@@ -49,7 +49,7 @@ export default function AlumnoEvaluaciones() {
       ) : (
         <>
           <h2>Evolución</h2>
-          <p className="texto-suave">Pasá el mouse sobre un punto para ver su fecha y valor.</p>
+          <p className="texto-suave solo-ancho">Pasá el mouse sobre un punto para ver su fecha y valor.</p>
           <div className="graficos">
             {armarGraficos(evaluaciones).map((grafico) => (
               <GraficoEvolucion key={grafico.pruebaId} datos={grafico} />

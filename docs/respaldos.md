@@ -1,6 +1,6 @@
 # Copias de seguridad
 
-`npm run respaldo` (desde `backend`) guarda una copia de la base con `pg_dump` en la carpeta `respaldos/` (configurable con `RESPALDOS_DIR` en `backend/.env`) y conserva las últimas 30. Conviene que esa carpeta esté sincronizada con la nube (por ejemplo, Google Drive para escritorio): una copia en el mismo disco no sirve si la notebook se rompe.
+`npm run respaldo` (desde `backend`) guarda una copia de la base con `pg_dump` en la carpeta `respaldos/` (configurable con `RESPALDOS_DIR` en `backend/.env`) y conserva las últimas 30. Con `RESPALDO_CLAVE` (mínimo 16 caracteres) la copia se guarda cifrada como `.dump.cifrado`; en producción es obligatoria. **Sin esa clave la copia no se puede recuperar:** guardarla fuera del servidor. Conviene que esa carpeta esté sincronizada con la nube (por ejemplo, Google Drive para escritorio): una copia en el mismo disco no sirve si la notebook se rompe.
 
 Cada tanto, comprobar que la copia se puede restaurar con `npm run respaldo:probar`: la restaura en una base temporal, cuenta alumnos y pagos, y la borra.
 
@@ -16,6 +16,12 @@ Register-ScheduledTask -TaskName "Respaldo entrenamiento" -Action $accion -Trigg
 
 ## Restaurar una copia
 
+Si está cifrada, primero descifrarla (deja al lado el `.dump`; borrarlo después de usarlo):
+
+```powershell
+npm run respaldo:descifrar -- ..\respaldos\<archivo>.dump.cifrado
+```
+
 Sobre la base real (borra lo que haya):
 
 ```powershell
@@ -24,4 +30,4 @@ pg_restore --clean --no-owner -U postgres -d entrenamiento respaldos\<archivo>.d
 
 `pg_restore` está en `C:\Program Files\PostgreSQL\17\bin`.
 
-Las copias contienen datos personales de los alumnos: no compartirlas.
+Las copias contienen datos personales de los alumnos: no compartirlas. Si se eliminó un alumno, sus datos siguen en las copias anteriores hasta que se reemplacen; restaurar una copia vieja lo trae de vuelta.

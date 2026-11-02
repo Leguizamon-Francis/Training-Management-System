@@ -1,5 +1,6 @@
 import type { EstadoCuota, MedioPago } from "../api/pagos";
 import { formatearFecha, formatearMoneda } from "./formato";
+import { linkChatWhatsApp } from "./whatsapp";
 
 // Precio de un plan para mostrar. Los planes nacen con precio 0 hasta que se define.
 export function textoPrecioPlan(precio: string) {
@@ -74,8 +75,6 @@ function mensajeWhatsApp({ nombre, estado, vence, diasRestantes, deudaTotal, can
   return partes.join(" ");
 }
 
-// Link wa.me: abre WhatsApp con el mensaje escrito, para revisarlo y enviarlo.
-// 549 = código de Argentina (54) + 9 (celulares).
 export function linkWhatsApp(datos: DatosAviso) {
-  return `https://wa.me/549${datos.telefono}?text=${encodeURIComponent(mensajeWhatsApp(datos))}`;
+  return linkChatWhatsApp(datos.telefono, mensajeWhatsApp(datos));
 }

@@ -77,11 +77,20 @@ export type DatosPago =
   | { tipo: "CUOTA"; fecha: string; importe: string; medio: MedioPago }
   | { tipo: "OTRO"; fecha: string; importe: string; concepto: string; medio: MedioPago };
 
+export interface CorreccionPago {
+  fecha: string;
+  importe: string;
+  medio: MedioPago;
+  concepto: string; // solo se usa en los pagos por otro concepto
+}
+
 export const pagosApi = {
   obtener: (alumnoId: number) => pedir<PagosAlumno>(`/alumnos/${alumnoId}/pagos`),
 
   registrar: (alumnoId: number, datos: DatosPago) =>
     pedir<Pago>(`/alumnos/${alumnoId}/pagos`, { metodo: "POST", datos }),
+
+  corregir: (id: number, datos: CorreccionPago) => pedir<Pago>(`/pagos/${id}`, { metodo: "PUT", datos }),
 
   eliminar: (id: number) => pedir<void>(`/pagos/${id}`, { metodo: "DELETE" }),
 

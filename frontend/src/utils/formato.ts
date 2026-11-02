@@ -37,6 +37,12 @@ export function formatearMoneda(valor: string | number) {
   return Number(valor).toLocaleString("es-AR", { style: "currency", currency: "ARS" });
 }
 
+// "2026-11" → "noviembre de 2026".
+export function nombreDelMes(mes: string) {
+  const [anio, numero] = mes.split("-").map(Number);
+  return new Date(anio, numero - 1, 1).toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+}
+
 // Suma meses a "aaaa-mm-dd" respetando el fin de mes (31-01 + 1 mes = 28-02). Igual que en el backend.
 export function sumarMeses(texto: string, meses: number) {
   const [anio, mes, dia] = texto.split("-").map(Number);

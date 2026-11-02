@@ -7,7 +7,10 @@ import AlumnoEvaluaciones from "./paginas/AlumnoEvaluaciones";
 import AlumnoFicha from "./paginas/AlumnoFicha";
 import AlumnoFormulario from "./paginas/AlumnoFormulario";
 import Alumnos from "./paginas/Alumnos";
-import CambiarPassword from "./paginas/CambiarPassword";
+import Asistencias from "./paginas/Asistencias";
+import AsistenciasAlumno from "./paginas/AsistenciasAlumno";
+import Configuracion from "./paginas/Configuracion";
+import EliminarAlumno from "./paginas/EliminarAlumno";
 import EvaluacionDetalle from "./paginas/EvaluacionDetalle";
 import EvaluacionFormulario from "./paginas/EvaluacionFormulario";
 import Evaluaciones from "./paginas/Evaluaciones";
@@ -19,6 +22,7 @@ import PagoNuevo from "./paginas/PagoNuevo";
 import PagosDeAlumno from "./paginas/PagosDeAlumno";
 import Pagos from "./paginas/Pagos";
 import Pruebas from "./paginas/Pruebas";
+import RegistrarAsistencia from "./paginas/RegistrarAsistencia";
 import Rutinas from "./paginas/Rutinas";
 import RutinasAlumno from "./paginas/RutinasAlumno";
 
@@ -61,7 +65,11 @@ export default function App() {
               <Route path="rutinas/:alumnoId" element={<RutinasAlumno />} />
               <Route path="rutinas/:alumnoId/nueva" element={editorRutina} />
               <Route path="rutinas/editar/:rutinaId" element={editorRutina} />
-              <Route path="cuenta/password" element={<CambiarPassword />} />
+              <Route path="asistencias" element={<Asistencias />} />
+              <Route path="asistencias/registrar" element={<RegistrarAsistencia />} />
+              <Route path="asistencias/:alumnoId" element={<AsistenciasAlumno />} />
+              <Route path="configuracion" element={<Configuracion />} />
+              <Route path="configuracion/eliminar-alumno" element={<EliminarAlumno />} />
             </Route>
           </Route>
 

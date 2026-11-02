@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { pagosApi, type EstadoCuotaAlumno } from "../api/pagos";
+import BotonVerTodos from "../componentes/BotonVerTodos";
 import UltimosIngresos from "../componentes/UltimosIngresos";
 import { useCarga } from "../hooks/useCarga";
+import { useListaCorta } from "../hooks/useListaCorta";
 import { formatearMoneda } from "../utils/formato";
 import {
   claseEstadoCuota,
@@ -29,6 +31,7 @@ export default function Pagos() {
 
   const criterio = FILTROS.find((f) => f.valor === filtro)!;
   const visibles = filas?.filter(criterio.cumple) ?? [];
+  const lista = useListaCorta(visibles, 3);
 
   return (
     <section>
@@ -81,7 +84,7 @@ export default function Pagos() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visibles.map((fila) => (
+                  {lista.visibles.map((fila) => (
                     <tr key={fila.id}>
                       <td>
                         <Link to={`/pagos/alumnos/${fila.id}`}>
@@ -114,6 +117,7 @@ export default function Pagos() {
                   ))}
                 </tbody>
               </table>
+              <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
             </div>
           )}
         </>

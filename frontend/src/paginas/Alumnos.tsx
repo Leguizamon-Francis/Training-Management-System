@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { alumnosApi, type AlumnoResumen, type FiltrosAlumnos } from "../api/alumnos";
+import BotonVerTodos from "../componentes/BotonVerTodos";
+import { useListaCorta } from "../hooks/useListaCorta";
 import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { calcularEdad } from "../utils/formato";
 
@@ -8,6 +10,7 @@ export default function Alumnos() {
   const [filtros, setFiltros] = useState<FiltrosAlumnos>({ buscar: "", estado: "activos", perfil: "" });
   const [alumnos, setAlumnos] = useState<AlumnoResumen[] | null>(null);
   const [error, setError] = useState("");
+  const lista = useListaCorta(alumnos ?? [], 10);
 
   // Se busca 300 ms después de la última tecla, para no consultar la API con cada letra.
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function Alumnos() {
               </tr>
             </thead>
             <tbody>
-              {alumnos.map((alumno) => (
+              {lista.visibles.map((alumno) => (
                 <tr key={alumno.id}>
                   <td>
                     <Link to={`/alumnos/${alumno.id}`}>
@@ -114,6 +117,7 @@ export default function Alumnos() {
               ))}
             </tbody>
           </table>
+          <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
           <p className="texto-suave">
             {alumnos.length} {alumnos.length === 1 ? "alumno" : "alumnos"}
           </p>

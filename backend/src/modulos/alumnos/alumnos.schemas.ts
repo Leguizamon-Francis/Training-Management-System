@@ -21,6 +21,11 @@ function normalizarTelefono(valor: string) {
   return digitos;
 }
 
+// POST /api/alumnos/:id/eliminar
+export const esquemaEliminarAlumno = z.object({
+  password: z.string({ error: "Ingresá tu contraseña" }).min(1, "Ingresá tu contraseña"),
+});
+
 export const esquemaAlumno = z.object({
   nombre: textoObligatorio("El nombre es obligatorio"),
   apellido: textoObligatorio("El apellido es obligatorio"),

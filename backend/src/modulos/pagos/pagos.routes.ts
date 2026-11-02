@@ -1,9 +1,17 @@
 import { Router } from "express";
 import { leerId } from "../../lib/errores";
 import { validar } from "../../middlewares/validar";
-import { esquemaPago, esquemaRangoIngresos, esquemaUltimosPagos, type DatosPago } from "./pagos.schemas";
+import {
+  esquemaCorreccionPago,
+  esquemaPago,
+  esquemaRangoIngresos,
+  esquemaUltimosPagos,
+  type CorreccionPago,
+  type DatosPago,
+} from "./pagos.schemas";
 import {
   anularDeuda,
+  corregirPago,
   eliminarPago,
   obtenerEstadoCuotas,
   obtenerIngresos,
@@ -46,6 +54,11 @@ pagosRouter.post("/alumnos/:alumnoId/pagos", validar(esquemaPago), async (req, r
 pagosRouter.post("/alumnos/:alumnoId/anular-deuda", async (req, res) => {
   await anularDeuda(leerId(req.params.alumnoId));
   res.status(204).end();
+});
+
+// PUT /api/pagos/:id  { fecha, importe, medio, concepto? }
+pagosRouter.put("/pagos/:id", validar(esquemaCorreccionPago), async (req, res) => {
+  res.json(await corregirPago(leerId(req.params.id), req.body as CorreccionPago));
 });
 
 // DELETE /api/pagos/:id

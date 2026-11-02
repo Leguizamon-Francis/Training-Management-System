@@ -5,8 +5,8 @@ import { prisma } from "../../lib/prisma";
 
 export const NOMBRE_COOKIE = "sesion";
 
-// Notebook de uso personal: la sesión dura 30 días para no pedir el login a cada rato.
-const DURACION_SESION_MS = 30 * 24 * 60 * 60 * 1000;
+// También se usa desde el celular, que se puede perder: la sesión dura 7 días, no más.
+const DURACION_SESION_MS = 7 * 24 * 60 * 60 * 1000;
 
 // Costo de bcrypt: más alto = más lento de adivinar por fuerza bruta (12 tarda ~0,2 s).
 const COSTO_BCRYPT = 12;
@@ -98,6 +98,30 @@ export async function cambiarPassword(usuarioId: number, actual: string, nueva: 
     prisma.sesion.deleteMany({ where: { usuarioId, tokenHash: { not: hashearToken(tokenActual) } } }),
   ]);
   return true;
+}
+
+// Para acciones que no se pueden deshacer, además de la sesión se pide la contraseña.
+export async function passwordCorrecta(usuarioId: number, password: string) {
+  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+  return !!usuario && bcrypt.compare(password, usuario.passwordHash);
+}
+
+export async function cambiarNombre(usuarioId: number, nombre: string) {
+  return datosPublicos(await prisma.usuario.update({ where: { id: usuarioId }, data: { nombre } }));
+}
+
+// El email es el dato para ingresar: cambiarlo pide la contraseña actual.
+// Si no se puede, devuelve el motivo.
+export async function cambiarEmail(usuarioId: number, email: string, actual: string) {
+  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+  if (!usuario || !(await bcrypt.compare(actual, usuario.passwordHash))) {
+    return { motivo: "password" as const };
+  }
+  const otro = await prisma.usuario.findUnique({ where: { email } });
+  if (otro && otro.id !== usuarioId) {
+    return { motivo: "email" as const };
+  }
+  return { usuario: datosPublicos(await prisma.usuario.update({ where: { id: usuarioId }, data: { email } })) };
 }
 
 export async function cerrarSesion(token: string) {

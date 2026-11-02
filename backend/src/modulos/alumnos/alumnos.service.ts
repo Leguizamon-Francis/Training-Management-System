@@ -69,6 +69,24 @@ export async function obtenerAlumno(id: number) {
   return alumno;
 }
 
+// Borra para siempre al alumno y todos sus datos, a pedido (derecho a la supresión de datos personales).
+// Para que deje de venir está la baja: conserva su historia. Va en una transacción: se borra todo o nada.
+// Los resultados de las evaluaciones se borran con cada evaluación (onDelete: Cascade).
+export async function eliminarAlumno(id: number) {
+  await obtenerAlumno(id); // 404 si no existe
+  const delAlumno = { where: { alumnoId: id } };
+  await prisma.$transaction([
+    prisma.pago.deleteMany(delAlumno), // antes que las cuotas, que los referencian
+    prisma.cuota.deleteMany(delAlumno),
+    prisma.evaluacion.deleteMany(delAlumno),
+    prisma.anotacion.deleteMany(delAlumno),
+    prisma.rutina.deleteMany(delAlumno),
+    prisma.asistencia.deleteMany(delAlumno),
+    prisma.cambioAlumno.deleteMany(delAlumno),
+    prisma.alumno.delete({ where: { id } }),
+  ]);
+}
+
 export async function obtenerHistorial(id: number) {
   await obtenerAlumno(id); // 404 si no existe
   return prisma.cambioAlumno.findMany({

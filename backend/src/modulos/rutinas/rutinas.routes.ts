@@ -1,11 +1,11 @@
 import express, { Router, type Request, type Response } from "express";
 import { ErrorHttp, leerId } from "../../lib/errores";
-import { esquemaDescarga, esquemaTipoBloque } from "./rutinas.schemas";
+import { esquemaBorrador, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
 import {
   actualizarRutina,
+  borradorRutina,
   crearRutina,
   eliminarRutina,
-  leerPlantilla,
   listarAlumnosConRutinas,
   listarRutinas,
   obtenerRutina,
@@ -41,19 +41,20 @@ rutinasRouter.get("/rutinas/alumnos", async (_req, res) => {
   res.json(await listarAlumnosConRutinas());
 });
 
-// GET /api/rutinas/plantilla  → la plantilla PDF, para empezar una rutina nueva
-rutinasRouter.get("/rutinas/plantilla", async (_req, res) => {
-  enviarPdf(res, await leerPlantilla());
-});
-
 // GET /api/alumnos/:alumnoId/rutinas
 rutinasRouter.get("/alumnos/:alumnoId/rutinas", async (req, res) => {
   res.json(await listarRutinas(leerId(req.params.alumnoId)));
 });
 
+// GET /api/alumnos/:alumnoId/rutinas/borrador?tipo=…&base=…  → el PDF para empezar una rutina nueva
+rutinasRouter.get("/alumnos/:alumnoId/rutinas/borrador", async (req, res) => {
+  const { tipo, base } = esquemaBorrador.parse(req.query);
+  enviarPdf(res, await borradorRutina(leerId(req.params.alumnoId), tipo, base));
+});
+
 // POST /api/alumnos/:alumnoId/rutinas?tipo=…  (cuerpo: el PDF completado)
 rutinasRouter.post("/alumnos/:alumnoId/rutinas", recibirPdf, async (req, res) => {
-  const { tipo } = esquemaTipoBloque.parse(req.query);
+  const { tipo } = esquemaModeloRutina.parse(req.query);
   res.status(201).json(await crearRutina(leerId(req.params.alumnoId), tipo, pdfRecibido(req)));
 });
 

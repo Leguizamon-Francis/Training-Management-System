@@ -71,6 +71,8 @@ export const alumnosApi = {
 
   obtener: (id: number) => pedir<Alumno>(`/alumnos/${id}`),
 
+  eliminar: (id: number, password: string) => pedir<void>(`/alumnos/${id}/eliminar`, { metodo: "POST", datos: { password } }),
+
   historial: (id: number) => pedir<CambioAlumno[]>(`/alumnos/${id}/historial`),
 
   crear: (datos: DatosAlumno) => pedir<Alumno>("/alumnos", { metodo: "POST", datos }),

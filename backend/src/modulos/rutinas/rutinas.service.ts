@@ -4,30 +4,41 @@ import type { TipoBloque } from "@prisma/client";
 import { PDFDocument, PDFTextField } from "pdf-lib";
 import { env } from "../../config/env";
 import { ErrorHttp } from "../../lib/errores";
-import { fechaArgentina, fechaDesdeTexto, formatearFechaTexto, hoyComoTexto, sumarMeses } from "../../lib/fechas";
+import { calcularEdad, fechaArgentina, fechaDesdeTexto, formatearFechaTexto, hoyComoTexto, sumarMeses, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
 
-// Campo de la plantilla actual que se muestra en las listas. Los nombres los puso el programa que armó
-// el PDF ("untitled…"); se identificó por su posición en la hoja. Si se cambia la plantilla, revisarlo.
-const CAMPO_OBJETIVO = "untitled2";
+// Campos que se muestran en las listas: "deporte" en los modelos actuales; en la planilla vieja, "untitled2"
+// (los nombres "untitled…" los puso el programa que armó ese PDF).
+const CAMPO_DEPORTE = "deporte";
+const CAMPO_OBJETIVO_VIEJO = "untitled2";
 
-// Duración de cada tipo de bloque (decisión del usuario, 14-10-2026).
+// Duración de cada tipo de rutina. Los modelos tienen 4 microciclos de 2 semanas.
 const MESES_POR_BLOQUE: Record<TipoBloque, number> = {
-  MICROCICLOS_2_SEMANAS: 2, // 4 microciclos de 2 semanas
-  MICROCICLOS_1_SEMANA: 1, // 4 microciclos de 1 semana
+  MICROCICLOS_2_SEMANAS: 2,
+  MICROCICLOS_1_SEMANA: 1,
+  MODELO_RUTINA: 2,
+  MODELO_RUTINA_2: 2,
+};
+
+// Planilla de cada tipo, relativa a la carpeta backend. Los tipos viejos solo abren las rutinas ya guardadas.
+const PLANTILLAS: Record<TipoBloque, string> = {
+  MICROCICLOS_2_SEMANAS: env.PLANTILLA_RUTINA,
+  MICROCICLOS_1_SEMANA: env.PLANTILLA_RUTINA,
+  MODELO_RUTINA: "plantillas/Modelo Rutina.pdf",
+  MODELO_RUTINA_2: "plantillas/Modelo Rutina 2.pdf",
 };
 
 type Valores = Record<string, string>;
 
 // La plantilla se lee del disco cada vez: si se reemplaza el archivo, se usa la nueva sin reiniciar nada.
 // Nunca se escribe sobre ella.
-export async function leerPlantilla() {
-  const ruta = path.resolve(process.cwd(), env.PLANTILLA_RUTINA);
+async function leerPlantilla(tipo: TipoBloque) {
+  const ruta = path.resolve(process.cwd(), PLANTILLAS[tipo]);
   try {
     return await readFile(ruta);
   } catch {
-    throw new ErrorHttp(500, `No se encontró la plantilla de rutinas (${env.PLANTILLA_RUTINA})`);
+    throw new ErrorHttp(500, `No se encontró la plantilla de rutinas (${PLANTILLAS[tipo]})`);
   }
 }
 
@@ -50,7 +61,7 @@ async function extraerValores(bytes: Uint8Array) {
 }
 
 function resumen(valores: Valores) {
-  return { objetivo: valores[CAMPO_OBJETIVO]?.trim() || null };
+  return { objetivo: (valores[CAMPO_DEPORTE] ?? valores[CAMPO_OBJETIVO_VIEJO])?.trim() || null };
 }
 
 // La fuente de los campos del PDF (Helvetica) no tiene todos los caracteres: se reemplazan los más comunes
@@ -64,11 +75,12 @@ function textoDibujable(texto: string) {
     .replace(/[^\n\r\t\x20-\x7E\xA0-\xFF]/g, "");
 }
 
-// Arma el PDF de una rutina: la plantilla con los valores guardados. Los campos siguen siendo editables.
-async function generarPdf(valores: Valores) {
-  const pdf = await PDFDocument.load(await leerPlantilla());
+// Arma el PDF de una rutina: la plantilla con los valores dados. Los campos siguen siendo editables,
+// y los que no vienen en valores conservan lo que trae la plantilla.
+async function generarPdf(tipo: TipoBloque, valores: Valores) {
+  const pdf = await PDFDocument.load(await leerPlantilla(tipo));
   for (const campo of pdf.getForm().getFields()) {
-    if (campo instanceof PDFTextField) campo.setText(textoDibujable(valores[campo.getName()] ?? ""));
+    if (campo instanceof PDFTextField && campo.getName() in valores) campo.setText(textoDibujable(valores[campo.getName()]));
   }
   return pdf.save();
 }
@@ -135,9 +147,31 @@ export async function pdfDeRutina(id: number) {
     throw new ErrorHttp(404, "Rutina no encontrada");
   }
   return {
-    bytes: await generarPdf(rutina.valores as Valores),
+    bytes: await generarPdf(rutina.tipo, rutina.valores as Valores),
     nombreArchivo: `Rutina ${rutina.alumno.apellido} ${rutina.alumno.nombre} ${formatearFechaTexto(fechaArgentina(rutina.creadoEn))}.pdf`,
   };
+}
+
+// PDF para empezar una rutina nueva: la plantilla con el nombre y la edad del alumno. Con una rutina base,
+// copia lo escrito en ella, salvo las fechas, que son del bloque anterior.
+export async function borradorRutina(alumnoId: number, tipo: TipoBloque, baseId?: number) {
+  const alumno = await obtenerAlumno(alumnoId);
+  let copiados: Valores = {};
+  if (baseId) {
+    const base = await prisma.rutina.findUnique({ where: { id: baseId } });
+    if (!base || base.alumnoId !== alumnoId) {
+      throw new ErrorHttp(404, "Rutina no encontrada");
+    }
+    if (base.tipo !== tipo) {
+      throw new ErrorHttp(400, "La rutina base es de otro modelo");
+    }
+    copiados = Object.fromEntries(Object.entries(base.valores as Valores).filter(([campo]) => !campo.startsWith("fecha_")));
+  }
+  return generarPdf(tipo, {
+    ...copiados,
+    nombre: `${alumno.apellido}, ${alumno.nombre}`,
+    edad: String(calcularEdad(textoDesdeFecha(alumno.fechaNacimiento))),
+  });
 }
 
 // ---------- Altas y cambios ----------

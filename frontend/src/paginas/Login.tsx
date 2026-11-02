@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate } from "react-router";
 import { useSesion } from "../componentes/Sesion";
+import { Logo } from "../componentes/Iconos";
 
 export default function Login() {
   const { usuario, iniciarSesion } = useSesion();
@@ -32,7 +33,10 @@ export default function Login() {
   return (
     <main className="login">
       <form className="tarjeta login-formulario" onSubmit={enviar}>
-        <h1>Gestión de entrenamiento</h1>
+        <div className="login-marca">
+          <Logo />
+          <h1>GPE Software</h1>
+        </div>
         <p className="texto-suave">Ingresá con tu email y contraseña.</p>
 
         <label className="campo">

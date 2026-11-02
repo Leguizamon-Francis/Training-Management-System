@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test, mock } from "node:test";
 import { Prisma, type Cuota } from "@prisma/client";
-import { calcularSituacion } from "./pagos.service";
+import { calcularSituacion, describirPago } from "./pagos.service";
 
 const HOY = "2026-10-19";
 const precio = new Prisma.Decimal(25000);
@@ -25,6 +25,11 @@ function cuota(desde: string, vence: string): Cuota {
     actualizadoEn: new Date(),
   };
 }
+
+test("describirPago: texto para el historial", () => {
+  const texto = describirPago({ fecha: new Date("2026-10-07T00:00:00Z"), importe: precio, medio: "TRANSFERENCIA", concepto: "Cuota mensual" });
+  assert.match(texto, /^Cuota mensual: .*25\.000,00, Transferencia, 07-10-2026$/);
+});
 
 test("sin cuotas: sin pagos y sin deuda", () => {
   const s = calcularSituacion(null, activo);

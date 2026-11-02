@@ -74,9 +74,10 @@ export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
       : MARGEN.izquierda + (indice.get(punto.evaluacionId)! / (evaluaciones.length - 1)) * AREA_ANCHO;
   const posY = (valor: number) => MARGEN.arriba + AREA_ALTO - ((valor - y.inicio) / (y.fin - y.inicio)) * AREA_ALTO;
 
-  // Rótulos del eje X: todos si son pocos; si no, uno de cada tantos (siempre el último).
+  // Rótulos del eje X: todos si son pocos; si no, uno de cada tantos contando desde el último,
+  // que siempre se muestra: así dos rótulos nunca quedan pegados.
   const salto = Math.ceil(evaluaciones.length / MAXIMO_ROTULOS_X);
-  const rotulosX = evaluaciones.filter((_, i) => i % salto === 0 || i === evaluaciones.length - 1);
+  const rotulosX = evaluaciones.filter((_, i) => (evaluaciones.length - 1 - i) % salto === 0);
 
   // Rótulo del último valor de cada serie, separados para que no se encimen.
   const rotulos = series

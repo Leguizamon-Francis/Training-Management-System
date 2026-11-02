@@ -4,14 +4,17 @@ import urlWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 // Lo que la página que usa el visor le puede pedir.
-export interface ControlVisor {
+export interface ControlPlanilla {
   // Devuelve el PDF con lo que se escribió en los campos.
   obtenerPdf: () => Promise<Uint8Array>;
 }
 
+const ANCHO_MINIMO_HOJA = 700;
+const ESCALA_PANTALLA_ANGOSTA = "0.75";
+
 // Muestra un PDF con campos rellenables (pdf.js, de Mozilla) para completarlo dentro de la página.
 // El PDF original no se toca: lo escrito queda en memoria hasta que se pide con obtenerPdf().
-const VisorPdfEditable = forwardRef<ControlVisor, { datos: Uint8Array }>(function VisorPdfEditable({ datos }, ref) {
+const PlanillaEditable = forwardRef<ControlPlanilla, { datos: Uint8Array }>(function PlanillaEditable({ datos }, ref) {
   const contenedor = useRef<HTMLDivElement>(null);
   const documento = useRef<PDFDocumentProxy | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -26,6 +29,7 @@ const VisorPdfEditable = forwardRef<ControlVisor, { datos: Uint8Array }>(functio
 
   useEffect(() => {
     let cancelado = false;
+    let cerrarVisor = () => {};
 
     (async () => {
       const pdfjs = await import("pdfjs-dist");
@@ -52,17 +56,21 @@ const VisorPdfEditable = forwardRef<ControlVisor, { datos: Uint8Array }>(functio
       });
       linkService.setViewer(visor);
       eventBus.on("pagesinit", () => {
-        visor.currentScaleValue = "page-width"; // la hoja ocupa todo el ancho disponible
+        // La hoja ocupa todo el ancho disponible; en el celular se vería diminuta: queda legible y se desliza.
+        const pantallaAngosta = (contenedor.current?.clientWidth ?? 0) < ANCHO_MINIMO_HOJA;
+        visor.currentScaleValue = pantallaAngosta ? ESCALA_PANTALLA_ANGOSTA : "page-width";
         setCargando(false);
       });
       visor.setDocument(doc);
       linkService.setDocument(doc);
+      cerrarVisor = () => visor.setDocument(null as unknown as PDFDocumentProxy);
     })().catch((err: unknown) => {
       if (!cancelado) setError(err instanceof Error ? err.message : "No se pudo abrir el PDF");
     });
 
     return () => {
       cancelado = true;
+      cerrarVisor(); // si queda abierto, su hoja sigue en pantalla pero ya no se guarda lo que se escribe en ella
       documento.current?.destroy();
       documento.current = null;
     };
@@ -80,4 +88,4 @@ const VisorPdfEditable = forwardRef<ControlVisor, { datos: Uint8Array }>(functio
   );
 });
 
-export default VisorPdfEditable;
+export default PlanillaEditable;

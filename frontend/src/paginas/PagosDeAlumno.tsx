@@ -4,7 +4,7 @@ import Cargando from "../componentes/Cargando";
 import PagosAlumno from "../componentes/PagosAlumno";
 import { useCarga } from "../hooks/useCarga";
 
-// Pagos de un alumno, desde la pantalla Pagos: lo mismo que "Cuota y pagos" de la ficha, abierto.
+// Pagos de un alumno, desde la pantalla Pagos: lo mismo que "Membresía" de la ficha, abierto.
 export default function PagosDeAlumno() {
   const alumnoId = Number(useParams().id);
   // Se recarga después de cambios que afectan al alumno (ej.: "Anular deuda" con baja).

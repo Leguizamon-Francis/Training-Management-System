@@ -63,8 +63,10 @@ enum Modalidad {
 }
 
 enum TipoBloque {
-  MICROCICLOS_2_SEMANAS // bloque de 4 microciclos de 2 semanas
-  MICROCICLOS_1_SEMANA // bloque de 4 microciclos de 1 semana
+  MICROCICLOS_2_SEMANAS // rutinas viejas: bloque de 4 microciclos de 2 semanas (planilla rutina.pdf)
+  MICROCICLOS_1_SEMANA // rutinas viejas: bloque de 4 microciclos de 1 semana (planilla rutina.pdf)
+  MODELO_RUTINA // planilla "Modelo Rutina"
+  MODELO_RUTINA_2 // planilla "Modelo Rutina 2"
 }
 
 enum MedioPago {
@@ -127,6 +129,7 @@ model Alumno {
   cuotas       Cuota[]
   pagos        Pago[]
   rutinas      Rutina[]
+  asistencias  Asistencia[]
 
   @@index([apellido, nombre])
 }
@@ -266,9 +269,23 @@ model Pago {
   @@index([fecha])
 }
 
+// ---------- Asistencias ----------
+
+// Un alumno vino ese día: una por día, sin hora. Quien faltó no se registra (no hay turnos).
+model Asistencia {
+  id       Int      @id @default(autoincrement())
+  alumnoId Int
+  alumno   Alumno   @relation(fields: [alumnoId], references: [id])
+  fecha    DateTime @db.Date
+  creadoEn DateTime @default(now())
+
+  @@unique([alumnoId, fecha])
+  @@index([fecha])
+}
+
 // ---------- Rutinas ----------
 
-// Rutina de entrenamiento de un alumno, armada sobre la plantilla PDF (rutina.pdf).
+// Rutina de entrenamiento de un alumno, armada sobre una plantilla PDF (ver TipoBloque).
 // No se guarda el PDF completo (pesa ~2,4 MB): se guarda lo escrito en cada campo y el PDF
 // se vuelve a armar con la plantilla al verlo o descargarlo.
 model Rutina {
@@ -276,9 +293,9 @@ model Rutina {
   alumnoId      Int
   alumno        Alumno     @relation(fields: [alumnoId], references: [id])
   tipo          TipoBloque
-  valores       Json // { "untitled1": "Pérez, Juan", "untitled2": "Adaptación", ... }
-  objetivo      String? // copiado de la planilla para mostrarlo en las listas sin abrir el PDF
-  // Duración del bloque, calculada por el sistema: desde = día de creación; hasta = + 2 meses (4×2 semanas) o + 1 mes (4×1 semana).
+  valores       Json // { "nombre": "Pérez, Juan", "deporte": "Hockey", "A4": "Sentadilla", ... }
+  objetivo      String? // deporte u objetivo, copiado de la planilla para mostrarlo en las listas sin abrir el PDF
+  // Duración del bloque, calculada por el sistema: desde = día de creación; hasta = según el tipo (MESES_POR_BLOQUE).
   desde         DateTime   @db.Date
   hasta         DateTime   @db.Date
   creadoEn      DateTime   @default(now())

@@ -26,6 +26,7 @@ export const ETIQUETAS_CAMPO: Record<string, string> = {
   plan: "Membresía",
   activo: "Estado",
   deuda: "Deuda",
+  pago: "Pago corregido",
 };
 
 // Muestra un valor del historial de forma legible.

@@ -1,14 +1,15 @@
 import { ErrorApi, pedir } from "./cliente";
 
-export type TipoBloque = "MICROCICLOS_2_SEMANAS" | "MICROCICLOS_1_SEMANA";
+export type ModeloRutina = "MODELO_RUTINA" | "MODELO_RUTINA_2";
+export type TipoBloque = "MICROCICLOS_2_SEMANAS" | "MICROCICLOS_1_SEMANA" | ModeloRutina; // los MICROCICLOS son de rutinas viejas
 
 export interface Rutina {
   id: number;
   alumnoId: number;
   tipo: TipoBloque;
-  objetivo: string | null; // copiado de la planilla, para mostrar en listas
+  objetivo: string | null; // deporte u objetivo copiado de la planilla, para mostrar en listas
   desde: string; // ISO: día de creación
-  hasta: string; // ISO: + 2 meses (4×2 semanas) o + 1 mes (4×1 semana)
+  hasta: string; // ISO: según el tipo (2 meses en los modelos actuales)
   creadoEn: string; // ISO
   actualizadoEn: string;
 }
@@ -55,15 +56,16 @@ export const rutinasApi = {
 
   obtener: (id: number) => pedir<RutinaConAlumno>(`/rutinas/${id}`),
 
-  // La plantilla vacía (el "PDF madre"): nunca se modifica, cada rutina nueva parte de ella.
-  plantilla: () => bajarPdf("/rutinas/plantilla"),
+  // El PDF para empezar una rutina nueva, con los datos del alumno y lo escrito en la rutina base, si hay.
+  borrador: (alumnoId: number, tipo: ModeloRutina, base: number | null) =>
+    bajarPdf(`/alumnos/${alumnoId}/rutinas/borrador?tipo=${tipo}${base ? `&base=${base}` : ""}`),
 
   pdf: (id: number) => bajarPdf(`/rutinas/${id}/pdf`),
 
   // Link directo para descargar el PDF (la cookie de sesión viaja sola).
   urlDescarga: (id: number) => `/api/rutinas/${id}/pdf?descargar=true`,
 
-  crear: (alumnoId: number, tipo: TipoBloque, pdf: Uint8Array) =>
+  crear: (alumnoId: number, tipo: ModeloRutina, pdf: Uint8Array) =>
     enviarPdf(`/alumnos/${alumnoId}/rutinas?tipo=${tipo}`, "POST", pdf),
 
   actualizar: (id: number, pdf: Uint8Array) => enviarPdf(`/rutinas/${id}`, "PUT", pdf),

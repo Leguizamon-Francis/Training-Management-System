@@ -16,6 +16,7 @@ import {
 import BotonVerTodos from "./BotonVerTodos";
 import Cargando from "./Cargando";
 import Desplegable from "./Desplegable";
+import FormularioCorregirPago from "./FormularioCorregirPago";
 import FormularioPago from "./FormularioPago";
 import SelectorPlan from "./SelectorPlan";
 
@@ -26,13 +27,14 @@ interface Props {
 }
 
 function Contenedor({ enFicha, children }: { enFicha: boolean; children: ReactNode }) {
-  return enFicha ? <Desplegable titulo="Cuota y pagos">{children}</Desplegable> : <div className="tarjeta seccion">{children}</div>;
+  return enFicha ? <Desplegable titulo="Membresía">{children}</Desplegable> : <div className="tarjeta seccion">{children}</div>;
 }
 
 // Membresía, estado de la cuota, deuda y pagos de un alumno.
 export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props) {
   const { datos, error, setError, recargar } = useCarga(() => pagosApi.obtener(alumno.id), [alumno.id]);
   const [registrando, setRegistrando] = useState(false);
+  const [corrigiendo, setCorrigiendo] = useState<Pago | null>(null);
   const lista = useListaCorta(datos?.pagos ?? [], 3);
 
   async function planCambiado() {
@@ -68,10 +70,17 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
     if (!window.confirm(pregunta)) return;
     try {
       await pagosApi.eliminar(pago.id);
+      setCorrigiendo(null);
       await recargar();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo eliminar el pago");
     }
+  }
+
+  async function pagoCorregido() {
+    setCorrigiendo(null);
+    await recargar();
+    onCambio(); // la corrección queda en el historial de cambios
   }
 
   async function pagoRegistrado() {
@@ -164,6 +173,10 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
 
       <div className="separador" />
 
+      {corrigiendo && (
+        <FormularioCorregirPago key={corrigiendo.id} pago={corrigiendo} onGuardado={pagoCorregido} onCancelar={() => setCorrigiendo(null)} />
+      )}
+
       {pagos.length === 0 ? (
         <p className="texto-suave">Todavía no hay pagos registrados.</p>
       ) : (
@@ -194,7 +207,10 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
                     </td>
                     <td>{ETIQUETAS_MEDIO[pago.medio]}</td>
                     <td className="numero sin-salto">{formatearMoneda(pago.importe)}</td>
-                    <td>
+                    <td className="sin-salto">
+                      <button type="button" className="boton-link" onClick={() => setCorrigiendo(pago)}>
+                        Corregir
+                      </button>
                       {sePuedeEliminar(pago) && (
                         <button type="button" className="boton-link peligro" onClick={() => eliminarPago(pago)}>
                           Eliminar

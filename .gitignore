@@ -9,6 +9,7 @@ build/
 .env
 .env.*
 !.env.example
+!.env.prueba.example
 
 # Plantilla de rutinas: la actual tiene datos de un alumno real (no se sube)
 /rutina.pdf
@@ -29,3 +30,7 @@ Thumbs.db
 
 # Notas internas del proyecto (contexto para el asistente de código)
 /CLAUDE.md
+
+# Modelos de rutina del cliente (los PDF se generan con npm run plantillas)
+/*.xlsx
+/backend/plantillas/

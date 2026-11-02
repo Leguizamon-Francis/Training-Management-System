@@ -77,7 +77,7 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
 
       {sinPlan && (
         <p className="mensaje-error">
-          El alumno no tiene una membresía asignada. Asignásela desde su ficha (Cuota y pagos) para registrar cuotas.
+          El alumno no tiene una membresía asignada. Asignásela desde su ficha (Membresía) para registrar cuotas.
         </p>
       )}
 

@@ -8,7 +8,8 @@ import ListaRutinas from "./ListaRutinas";
 const CANTIDAD_EN_FICHA = 4;
 
 // Sección "Rutinas" de la ficha del alumno: sus últimas rutinas guardadas.
-export default function RutinasFicha({ alumnoId }: { alumnoId: number }) {
+export default function RutinasFicha({ alumno }: { alumno: { id: number; nombre: string; telefono: string } }) {
+  const alumnoId = alumno.id;
   const { datos: rutinas, error } = useCarga(() => rutinasApi.listar(alumnoId), [alumnoId]);
 
   return (
@@ -28,7 +29,7 @@ export default function RutinasFicha({ alumnoId }: { alumnoId: number }) {
         (rutinas.length === 0 ? (
           <p className="texto-suave">Todavía no tiene rutinas.</p>
         ) : (
-          <ListaRutinas rutinas={rutinas.slice(0, CANTIDAD_EN_FICHA)} />
+          <ListaRutinas rutinas={rutinas.slice(0, CANTIDAD_EN_FICHA)} alumno={alumno} />
         ))}
     </Desplegable>
   );

@@ -7,6 +7,7 @@ interface ValorSesion {
   cargando: boolean;
   iniciarSesion: (email: string, password: string) => Promise<void>;
   cerrarSesion: () => Promise<void>;
+  actualizarUsuario: (usuario: Usuario) => void; // después de cambiar sus datos
 }
 
 const ContextoSesion = createContext<ValorSesion | null>(null);
@@ -35,7 +36,7 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ContextoSesion.Provider value={{ usuario, cargando, iniciarSesion, cerrarSesion }}>
+    <ContextoSesion.Provider value={{ usuario, cargando, iniciarSesion, cerrarSesion, actualizarUsuario: setUsuario }}>
       {children}
     </ContextoSesion.Provider>
   );

@@ -1,13 +1,14 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { alumnosApi } from "../api/alumnos";
-import { rutinasApi, type TipoBloque } from "../api/rutinas";
-import VisorPdfEditable, { type ControlVisor } from "../componentes/VisorPdfEditable";
+import { rutinasApi, type ModeloRutina, type TipoBloque } from "../api/rutinas";
+import PlanillaEditable, { type ControlPlanilla } from "../componentes/PlanillaEditable";
 import { useCarga } from "../hooks/useCarga";
-import { ETIQUETAS_TIPO_BLOQUE } from "../utils/rutinas";
+import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 
 // Completar una rutina sobre la planilla PDF.
-// - Nueva (/rutinas/:alumnoId/nueva?tipo=…): parte de la plantilla, que nunca se modifica.
+// - Nueva (/rutinas/:alumnoId/nueva?tipo=…): parte de la plantilla del modelo, que nunca se modifica.
+//   Con &base=… parte de lo escrito en esa rutina, que tampoco cambia.
 // - Existente (/rutinas/editar/:rutinaId): parte de la rutina guardada.
 // Al guardar, lo escrito queda en el perfil del alumno.
 export default function EditorRutina() {
@@ -15,18 +16,20 @@ export default function EditorRutina() {
   const [busqueda] = useSearchParams();
   const navigate = useNavigate();
   const rutinaId = parametros.rutinaId ? Number(parametros.rutinaId) : null;
-  const visor = useRef<ControlVisor>(null);
+  const baseId = busqueda.get("base") ? Number(busqueda.get("base")) : null;
+  const visor = useRef<ControlPlanilla>(null);
   const [guardando, setGuardando] = useState(false);
 
   const { datos, error, setError } = useCarga(async () => {
     if (rutinaId) {
       const [rutina, pdf] = await Promise.all([rutinasApi.obtener(rutinaId), rutinasApi.pdf(rutinaId)]);
-      return { alumno: rutina.alumno, tipo: rutina.tipo, pdf };
+      return { alumno: rutina.alumno, tipo: rutina.tipo, modelo: null, pdf };
     }
-    const tipo = busqueda.get("tipo") as TipoBloque | null;
-    if (!tipo || !(tipo in ETIQUETAS_TIPO_BLOQUE)) throw new Error("Falta elegir el tipo de bloque");
-    const [alumno, pdf] = await Promise.all([alumnosApi.obtener(Number(parametros.alumnoId)), rutinasApi.plantilla()]);
-    return { alumno, tipo, pdf };
+    const modelo = MODELOS_RUTINA.find((tipo) => tipo === busqueda.get("tipo"));
+    if (!modelo) throw new Error("Falta elegir el modelo de rutina");
+    const alumnoId = Number(parametros.alumnoId);
+    const [alumno, pdf] = await Promise.all([alumnosApi.obtener(alumnoId), rutinasApi.borrador(alumnoId, modelo, baseId)]);
+    return { alumno, tipo: modelo as TipoBloque, modelo: modelo as ModeloRutina | null, pdf };
   }, [rutinaId, parametros.alumnoId, busqueda]);
 
   async function guardar() {
@@ -36,7 +39,7 @@ export default function EditorRutina() {
     try {
       const pdf = await visor.current.obtenerPdf();
       if (rutinaId) await rutinasApi.actualizar(rutinaId, pdf);
-      else await rutinasApi.crear(datos.alumno.id, datos.tipo, pdf);
+      else if (datos.modelo) await rutinasApi.crear(datos.alumno.id, datos.modelo, pdf);
       navigate(`/rutinas/${datos.alumno.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar la rutina");
@@ -74,6 +77,7 @@ export default function EditorRutina() {
           <h1>{rutinaId ? "Rutina" : "Nueva rutina"}</h1>
           <p className="texto-suave subtitulo">
             {datos.alumno.apellido}, {datos.alumno.nombre} · {ETIQUETAS_TIPO_BLOQUE[datos.tipo]}
+            {baseId && " · A partir de una rutina anterior"}
           </p>
         </div>
         <div className="acciones">
@@ -87,9 +91,12 @@ export default function EditorRutina() {
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
-      <p className="texto-suave">Completá los campos de la planilla haciendo clic sobre ellos.</p>
+      <p className="texto-suave">
+        Completá los campos de la planilla haciendo clic sobre ellos.
+        <span className="solo-angosto"> Deslizá con el dedo para ver toda la hoja.</span>
+      </p>
 
-      <VisorPdfEditable ref={visor} datos={datos.pdf} />
+      <PlanillaEditable ref={visor} datos={datos.pdf} />
     </section>
   );
 }

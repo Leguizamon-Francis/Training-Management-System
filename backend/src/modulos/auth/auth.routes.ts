@@ -2,8 +2,19 @@ import { Router, type Request, type Response } from "express";
 import { env } from "../../config/env";
 import { requiereSesion } from "../../middlewares/requiereSesion";
 import { validar } from "../../middlewares/validar";
-import { esquemaCambioPassword, esquemaLogin, type DatosCambioPassword, type DatosLogin } from "./auth.schemas";
 import {
+  esquemaCambioEmail,
+  esquemaCambioNombre,
+  esquemaCambioPassword,
+  esquemaLogin,
+  type DatosCambioEmail,
+  type DatosCambioNombre,
+  type DatosCambioPassword,
+  type DatosLogin,
+} from "./auth.schemas";
+import {
+  cambiarEmail,
+  cambiarNombre,
   cambiarPassword,
   cerrarSesion,
   iniciarSesion,
@@ -18,12 +29,12 @@ export const authRouter = Router();
 // Los intentos fallidos se cuentan por dirección IP.
 // Si en producción el servidor queda detrás de un proxy, hay que configurar app.set("trust proxy", ...)
 // para que req.ip sea la IP real y no la del proxy.
-function claveIntentos(req: Request) {
+export function claveIntentos(req: Request) {
   return req.ip ?? "desconocida";
 }
 
 // Responde 429 si la conexión está bloqueada por demasiados intentos. Devuelve true si respondió.
-function respondioBloqueo(req: Request, res: Response) {
+export function respondioBloqueo(req: Request, res: Response) {
   const minutos = minutosDeBloqueo(claveIntentos(req));
   if (minutos === 0) return false;
   res.status(429).json({
@@ -79,6 +90,30 @@ authRouter.post("/password", requiereSesion, validar(esquemaCambioPassword), asy
   }
   limpiarIntentos(claveIntentos(req));
   res.status(204).end();
+});
+
+// PUT /api/auth/nombre  { nombre }
+authRouter.put("/nombre", requiereSesion, validar(esquemaCambioNombre), async (req, res) => {
+  const { nombre } = req.body as DatosCambioNombre;
+  res.json({ usuario: await cambiarNombre(req.usuario!.id, nombre) });
+});
+
+// PUT /api/auth/email  { email, actual }
+authRouter.put("/email", requiereSesion, validar(esquemaCambioEmail), async (req, res) => {
+  if (respondioBloqueo(req, res)) return;
+  const { email, actual } = req.body as DatosCambioEmail;
+  const resultado = await cambiarEmail(req.usuario!.id, email, actual);
+  if (resultado.motivo === "password") {
+    registrarIntentoFallido(claveIntentos(req));
+    res.status(400).json({ error: "La contraseña actual no es correcta", campos: { actual: ["La contraseña actual no es correcta"] } });
+    return;
+  }
+  limpiarIntentos(claveIntentos(req));
+  if (resultado.motivo === "email") {
+    res.status(400).json({ error: "Ese email ya está en uso", campos: { email: ["Ese email ya está en uso"] } });
+    return;
+  }
+  res.json({ usuario: resultado.usuario });
 });
 
 // GET /api/auth/yo  → usuario de la sesión actual (el frontend lo usa al cargar)

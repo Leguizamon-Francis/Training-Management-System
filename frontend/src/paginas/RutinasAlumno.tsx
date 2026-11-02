@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { alumnosApi } from "../api/alumnos";
-import { rutinasApi, type Rutina, type TipoBloque } from "../api/rutinas";
+import { rutinasApi, type Rutina } from "../api/rutinas";
 import Cargando from "../componentes/Cargando";
 import ListaRutinas from "../componentes/ListaRutinas";
 import { useCarga } from "../hooks/useCarga";
 import { formatearFechaHora } from "../utils/formato";
-import { ETIQUETAS_TIPO_BLOQUE } from "../utils/rutinas";
+import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 
 // Rutinas de un alumno: todas las guardadas y el botón para armar una nueva.
 export default function RutinasAlumno() {
@@ -16,7 +16,8 @@ export default function RutinasAlumno() {
     () => Promise.all([alumnosApi.obtener(alumnoId), rutinasApi.listar(alumnoId)]),
     [alumnoId],
   );
-  const [eligiendoTipo, setEligiendoTipo] = useState(false);
+  const [busqueda] = useSearchParams();
+  const [eligiendoTipo, setEligiendoTipo] = useState(busqueda.has("nueva"));
 
   async function eliminar(rutina: Rutina) {
     const fecha = formatearFechaHora(rutina.creadoEn).slice(0, 10);
@@ -55,12 +56,12 @@ export default function RutinasAlumno() {
 
       {error && <p className="mensaje-error">{error}</p>}
 
-      {/* Al crear una rutina se elige el tipo de bloque y se abre la planilla */}
+      {/* Al crear una rutina se elige el modelo y se abre su planilla */}
       {eligiendoTipo && (
         <div className="tarjeta seccion">
-          <h2>Elegí el tipo de rutina</h2>
+          <h2>Elegí el modelo de rutina</h2>
           <div className="opciones-bloque">
-            {(Object.keys(ETIQUETAS_TIPO_BLOQUE) as TipoBloque[]).map((tipo) => (
+            {MODELOS_RUTINA.map((tipo) => (
               <button
                 key={tipo}
                 type="button"
@@ -82,7 +83,7 @@ export default function RutinasAlumno() {
         {rutinas.length === 0 ? (
           <p className="texto-suave">Todavía no tiene rutinas.</p>
         ) : (
-          <ListaRutinas rutinas={rutinas} onEliminar={eliminar} />
+          <ListaRutinas rutinas={rutinas} alumno={alumno} onEliminar={eliminar} />
         )}
       </div>
     </section>

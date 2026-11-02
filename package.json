@@ -1,0 +1,14 @@
+{
+  "name": "gpe-software",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Comandos para publicar el sistema: ver docs/publicacion.md",
+  "engines": {
+    "node": ">=22.9"
+  },
+  "scripts": {
+    "build": "npm ci --prefix backend --include=dev && npm ci --prefix frontend --include=dev && npm run build --prefix backend && npm run plantillas --prefix backend && npm run build --prefix frontend",
+    "migrar": "npm run db:deploy --prefix backend",
+    "start": "npm start --prefix backend"
+  }
+}

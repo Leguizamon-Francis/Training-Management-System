@@ -9,6 +9,12 @@ const fechaPago = z.iso
 
 const medio = z.enum(MedioPago, { error: "Elegí el medio de pago" });
 
+const concepto = z
+  .string({ error: "Indicá el concepto" })
+  .trim()
+  .min(1, "Indicá el concepto")
+  .max(200, "Máximo 200 caracteres");
+
 // Hay dos tipos de pago; el campo "tipo" indica cuál es y qué otros campos lleva
 // (en Zod esto se llama "unión discriminada").
 export const esquemaPago = z.discriminatedUnion(
@@ -26,11 +32,7 @@ export const esquemaPago = z.discriminatedUnion(
       tipo: z.literal("OTRO"),
       fecha: fechaPago,
       importe: esquemaImporte,
-      concepto: z
-        .string({ error: "Indicá el concepto" })
-        .trim()
-        .min(1, "Indicá el concepto")
-        .max(200, "Máximo 200 caracteres"),
+      concepto,
       medio,
     }),
   ],
@@ -38,6 +40,16 @@ export const esquemaPago = z.discriminatedUnion(
 );
 
 export type DatosPago = z.infer<typeof esquemaPago>;
+
+// PUT /api/pagos/:id  El concepto solo se usa en los pagos por otro concepto.
+export const esquemaCorreccionPago = z.object({
+  fecha: fechaPago,
+  importe: esquemaImporte,
+  medio,
+  concepto: concepto.optional(),
+});
+
+export type CorreccionPago = z.infer<typeof esquemaCorreccionPago>;
 
 // GET /api/pagos/ultimos?cantidad=20
 export const esquemaUltimosPagos = z.object({

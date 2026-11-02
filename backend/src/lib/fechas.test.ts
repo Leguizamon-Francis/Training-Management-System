@@ -1,7 +1,13 @@
 // Pruebas automáticas: npm test (usa node:test, que viene con Node).
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { diasEntre, formatearFechaTexto, sumarMeses } from "./fechas";
+import { calcularEdad, diasEntre, formatearFechaTexto, sumarMeses } from "./fechas";
+
+test("calcularEdad: cuenta el año recién el día del cumpleaños", () => {
+  assert.equal(calcularEdad("2000-06-15", "2026-06-14"), 25);
+  assert.equal(calcularEdad("2000-06-15", "2026-06-15"), 26);
+  assert.equal(calcularEdad("2000-06-15", "2026-12-31"), 26);
+});
 
 test("sumarMeses: mismo día del mes siguiente", () => {
   assert.equal(sumarMeses("2026-10-14", 1), "2026-11-14");

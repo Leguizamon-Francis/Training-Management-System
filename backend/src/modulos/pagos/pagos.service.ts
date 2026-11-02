@@ -1,4 +1,4 @@
-import { Prisma, type Cuota } from "@prisma/client";
+import { Prisma, type Cuota, type MedioPago } from "@prisma/client";
 import { ErrorHttp } from "../../lib/errores";
 import {
   diasEntre,
@@ -12,7 +12,7 @@ import {
 import { formatearMoneda } from "../../lib/montos";
 import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
-import type { DatosPago } from "./pagos.schemas";
+import type { CorreccionPago, DatosPago } from "./pagos.schemas";
 
 // Con cuántos días de anticipación una cuota figura como "por vencer".
 const DIAS_AVISO_VENCIMIENTO = 7;
@@ -229,6 +229,39 @@ export async function eliminarPago(id: number) {
     throw new ErrorHttp(409, "Solo se puede eliminar el pago de la última cuota. Para corregir uno anterior, eliminá primero los más nuevos.");
   }
   await prisma.$transaction([prisma.pago.delete({ where: { id } }), prisma.cuota.delete({ where: { id: pago.cuotaId } })]);
+}
+
+const NOMBRES_MEDIO: Record<MedioPago, string> = { EFECTIVO: "Efectivo", TRANSFERENCIA: "Transferencia" };
+
+// Cómo queda un pago en el historial de cambios.
+export function describirPago(pago: { fecha: Date; importe: Prisma.Decimal; medio: MedioPago; concepto: string }) {
+  return `${pago.concepto}: ${formatearMoneda(pago.importe)}, ${NOMBRES_MEDIO[pago.medio]}, ${formatearFechaTexto(textoDesdeFecha(pago.fecha))}`;
+}
+
+// Corrige un pago de cualquier fecha. No cambia el período de la cuota, así que la cadena de cuotas y la
+// deuda quedan igual. La cuota vale lo que se pagó: su importe se actualiza con el pago.
+// Como es dinero, cada corrección queda en el historial de cambios del alumno.
+export async function corregirPago(id: number, datos: CorreccionPago) {
+  const pago = await prisma.pago.findUnique({ where: { id } });
+  if (!pago) {
+    throw new ErrorHttp(404, "Pago no encontrado");
+  }
+  const concepto = pago.cuotaId ? pago.concepto : datos.concepto;
+  if (!concepto) {
+    throw new ErrorHttp(400, "Indicá el concepto");
+  }
+  const corregido = { fecha: fechaDesdeTexto(datos.fecha), importe: datos.importe, medio: datos.medio, concepto };
+  const valorAnterior = describirPago(pago);
+  const valorNuevo = describirPago(corregido);
+  if (valorAnterior === valorNuevo) return pago;
+
+  return prisma.$transaction(async (tx) => {
+    if (pago.cuotaId) {
+      await tx.cuota.update({ where: { id: pago.cuotaId }, data: { importe: datos.importe } });
+    }
+    await tx.cambioAlumno.create({ data: { alumnoId: pago.alumnoId, campo: "pago", valorAnterior, valorNuevo } });
+    return tx.pago.update({ where: { id }, data: corregido });
+  });
 }
 
 // ---------- Estado de cuotas de todos los alumnos activos ----------

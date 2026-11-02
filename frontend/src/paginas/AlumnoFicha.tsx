@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import { alumnosApi } from "../api/alumnos";
 import AnotacionesAlumno from "../componentes/AnotacionesAlumno";
+import AsistenciasFicha from "../componentes/AsistenciasFicha";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Desplegable from "../componentes/Desplegable";
 import EvaluacionesAlumno from "../componentes/EvaluacionesAlumno";
@@ -119,7 +120,9 @@ export default function AlumnoFicha() {
 
       <EvaluacionesAlumno alumnoId={alumno.id} />
 
-      <RutinasFicha alumnoId={alumno.id} />
+      <RutinasFicha alumno={alumno} />
+
+      <AsistenciasFicha alumnoId={alumno.id} />
 
       <PagosAlumno alumno={alumno} onCambio={recargar} />
 
