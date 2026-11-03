@@ -1,4 +1,9 @@
-# GPE Software
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-oscuro.png">
+  <img src="docs/logo/logo-claro.png" alt="DV Training" width="440">
+</picture>
+
+# DV Training
 
 A training management web app I built for a physical education trainer who kept his clients' information scattered across Google Drive spreadsheets and WhatsApp chats. Being prepared for its first production release.
 

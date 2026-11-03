@@ -46,12 +46,13 @@ export function IconoRutina() {
   );
 }
 
-// Logo de GPE Software (el mismo dibujo que frontend/public/favicon.svg).
+// Logo de DV Training (el mismo dibujo que frontend/public/favicon.svg). El fondo
+// cambia con el tema: en oscuro el cuadrado es blanco.
 export function Logo() {
   return (
-    <svg className="logo" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="#0f766e" />
-      <path d="M11 11v10M21 11v10M11 16h10M7.5 13v6M24.5 13v6" fill="none" stroke="#fff" strokeWidth="2.8" strokeLinecap="round" />
+    <svg className="logo" viewBox="100 100 600 600" aria-hidden="true">
+      <rect className="logo-fondo" x="100" y="100" width="600" height="600" rx="130" />
+      <path className="logo-flecha" d="M210 520l118-110 92 58 158-160M492 298l93 5-5 97" fill="none" strokeWidth="46" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

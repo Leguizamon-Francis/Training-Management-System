@@ -22,6 +22,8 @@
   --color-aviso-borde: #fde68a;
   --color-visor: #cbd2d9;
   --opacidad-marca-agua: 0.07;
+  --logo-fondo: #0f2a44;
+  --logo-flecha: #ff6b2c;
   --sombra: 0 1px 2px rgba(16, 42, 67, 0.05), 0 4px 12px rgba(16, 42, 67, 0.05);
   --sombra-alta: 0 2px 4px rgba(16, 42, 67, 0.07), 0 8px 20px rgba(16, 42, 67, 0.09);
   --radio: 10px;
@@ -57,6 +59,7 @@
   --color-aviso-borde: #7a5a14;
   --color-visor: #2a3642;
   --opacidad-marca-agua: 0.13;
+  --logo-fondo: #ffffff;
   --sombra: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25);
   --sombra-alta: 0 2px 4px rgba(0, 0, 0, 0.35), 0 8px 20px rgba(0, 0, 0, 0.35);
   --serie-1: #3f8ae6;
@@ -99,6 +102,14 @@ h1 {
   flex-shrink: 0;
 }
 
+.logo-fondo {
+  fill: var(--logo-fondo);
+}
+
+.logo-flecha {
+  stroke: var(--logo-flecha);
+}
+
 @keyframes aparecer {
   from {
     opacity: 0;
@@ -132,7 +143,7 @@ h1 {
   justify-content: center;
   gap: 16px;
   opacity: var(--opacidad-marca-agua);
-  color: var(--color-primario);
+  color: var(--color-texto);
   font-size: min(9vw, 4.5rem);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -339,6 +350,12 @@ h1 {
 
 .login-marca h1 {
   margin: 0;
+  line-height: 1.1;
+}
+
+.login-marca .texto-suave {
+  margin: 0;
+  font-size: 0.9rem;
 }
 
 .login-marca .logo {

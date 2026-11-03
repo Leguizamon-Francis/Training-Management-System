@@ -1,8 +1,8 @@
-# Manual de uso de GPE Software
+# Manual de uso de DV Training
 
 ## Inicio
 
-Es la pantalla principal; se vuelve a ella tocando **GPE Software** arriba a la izquierda. En el celular, las secciones se abren con el botón **Menú**.
+Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la izquierda. En el celular, las secciones se abren con el botón **Menú**.
 
 - Accesos rápidos: **Registrar asistencia**, **Nuevo Alumno** y **Nueva Rutina**.
 - Las tarjetas muestran cuántos alumnos están activos y qué vence en los próximos 7 días. Tocá una para ver los nombres y entrar a cada uno.

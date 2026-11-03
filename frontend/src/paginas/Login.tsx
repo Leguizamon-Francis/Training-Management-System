@@ -35,7 +35,10 @@ export default function Login() {
       <form className="tarjeta login-formulario" onSubmit={enviar}>
         <div className="login-marca">
           <Logo />
-          <h1>GPE Software</h1>
+          <div>
+            <h1>DV Training</h1>
+            <p className="texto-suave">Gestión de entrenamiento</p>
+          </div>
         </div>
         <p className="texto-suave">Ingresá con tu email y contraseña.</p>
 

@@ -22,14 +22,14 @@ export default function Layout() {
       {!ES_EDITOR_RUTINA.test(pathname) && (
         <div className="marca-agua" aria-hidden="true">
           <Logo />
-          <span>GPE Software</span>
+          <span>DV Training</span>
         </div>
       )}
       <header className="encabezado">
         <div className={`encabezado-contenido${menuAbierto ? " menu-abierto" : ""}`}>
           <Link to="/" className="marca">
             <Logo />
-            GPE Software
+            DV Training
           </Link>
           <button type="button" className="boton-secundario boton-menu" aria-expanded={menuAbierto} onClick={() => setMenuAbierto(!menuAbierto)}>
             {menuAbierto ? "Cerrar" : "Menú"}
