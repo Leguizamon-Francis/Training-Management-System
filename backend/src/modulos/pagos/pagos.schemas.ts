@@ -15,19 +15,16 @@ const concepto = z
   .min(1, "Indicá el concepto")
   .max(200, "Máximo 200 caracteres");
 
-// Hay dos tipos de pago; el campo "tipo" indica cuál es y qué otros campos lleva
-// (en Zod esto se llama "unión discriminada").
 export const esquemaPago = z.discriminatedUnion(
   "tipo",
   [
-    // Cuota mensual, pagada completa. "importe" es lo que vale la cuota (por defecto, el precio del plan).
+    // La cuota se paga completa: "importe" es lo que vale (el frontend propone el precio del plan).
     z.object({
       tipo: z.literal("CUOTA"),
       fecha: fechaPago,
       importe: esquemaImporte,
       medio,
     }),
-    // Otro concepto (no es cuota mensual).
     z.object({
       tipo: z.literal("OTRO"),
       fecha: fechaPago,

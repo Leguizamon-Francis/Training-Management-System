@@ -7,6 +7,7 @@ import { ETIQUETAS_TIPO_ANOTACION } from "../utils/anotaciones";
 import { formatearFecha, hoyComoTexto } from "../utils/formato";
 import BotonVerTodos from "./BotonVerTodos";
 import Campo from "./Campo";
+import Cargando from "./Cargando";
 import Desplegable from "./Desplegable";
 
 // Caracteres del detalle que se muestran antes de "Ver más".
@@ -150,7 +151,7 @@ export default function AnotacionesAlumno({ alumnoId }: { alumnoId: number }) {
       {error && <p className="mensaje-error">{error}</p>}
 
       {anotaciones === null ? (
-        !error && <p className="texto-suave">Cargando…</p>
+        !error && <Cargando />
       ) : anotaciones.length === 0 ? (
         <p className="texto-suave">Todavía no hay anotaciones.</p>
       ) : (

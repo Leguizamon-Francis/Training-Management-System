@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { alumnosApi, type Alumno, type DatosAlumno } from "../api/alumnos";
 import { ErrorApi } from "../api/cliente";
 import Campo from "../componentes/Campo";
+import Cargando from "../componentes/Cargando";
 import { ETIQUETAS_CAMPO, ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { hoyComoTexto } from "../utils/formato";
 
@@ -69,7 +70,6 @@ export default function AlumnoFormulario() {
       .finally(() => setCargando(false));
   }, [esEdicion, id]);
 
-  // Props comunes de cada control: valor + manejador de cambios.
   function control(campo: keyof DatosAlumno) {
     return {
       name: campo,
@@ -97,7 +97,7 @@ export default function AlumnoFormulario() {
   }
 
   if (cargando) {
-    return <p className="texto-suave">Cargando…</p>;
+    return <Cargando />;
   }
 
   const volverA = esEdicion ? `/alumnos/${id}` : "/alumnos";

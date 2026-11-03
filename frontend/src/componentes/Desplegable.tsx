@@ -5,8 +5,7 @@ interface Props {
   children: ReactNode;
 }
 
-// Sección que muestra solo su título; al hacer clic se despliega el contenido hacia abajo.
-// Usa el elemento nativo <details> del navegador: no necesita estado y funciona con teclado (Enter / Espacio).
+// Con <details> nativo: sin estado propio y accesible con teclado.
 export default function Desplegable({ titulo, children }: Props) {
   return (
     <details className="tarjeta seccion desplegable">

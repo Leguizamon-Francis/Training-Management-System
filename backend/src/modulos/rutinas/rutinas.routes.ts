@@ -12,7 +12,6 @@ import {
   pdfDeRutina,
 } from "./rutinas.service";
 
-// Se monta en /api.
 export const rutinasRouter = Router();
 
 // El PDF completado llega como cuerpo binario (Content-Type: application/pdf), no como JSON.
@@ -41,7 +40,6 @@ rutinasRouter.get("/rutinas/alumnos", async (_req, res) => {
   res.json(await listarAlumnosConRutinas());
 });
 
-// GET /api/alumnos/:alumnoId/rutinas
 rutinasRouter.get("/alumnos/:alumnoId/rutinas", async (req, res) => {
   res.json(await listarRutinas(leerId(req.params.alumnoId)));
 });
@@ -58,7 +56,6 @@ rutinasRouter.post("/alumnos/:alumnoId/rutinas", recibirPdf, async (req, res) =>
   res.status(201).json(await crearRutina(leerId(req.params.alumnoId), tipo, pdfRecibido(req)));
 });
 
-// GET /api/rutinas/:id
 rutinasRouter.get("/rutinas/:id", async (req, res) => {
   res.json(await obtenerRutina(leerId(req.params.id)));
 });
@@ -75,7 +72,6 @@ rutinasRouter.put("/rutinas/:id", recibirPdf, async (req, res) => {
   res.json(await actualizarRutina(leerId(req.params.id), pdfRecibido(req)));
 });
 
-// DELETE /api/rutinas/:id
 rutinasRouter.delete("/rutinas/:id", async (req, res) => {
   await eliminarRutina(leerId(req.params.id));
   res.status(204).end();

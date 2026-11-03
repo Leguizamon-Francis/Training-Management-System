@@ -63,7 +63,6 @@ export async function iniciarSesion(email: string, password: string) {
     return null;
   }
 
-  // Limpieza: borra las sesiones vencidas de este usuario.
   await prisma.sesion.deleteMany({ where: { usuarioId: usuario.id, expiraEn: { lt: new Date() } } });
 
   const token = crypto.randomBytes(32).toString("base64url");
@@ -86,13 +85,15 @@ export async function buscarUsuarioPorToken(token: string) {
   return datosPublicos(sesion.usuario);
 }
 
-// Cambia la contraseña y cierra las demás sesiones abiertas (la actual sigue).
-// Devuelve false si la contraseña actual no es correcta.
-export async function cambiarPassword(usuarioId: number, actual: string, nueva: string, tokenActual: string) {
+// Para lo que no se puede deshacer, además de la sesión se pide la contraseña.
+export async function passwordCorrecta(usuarioId: number, password: string) {
   const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
-  if (!usuario || !(await bcrypt.compare(actual, usuario.passwordHash))) {
-    return false;
-  }
+  return !!usuario && bcrypt.compare(password, usuario.passwordHash);
+}
+
+// Cierra las demás sesiones abiertas; la actual sigue. false si la contraseña actual no es correcta.
+export async function cambiarPassword(usuarioId: number, actual: string, nueva: string, tokenActual: string) {
+  if (!(await passwordCorrecta(usuarioId, actual))) return false;
   await prisma.$transaction([
     prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: await hashearPassword(nueva) } }),
     prisma.sesion.deleteMany({ where: { usuarioId, tokenHash: { not: hashearToken(tokenActual) } } }),
@@ -100,21 +101,13 @@ export async function cambiarPassword(usuarioId: number, actual: string, nueva: 
   return true;
 }
 
-// Para acciones que no se pueden deshacer, además de la sesión se pide la contraseña.
-export async function passwordCorrecta(usuarioId: number, password: string) {
-  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
-  return !!usuario && bcrypt.compare(password, usuario.passwordHash);
-}
-
 export async function cambiarNombre(usuarioId: number, nombre: string) {
   return datosPublicos(await prisma.usuario.update({ where: { id: usuarioId }, data: { nombre } }));
 }
 
 // El email es el dato para ingresar: cambiarlo pide la contraseña actual.
-// Si no se puede, devuelve el motivo.
 export async function cambiarEmail(usuarioId: number, email: string, actual: string) {
-  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
-  if (!usuario || !(await bcrypt.compare(actual, usuario.passwordHash))) {
+  if (!(await passwordCorrecta(usuarioId, actual))) {
     return { motivo: "password" as const };
   }
   const otro = await prisma.usuario.findUnique({ where: { email } });

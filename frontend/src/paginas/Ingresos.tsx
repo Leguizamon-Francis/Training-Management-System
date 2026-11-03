@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { pagosApi, type ReporteIngresos } from "../api/pagos";
-import { fechaComoTexto, formatearFecha, formatearMoneda, hoyComoTexto } from "../utils/formato";
+import { fechaComoTexto, formatearFecha, formatearMoneda, hoyComoTexto, nombreDelMes } from "../utils/formato";
 import { ETIQUETAS_MEDIO } from "../utils/pagos";
 
 function rangoMesActual() {
@@ -22,13 +22,6 @@ function rangoAnioActual() {
   return { desde: `${hoy.slice(0, 4)}-01-01`, hasta: hoy };
 }
 
-// "2026-10" → "octubre de 2026"
-function nombreMes(mes: string) {
-  const [anio, numero] = mes.split("-").map(Number);
-  return new Date(anio, numero - 1, 1).toLocaleDateString("es-AR", { month: "long", year: "numeric" });
-}
-
-// Reporte de ingresos por rango de fechas.
 export default function Ingresos() {
   const [rango, setRango] = useState(rangoMesActual);
   const [reporte, setReporte] = useState<ReporteIngresos | null>(null);
@@ -113,7 +106,7 @@ export default function Ingresos() {
                   <tbody>
                     {reporte.porMes.map((fila) => (
                       <tr key={fila.mes}>
-                        <td className="primera-mayuscula">{nombreMes(fila.mes)}</td>
+                        <td className="primera-mayuscula">{nombreDelMes(fila.mes)}</td>
                         <td className="numero">{formatearMoneda(fila.efectivo)}</td>
                         <td className="numero">{formatearMoneda(fila.transferencia)}</td>
                         <td className="numero">

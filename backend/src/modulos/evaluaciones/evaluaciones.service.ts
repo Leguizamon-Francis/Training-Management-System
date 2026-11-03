@@ -5,7 +5,7 @@ import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
 import type { DatosEvaluacion } from "./evaluaciones.schemas";
 
-// Cada cuántos meses se reevalúa según el perfil (decisión del 13-10-2026).
+// Cada cuántos meses se reevalúa según el perfil.
 const MESES_REEVALUACION: Record<Perfil, number> = {
   DEPORTIVO: 2,
   RECUPERACION: 2,
@@ -82,7 +82,6 @@ async function prepararResultados(resultados: DatosEvaluacion["resultados"]) {
     if (!prueba) {
       throw new ErrorHttp(400, "Una de las pruebas elegidas no existe");
     }
-    // El lado solo se puede indicar en las pruebas que se miden por lado.
     if (resultado.lado && !prueba.porLado) {
       throw new ErrorHttp(400, `"${prueba.nombre}" no se mide por lado: quitá el lado de ese resultado`);
     }
@@ -122,8 +121,7 @@ export async function crearEvaluacion(alumnoId: number, datos: DatosEvaluacion) 
   });
 }
 
-// Al editar se reemplazan todos los resultados (es más simple que comparar fila por fila).
-// Va en una transacción: si algo falla, la evaluación queda como estaba.
+// Reemplaza todos los resultados: es más simple que comparar fila por fila.
 export async function actualizarEvaluacion(id: number, datos: DatosEvaluacion) {
   await obtenerEvaluacion(id);
   const resultados = await prepararResultados(datos.resultados);

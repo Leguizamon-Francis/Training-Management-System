@@ -20,7 +20,7 @@ export function formatearFechaHora(iso: string) {
 
 // Minúsculas y sin tildes, para buscar: "Pérez" → "perez".
 function normalizarTexto(texto: string) {
-  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 }
 
 // ¿El texto contiene todas las palabras buscadas? (sin distinguir tildes ni mayúsculas)

@@ -20,7 +20,6 @@ import {
   registrarPago,
 } from "./pagos.service";
 
-// Se monta en /api.
 export const pagosRouter = Router();
 
 // GET /api/pagos/estado-cuotas  → alumnos activos con el estado de su cuota (lo urgente primero)
@@ -61,7 +60,6 @@ pagosRouter.put("/pagos/:id", validar(esquemaCorreccionPago), async (req, res) =
   res.json(await corregirPago(leerId(req.params.id), req.body as CorreccionPago));
 });
 
-// DELETE /api/pagos/:id
 pagosRouter.delete("/pagos/:id", async (req, res) => {
   await eliminarPago(leerId(req.params.id));
   res.status(204).end();

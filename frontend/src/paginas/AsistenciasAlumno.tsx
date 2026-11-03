@@ -11,7 +11,6 @@ function diaDeLaSemana(fecha: string) {
   return new Date(`${fecha}T12:00:00`).toLocaleDateString("es-AR", { weekday: "long" });
 }
 
-// Historial de asistencias de un alumno.
 export default function AsistenciasAlumno() {
   const alumnoId = Number(useParams().alumnoId);
   const { datos, error } = useCarga(

@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import Cargando from "./componentes/Cargando";
 import Layout from "./componentes/Layout";
 import RutaProtegida from "./componentes/RutaProtegida";
 import { ProveedorSesion } from "./componentes/Sesion";
@@ -30,7 +31,7 @@ import RutinasAlumno from "./paginas/RutinasAlumno";
 // así las demás pantallas cargan más rápido.
 const EditorRutina = lazy(() => import("./paginas/EditorRutina"));
 const editorRutina = (
-  <Suspense fallback={<p className="texto-suave">Cargando…</p>}>
+  <Suspense fallback={<Cargando />}>
     <EditorRutina />
   </Suspense>
 );
@@ -42,7 +43,6 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
 
-          {/* Todo lo de adentro requiere sesión */}
           <Route element={<RutaProtegida />}>
             <Route element={<Layout />}>
               <Route index element={<Inicio />} />

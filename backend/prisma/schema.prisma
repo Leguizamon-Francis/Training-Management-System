@@ -4,7 +4,7 @@
 // Convenciones:
 // - Montos en Decimal(12,2), nunca float.
 // - Fechas de calendario con @db.Date (sin hora) para que la zona horaria no corra el día.
-// - Los alumnos no se borran: se marcan con activo = false.
+// - Dar de baja a un alumno es activo = false. Borrarlo (eliminarAlumno) se hace a mano en cada tabla, sin cascada.
 
 generator client {
   provider = "prisma-client-js"

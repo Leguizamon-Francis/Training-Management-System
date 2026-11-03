@@ -16,9 +16,8 @@ async function obtenerAnotacion(id: number) {
   return anotacion;
 }
 
-// Las más recientes primero; si hay varias del mismo día, la última cargada arriba.
 export async function listarAnotaciones(alumnoId: number) {
-  await obtenerAlumno(alumnoId); // 404 si el alumno no existe
+  await obtenerAlumno(alumnoId);
   return prisma.anotacion.findMany({
     where: { alumnoId },
     orderBy: [{ fecha: "desc" }, { id: "desc" }],
@@ -35,7 +34,6 @@ export async function actualizarAnotacion(id: number, datos: DatosAnotacion) {
   return prisma.anotacion.update({ where: { id }, data: datosParaPrisma(datos) });
 }
 
-// A diferencia de los alumnos, una anotación sí se puede borrar (ej.: cargada por error).
 export async function eliminarAnotacion(id: number) {
   await obtenerAnotacion(id);
   await prisma.anotacion.delete({ where: { id } });

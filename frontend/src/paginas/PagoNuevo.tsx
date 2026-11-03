@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { alumnosApi, type AlumnoResumen } from "../api/alumnos";
 import { pagosApi, type PagosAlumno } from "../api/pagos";
+import Cargando from "../componentes/Cargando";
 import FormularioPago from "../componentes/FormularioPago";
 import { claseEstadoCuota, ETIQUETAS_ESTADO_CUOTA, textoPrecioPlan, textoVencimiento } from "../utils/pagos";
 
@@ -104,7 +105,7 @@ export default function PagoNuevo() {
           </div>
 
           {!datos ? (
-            <p className="texto-suave">Cargando…</p>
+            <Cargando />
           ) : (
             <FormularioPago
               key={alumno.id}

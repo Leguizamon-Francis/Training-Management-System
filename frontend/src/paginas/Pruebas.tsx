@@ -91,7 +91,6 @@ function FormularioPrueba({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
   );
 }
 
-// Catálogo de pruebas de evaluación.
 export default function Pruebas() {
   const [incluirInactivas, setIncluirInactivas] = useState(false);
   const { datos: pruebas, error, setError, recargar } = useCarga(() => pruebasApi.listar(incluirInactivas), [incluirInactivas]);

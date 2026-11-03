@@ -14,7 +14,6 @@ pruebasRouter.get("/", async (req, res) => {
   res.json(await listarPruebas(incluirInactivas));
 });
 
-// POST /api/pruebas
 pruebasRouter.post("/", validar(esquemaPrueba), async (req, res) => {
   res.status(201).json(await crearPrueba(req.body as DatosPrueba));
 });

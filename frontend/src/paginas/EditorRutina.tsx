@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { alumnosApi } from "../api/alumnos";
 import { rutinasApi, type ModeloRutina, type TipoBloque } from "../api/rutinas";
+import Cargando from "../componentes/Cargando";
 import PlanillaEditable, { type ControlPlanilla } from "../componentes/PlanillaEditable";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
@@ -62,7 +63,7 @@ export default function EditorRutina() {
         <Link to="/rutinas">← Rutinas</Link>
       </>
     ) : (
-      <p className="texto-suave">Cargando…</p>
+      <Cargando />
     );
   }
 

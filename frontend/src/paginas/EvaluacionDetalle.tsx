@@ -6,7 +6,6 @@ import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_LADO, ETIQUETAS_ORIGEN, formatearNumero } from "../utils/evaluaciones";
 import { formatearFecha } from "../utils/formato";
 
-// Detalle de una evaluación: resultados, observaciones y acciones (editar / eliminar).
 export default function EvaluacionDetalle() {
   const evaluacionId = Number(useParams().evaluacionId);
   const navigate = useNavigate();

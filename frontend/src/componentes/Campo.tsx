@@ -8,7 +8,6 @@ interface Props {
   obligatorio?: boolean;
 }
 
-// Envoltorio de un campo de formulario: etiqueta, control, texto de ayuda y errores.
 export default function Campo({ etiqueta, children, ayuda, errores, obligatorio }: Props) {
   return (
     <label className="campo">

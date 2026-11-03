@@ -7,7 +7,6 @@ import { actualizarPrecioPlan, listarPlanes } from "./planes.service";
 // Planes fijos (uno por modalidad, creados por el seed): no se crean ni se borran, solo cambia el precio.
 export const planesRouter = Router();
 
-// GET /api/planes
 planesRouter.get("/", async (_req, res) => {
   res.json(await listarPlanes());
 });

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { alumnosApi, type AlumnoResumen, type FiltrosAlumnos } from "../api/alumnos";
 import BotonVerTodos from "../componentes/BotonVerTodos";
+import Cargando from "../componentes/Cargando";
 import { useListaCorta } from "../hooks/useListaCorta";
 import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { calcularEdad } from "../utils/formato";
@@ -80,7 +81,7 @@ export default function Alumnos() {
       {error && <p className="mensaje-error">{error}</p>}
 
       {alumnos === null ? (
-        !error && <p className="texto-suave">Cargando…</p>
+        !error && <Cargando />
       ) : alumnos.length === 0 ? (
         <p className="texto-suave">No hay alumnos que coincidan con la búsqueda.</p>
       ) : (

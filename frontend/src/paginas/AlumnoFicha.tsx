@@ -4,6 +4,7 @@ import { alumnosApi } from "../api/alumnos";
 import AnotacionesAlumno from "../componentes/AnotacionesAlumno";
 import AsistenciasFicha from "../componentes/AsistenciasFicha";
 import BotonVerTodos from "../componentes/BotonVerTodos";
+import Cargando from "../componentes/Cargando";
 import Desplegable from "../componentes/Desplegable";
 import EvaluacionesAlumno from "../componentes/EvaluacionesAlumno";
 import PagosAlumno from "../componentes/PagosAlumno";
@@ -38,7 +39,7 @@ export default function AlumnoFicha() {
         <Link to="/alumnos">← Volver a alumnos</Link>
       </>
     ) : (
-      <p className="texto-suave">Cargando…</p>
+      <Cargando />
     );
   }
 

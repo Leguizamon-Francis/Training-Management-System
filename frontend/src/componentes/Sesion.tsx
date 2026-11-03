@@ -1,4 +1,4 @@
-// Guarda quién está logueado y lo comparte con toda la aplicación (Context de React).
+// Usuario logueado, compartido con toda la aplicación.
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { authApi, type Usuario } from "../api/auth";
 

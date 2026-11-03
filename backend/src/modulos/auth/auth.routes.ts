@@ -26,10 +26,8 @@ import {
 
 export const authRouter = Router();
 
-// Los intentos fallidos se cuentan por dirección IP.
-// Si en producción el servidor queda detrás de un proxy, hay que configurar app.set("trust proxy", ...)
-// para que req.ip sea la IP real y no la del proxy.
-export function claveIntentos(req: Request) {
+// Los intentos fallidos se cuentan por IP. Detrás del proxy del hosting, req.ip es la real gracias a TRUST_PROXY.
+function claveIntentos(req: Request) {
   return req.ip ?? "desconocida";
 }
 
@@ -41,6 +39,17 @@ export function respondioBloqueo(req: Request, res: Response) {
     error: `Demasiados intentos fallidos. Probá de nuevo en ${minutos} ${minutos === 1 ? "minuto" : "minutos"}.`,
   });
   return true;
+}
+
+// Contraseña incorrecta en una acción que la pide estando logueado. Responde 400 y no 401,
+// porque un 401 hace que el frontend cierre la sesión.
+export function rechazarPassword(req: Request, res: Response, campo: string, mensaje: string) {
+  registrarIntentoFallido(claveIntentos(req));
+  res.status(400).json({ error: mensaje, campos: { [campo]: [mensaje] } });
+}
+
+export function aceptarPassword(req: Request) {
+  limpiarIntentos(claveIntentos(req));
 }
 
 // POST /api/auth/login  { email, password }
@@ -55,19 +64,18 @@ authRouter.post("/login", validar(esquemaLogin), async (req, res) => {
     res.status(401).json({ error: "Email o contraseña incorrectos" });
     return;
   }
-  limpiarIntentos(claveIntentos(req));
+  aceptarPassword(req);
 
   res.cookie(NOMBRE_COOKIE, resultado.token, {
-    httpOnly: true, // JavaScript del navegador no puede leerla
-    sameSite: "lax", // no se envía desde formularios de otros sitios
-    secure: env.NODE_ENV === "production", // solo por HTTPS en producción
+    httpOnly: true,
+    sameSite: "lax",
+    secure: env.NODE_ENV === "production",
     expires: resultado.expiraEn,
     path: "/",
   });
   res.json({ usuario: resultado.usuario });
 });
 
-// POST /api/auth/logout
 authRouter.post("/logout", async (req, res) => {
   const token = req.cookies?.[NOMBRE_COOKIE];
   if (token) {
@@ -81,14 +89,11 @@ authRouter.post("/logout", async (req, res) => {
 authRouter.post("/password", requiereSesion, validar(esquemaCambioPassword), async (req, res) => {
   if (respondioBloqueo(req, res)) return;
   const { actual, nueva } = req.body as DatosCambioPassword;
-  const cambiada = await cambiarPassword(req.usuario!.id, actual, nueva, req.cookies[NOMBRE_COOKIE]);
-  if (!cambiada) {
-    registrarIntentoFallido(claveIntentos(req));
-    // 400 y no 401: un 401 haría que el frontend cierre la sesión.
-    res.status(400).json({ error: "La contraseña actual no es correcta", campos: { actual: ["La contraseña actual no es correcta"] } });
+  if (!(await cambiarPassword(req.usuario!.id, actual, nueva, req.cookies[NOMBRE_COOKIE]))) {
+    rechazarPassword(req, res, "actual", "La contraseña actual no es correcta");
     return;
   }
-  limpiarIntentos(claveIntentos(req));
+  aceptarPassword(req);
   res.status(204).end();
 });
 
@@ -104,11 +109,10 @@ authRouter.put("/email", requiereSesion, validar(esquemaCambioEmail), async (req
   const { email, actual } = req.body as DatosCambioEmail;
   const resultado = await cambiarEmail(req.usuario!.id, email, actual);
   if (resultado.motivo === "password") {
-    registrarIntentoFallido(claveIntentos(req));
-    res.status(400).json({ error: "La contraseña actual no es correcta", campos: { actual: ["La contraseña actual no es correcta"] } });
+    rechazarPassword(req, res, "actual", "La contraseña actual no es correcta");
     return;
   }
-  limpiarIntentos(claveIntentos(req));
+  aceptarPassword(req);
   if (resultado.motivo === "email") {
     res.status(400).json({ error: "Ese email ya está en uso", campos: { email: ["Ese email ya está en uso"] } });
     return;
@@ -116,7 +120,7 @@ authRouter.put("/email", requiereSesion, validar(esquemaCambioEmail), async (req
   res.json({ usuario: resultado.usuario });
 });
 
-// GET /api/auth/yo  → usuario de la sesión actual (el frontend lo usa al cargar)
+// GET /api/auth/yo  → el frontend lo pide al abrir la página para saber si ya hay sesión
 authRouter.get("/yo", requiereSesion, (req, res) => {
   res.json({ usuario: req.usuario });
 });

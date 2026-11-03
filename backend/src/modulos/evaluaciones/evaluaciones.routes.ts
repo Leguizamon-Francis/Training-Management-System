@@ -20,7 +20,6 @@ evaluacionesRouter.get("/alumnos/:alumnoId/evaluaciones", async (req, res) => {
   res.json(await listarEvaluaciones(leerId(req.params.alumnoId)));
 });
 
-// POST /api/alumnos/:alumnoId/evaluaciones
 evaluacionesRouter.post("/alumnos/:alumnoId/evaluaciones", validar(esquemaEvaluacion), async (req, res) => {
   res.status(201).json(await crearEvaluacion(leerId(req.params.alumnoId), req.body as DatosEvaluacion));
 });
@@ -30,17 +29,14 @@ evaluacionesRouter.get("/evaluaciones/resumen-alumnos", async (_req, res) => {
   res.json(await resumenAlumnos());
 });
 
-// GET /api/evaluaciones/:id
 evaluacionesRouter.get("/evaluaciones/:id", async (req, res) => {
   res.json(await obtenerEvaluacion(leerId(req.params.id)));
 });
 
-// PUT /api/evaluaciones/:id
 evaluacionesRouter.put("/evaluaciones/:id", validar(esquemaEvaluacion), async (req, res) => {
   res.json(await actualizarEvaluacion(leerId(req.params.id), req.body as DatosEvaluacion));
 });
 
-// DELETE /api/evaluaciones/:id
 evaluacionesRouter.delete("/evaluaciones/:id", async (req, res) => {
   await eliminarEvaluacion(leerId(req.params.id));
   res.status(204).end();

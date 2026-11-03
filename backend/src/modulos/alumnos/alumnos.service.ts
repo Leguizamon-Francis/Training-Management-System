@@ -20,7 +20,7 @@ function valorComoTexto(valor: unknown) {
 
 // Minúsculas y sin tildes, para que "perez" encuentre a "Pérez".
 function normalizar(texto: string) {
-  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 }
 
 export async function listarAlumnos(filtros: FiltrosAlumnos) {
@@ -69,11 +69,10 @@ export async function obtenerAlumno(id: number) {
   return alumno;
 }
 
-// Borra para siempre al alumno y todos sus datos, a pedido (derecho a la supresión de datos personales).
-// Para que deje de venir está la baja: conserva su historia. Va en una transacción: se borra todo o nada.
-// Los resultados de las evaluaciones se borran con cada evaluación (onDelete: Cascade).
+// Borra para siempre al alumno y todos sus datos (derecho a la supresión de datos personales).
+// Una tabla nueva con alumnoId tiene que sumarse acá. Los resultados se borran con cada evaluación (onDelete: Cascade).
 export async function eliminarAlumno(id: number) {
-  await obtenerAlumno(id); // 404 si no existe
+  await obtenerAlumno(id);
   const delAlumno = { where: { alumnoId: id } };
   await prisma.$transaction([
     prisma.pago.deleteMany(delAlumno), // antes que las cuotas, que los referencian
@@ -88,7 +87,7 @@ export async function eliminarAlumno(id: number) {
 }
 
 export async function obtenerHistorial(id: number) {
-  await obtenerAlumno(id); // 404 si no existe
+  await obtenerAlumno(id);
   return prisma.cambioAlumno.findMany({
     where: { alumnoId: id },
     orderBy: { fecha: "desc" },
@@ -107,8 +106,7 @@ export async function crearAlumno(datos: DatosAlumno) {
   return prisma.alumno.create({ data: datosParaPrisma(datos) });
 }
 
-// Actualiza la ficha y, en la misma transacción, registra una fila de historial
-// por cada campo que cambió: o se guarda todo, o no se guarda nada.
+// La ficha y una fila de historial por cada campo que cambió, en la misma transacción.
 export async function actualizarAlumno(id: number, datos: DatosAlumno) {
   const actual = await obtenerAlumno(id);
   await verificarDniLibre(datos.dni, id);
@@ -130,8 +128,7 @@ export async function actualizarAlumno(id: number, datos: DatosAlumno) {
   });
 }
 
-// Asigna (o quita, con null) el plan del alumno. Queda en el historial de cambios con el nombre del plan
-// (ese es el historial de membresías del alumno).
+// planId null quita el plan. El historial de cambios (campo "plan") es el historial de membresías.
 export async function cambiarPlan(id: number, planId: number | null) {
   const actual = await obtenerAlumno(id);
   if (actual.planId === planId) {
@@ -152,7 +149,7 @@ export async function cambiarPlan(id: number, planId: number | null) {
   });
 }
 
-// Baja o reactivación. Los alumnos nunca se borran: solo cambia "activo" (y queda en el historial).
+// La reactivación queda en el historial: la deuda se empieza a contar desde ahí (ver pagos.service).
 export async function cambiarEstado(id: number, activo: boolean) {
   const actual = await obtenerAlumno(id);
   if (actual.activo === activo) {

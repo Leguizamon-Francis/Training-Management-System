@@ -3,7 +3,6 @@ import { leerId } from "../../lib/errores";
 import { esquemaDia, esquemaFechaAsistencia, esquemaMes } from "./asistencias.schemas";
 import { historialAlumno, listarDia, quitarAsistencia, registrarAsistencia, resumenMes } from "./asistencias.service";
 
-// Se monta en /api.
 export const asistenciasRouter = Router();
 
 // GET /api/asistencias/dia?fecha=aaaa-mm-dd  → alumnos activos, marcando quiénes vinieron ese día
@@ -29,7 +28,6 @@ asistenciasRouter.put("/alumnos/:alumnoId/asistencias/:fecha", async (req, res) 
   res.status(204).end();
 });
 
-// DELETE /api/alumnos/:alumnoId/asistencias/:fecha
 asistenciasRouter.delete("/alumnos/:alumnoId/asistencias/:fecha", async (req, res) => {
   await quitarAsistencia(leerId(req.params.alumnoId), esquemaFechaAsistencia.parse(req.params.fecha));
   res.status(204).end();

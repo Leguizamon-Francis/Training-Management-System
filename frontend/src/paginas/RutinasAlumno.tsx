@@ -8,7 +8,6 @@ import { useCarga } from "../hooks/useCarga";
 import { formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 
-// Rutinas de un alumno: todas las guardadas y el botón para armar una nueva.
 export default function RutinasAlumno() {
   const alumnoId = Number(useParams().alumnoId);
   const navigate = useNavigate();

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { leerId } from "../../lib/errores";
 import { validar } from "../../middlewares/validar";
-import { claveIntentos, respondioBloqueo } from "../auth/auth.routes";
-import { limpiarIntentos, passwordCorrecta, registrarIntentoFallido } from "../auth/auth.service";
+import { aceptarPassword, rechazarPassword, respondioBloqueo } from "../auth/auth.routes";
+import { passwordCorrecta } from "../auth/auth.service";
 import { esquemaAlumno, esquemaEliminarAlumno, esquemaEstado, esquemaFiltros, esquemaPlanAlumno, type DatosAlumno } from "./alumnos.schemas";
 import {
   actualizarAlumno,
@@ -23,7 +23,6 @@ alumnosRouter.get("/", async (req, res) => {
   res.json(await listarAlumnos(filtros));
 });
 
-// POST /api/alumnos
 alumnosRouter.post("/", validar(esquemaAlumno), async (req, res) => {
   res.status(201).json(await crearAlumno(req.body as DatosAlumno));
 });
@@ -32,17 +31,14 @@ alumnosRouter.post("/", validar(esquemaAlumno), async (req, res) => {
 alumnosRouter.post("/:id/eliminar", validar(esquemaEliminarAlumno), async (req, res) => {
   if (respondioBloqueo(req, res)) return;
   if (!(await passwordCorrecta(req.usuario!.id, req.body.password))) {
-    registrarIntentoFallido(claveIntentos(req));
-    // 400 y no 401: un 401 haría que el frontend cierre la sesión.
-    res.status(400).json({ error: "La contraseña no es correcta", campos: { password: ["La contraseña no es correcta"] } });
+    rechazarPassword(req, res, "password", "La contraseña no es correcta");
     return;
   }
-  limpiarIntentos(claveIntentos(req));
+  aceptarPassword(req);
   await eliminarAlumno(leerId(req.params.id));
   res.status(204).end();
 });
 
-// GET /api/alumnos/:id
 alumnosRouter.get("/:id", async (req, res) => {
   res.json(await obtenerAlumno(leerId(req.params.id)));
 });
@@ -62,7 +58,6 @@ alumnosRouter.patch("/:id/plan", validar(esquemaPlanAlumno), async (req, res) =>
   res.json(await cambiarPlan(leerId(req.params.id), req.body.planId));
 });
 
-// GET /api/alumnos/:id/historial
 alumnosRouter.get("/:id/historial", async (req, res) => {
   res.json(await obtenerHistorial(leerId(req.params.id)));
 });

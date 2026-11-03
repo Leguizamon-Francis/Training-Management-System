@@ -20,9 +20,8 @@ const DIAS_AVISO_VENCIMIENTO = 7;
 // Tope de seguridad de cuotas adeudadas que se calculan (10 años).
 const MAXIMO_CUOTAS_ADEUDADAS = 120;
 
-type EstadoCuota ="SIN_PAGOS" | "AL_DIA" | "POR_VENCER" | "VENCIDA";
+type EstadoCuota = "SIN_PAGOS" | "AL_DIA" | "POR_VENCER" | "VENCIDA";
 
-// Datos del alumno que hacen falta para calcular la deuda.
 interface ContextoAlumno {
   activo: boolean;
   reactivadoEl: string | null; // "aaaa-mm-dd" de la última reactivación, si hubo
@@ -36,7 +35,6 @@ const ultimaCuota = {
   take: 1,
 } satisfies Prisma.Alumno$cuotasArgs;
 
-// Para traer la última reactivación del alumno (queda en el historial de cambios).
 const ultimaReactivacion = {
   where: { campo: "activo", valorNuevo: "true" },
   select: { fecha: true },
@@ -93,26 +91,26 @@ function calcularCuotasAdeudadas(inicio: string | null) {
 // - Deuda: las cuotas mensuales sin pagar desde el vencimiento de la última cuota (solo alumnos activos),
 //   cada una al precio actual del plan.
 export function calcularSituacion(cuota: Cuota | null, contexto: ContextoAlumno) {
-  const ultimaCuota = cuota ? resumirCuota(cuota) : null;
+  const ultima = cuota ? resumirCuota(cuota) : null;
 
   let estado: EstadoCuota = "SIN_PAGOS";
   let diasRestantes: number | null = null;
-  if (ultimaCuota) {
-    diasRestantes = diasEntre(hoyComoTexto(), ultimaCuota.vence);
+  if (ultima) {
+    diasRestantes = diasEntre(hoyComoTexto(), ultima.vence);
     if (diasRestantes < 0) estado = "VENCIDA";
     else if (diasRestantes <= DIAS_AVISO_VENCIMIENTO) estado = "POR_VENCER";
     else estado = "AL_DIA";
   }
 
-  const inicio = inicioProximaCuota(ultimaCuota?.vence ?? null, contexto);
+  const inicio = inicioProximaCuota(ultima?.vence ?? null, contexto);
   const cuotasAdeudadas = calcularCuotasAdeudadas(inicio);
   const precio = contexto.precioPlan && contexto.precioPlan.gt(0) ? contexto.precioPlan : null;
 
   return {
     estado,
-    vence: ultimaCuota?.vence ?? null,
+    vence: ultima?.vence ?? null,
     diasRestantes,
-    ultimaCuota,
+    ultimaCuota: ultima,
     inicioProximaCuota: inicio,
     cuotasAdeudadas,
     precioCuotaAdeudada: precio, // null si el plan no tiene precio: se sabe cuántas cuotas debe pero no el monto
@@ -120,9 +118,8 @@ export function calcularSituacion(cuota: Cuota | null, contexto: ContextoAlumno)
   };
 }
 
-// Trae todo lo necesario para calcular la situación de un alumno.
 async function cargarSituacion(alumnoId: number) {
-  const alumno = await obtenerAlumno(alumnoId); // 404 si no existe
+  const alumno = await obtenerAlumno(alumnoId);
   const [cuotas, reactivaciones] = await Promise.all([
     prisma.cuota.findMany({ where: { alumnoId }, ...ultimaCuota }),
     prisma.cambioAlumno.findMany({ ...ultimaReactivacion, where: { ...ultimaReactivacion.where, alumnoId } }),
@@ -155,7 +152,6 @@ export async function registrarPago(alumnoId: number, datos: DatosPago) {
     // La cuota cubre el período más viejo que debe (o el siguiente, si está al día).
     // Si nunca pagó, empieza en la fecha de pago.
     const desde = situacion.inicioProximaCuota ?? datos.fecha;
-    // Cuota y pago se crean juntos: o se guardan los dos, o ninguno.
     return prisma.$transaction(async (tx) => {
       const cuota = await tx.cuota.create({
         data: {
@@ -172,7 +168,6 @@ export async function registrarPago(alumnoId: number, datos: DatosPago) {
     });
   }
 
-  // Otro concepto: pago sin cuota.
   return prisma.pago.create({
     data: { alumnoId, fecha, importe: datos.importe, medio: datos.medio, concepto: datos.concepto },
   });
@@ -266,7 +261,7 @@ export async function corregirPago(id: number, datos: CorreccionPago) {
 
 // ---------- Estado de cuotas de todos los alumnos activos ----------
 
-// Orden: lo que requiere atención primero.
+// Lo que requiere atención primero.
 const PRIORIDAD: Record<EstadoCuota, number> = { VENCIDA: 0, POR_VENCER: 1, SIN_PAGOS: 2, AL_DIA: 3 };
 
 export async function obtenerEstadoCuotas() {
@@ -313,7 +308,6 @@ export async function obtenerEstadoCuotas() {
 
 // ---------- Reporte de ingresos ----------
 
-// Los pagos más recientes (de todos los alumnos), para la lista "Últimos ingresos" de Pagos.
 export function obtenerUltimosPagos(cantidad: number) {
   return prisma.pago.findMany({
     include: { alumno: { select: { id: true, nombre: true, apellido: true } } },

@@ -4,6 +4,7 @@ import { ErrorApi } from "../api/cliente";
 import { evaluacionesApi, type DatosEvaluacion, type Lado, type OrigenResultado } from "../api/evaluaciones";
 import { pruebasApi, type CategoriaPrueba, type Prueba } from "../api/pruebas";
 import Campo from "../componentes/Campo";
+import Cargando from "../componentes/Cargando";
 import { ETIQUETAS_CATEGORIA, ETIQUETAS_LADO, ETIQUETAS_ORIGEN } from "../utils/evaluaciones";
 import { hoyComoTexto } from "../utils/formato";
 
@@ -70,6 +71,13 @@ export default function EvaluacionFormulario() {
       .finally(() => setCargando(false));
   }, [evaluacionId]);
 
+  // Al editar se vuelve al detalle de la evaluación; al crear, a las evaluaciones del alumno.
+  const volverA = evaluacionId
+    ? `/evaluaciones/${evaluacionId}`
+    : alumnoId
+      ? `/alumnos/${alumnoId}/evaluaciones`
+      : "/alumnos";
+
   function cambiarFila(clave: number, campo: keyof FilaResultado, valor: string) {
     setFilas((anteriores) =>
       anteriores.map((fila) => {
@@ -117,8 +125,7 @@ export default function EvaluacionFormulario() {
       } else {
         await evaluacionesApi.crear(alumnoId, datos);
       }
-      // Al editar se vuelve al detalle de la evaluación; al crear, a la lista de evaluaciones del alumno.
-      navigate(evaluacionId ? `/evaluaciones/${evaluacionId}` : `/alumnos/${alumnoId}/evaluaciones`);
+      navigate(volverA);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar");
       if (err instanceof ErrorApi) setErrores(err.campos);
@@ -129,15 +136,9 @@ export default function EvaluacionFormulario() {
   }
 
   if (cargando) {
-    return <p className="texto-suave">Cargando…</p>;
+    return <Cargando />;
   }
 
-  // "Volver" y "Cancelar": al editar, al detalle de la evaluación; al crear, a las evaluaciones del alumno.
-  const volverA = evaluacionId
-    ? `/evaluaciones/${evaluacionId}`
-    : alumnoId
-      ? `/alumnos/${alumnoId}/evaluaciones`
-      : "/alumnos";
   const categorias = Object.keys(ETIQUETAS_CATEGORIA) as CategoriaPrueba[];
 
   return (

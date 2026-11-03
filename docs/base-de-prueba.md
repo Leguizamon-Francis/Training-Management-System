@@ -21,6 +21,6 @@ npm run datos-ejemplo
 npm run dev:prueba     # el backend con la base de prueba
 ```
 
-El frontend se abre igual que siempre. El usuario es `demo@gpe.test` y la contraseña, `demo-1234`.
+El frontend se abre igual que siempre. El usuario es `demo@dvtraining.test` y la contraseña, `demo-1234`.
 
 `npm run datos-ejemplo` se puede repetir sin duplicar, y se niega a correr en producción o si el nombre de la base no contiene "prueba".

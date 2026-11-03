@@ -6,7 +6,7 @@ import { fechaDesdeTexto, hoyComoTexto, sumarMeses } from "../lib/fechas";
 import { prisma } from "../lib/prisma";
 import { hashearPassword } from "../modulos/auth/auth.service";
 
-const EMAIL_DEMO = "demo@gpe.test";
+const EMAIL_DEMO = "demo@dvtraining.test";
 const PASSWORD_DEMO = "demo-1234";
 
 const ALUMNOS: [nombre: string, apellido: string, perfil: Perfil, detalle: string][] = [
@@ -65,7 +65,7 @@ async function main() {
         fechaNacimiento: fechaDesdeTexto(`${1985 + (i % 20)}-0${(i % 9) + 1}-15`),
         profesion: "Ejemplo",
         telefono: `34100000${String(i).padStart(2, "0")}`,
-        email: `${nombre.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()}@ejemplo.test`,
+        email: `${nombre.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()}@ejemplo.test`,
         perfil,
         detallePerfil,
         planId: plan.id,

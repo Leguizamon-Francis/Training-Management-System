@@ -3,7 +3,6 @@ import type { PDFDocumentProxy } from "pdfjs-dist";
 import urlWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import "pdfjs-dist/web/pdf_viewer.css";
 
-// Lo que la página que usa el visor le puede pedir.
 export interface ControlPlanilla {
   // Devuelve el PDF con lo que se escribió en los campos.
   obtenerPdf: () => Promise<Uint8Array>;
