@@ -53,7 +53,7 @@ function EdicionPrecio({ plan, onGuardado, onCancelar }: PropsEdicion) {
   );
 }
 
-// Pagos → "Configurar pagos": precio de los 4 planes fijos (Presencial, Semi presencial, Online, Otro).
+// Membresías → "Configurar Membresías": precio de los 4 planes fijos (Presencial, Semi presencial, Online, Otro).
 export default function GestionPlanes() {
   const { datos: planes, error, recargar } = useCarga(() => planesApi.listar(), []);
   const [editandoId, setEditandoId] = useState<number | null>(null);
@@ -65,10 +65,10 @@ export default function GestionPlanes() {
 
   return (
     <section>
-      <Link to="/pagos" className="volver">
-        ← Pagos
+      <Link to="/membresias" className="volver">
+        ← Membresías
       </Link>
-      <h1>Configurar pagos</h1>
+      <h1>Configurar Membresías</h1>
       <p className="texto-suave">
         Precio mensual de cada membresía. Es el importe que se propone al cobrar la cuota (se puede cambiar en cada pago).
         Cambiar un precio no modifica las cuotas ya cobradas.

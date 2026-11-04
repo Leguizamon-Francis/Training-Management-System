@@ -8,6 +8,7 @@ import {
   eliminarRutina,
   listarAlumnosConRutinas,
   listarRutinas,
+  listarRutinasSueltas,
   obtenerRutina,
   pdfDeRutina,
 } from "./rutinas.service";
@@ -54,6 +55,24 @@ rutinasRouter.get("/alumnos/:alumnoId/rutinas/borrador", async (req, res) => {
 rutinasRouter.post("/alumnos/:alumnoId/rutinas", recibirPdf, async (req, res) => {
   const { tipo } = esquemaModeloRutina.parse(req.query);
   res.status(201).json(await crearRutina(leerId(req.params.alumnoId), tipo, pdfRecibido(req)));
+});
+
+// ---------- Rutinas sin alumno (van antes de /rutinas/:id para que no se confundan con un id) ----------
+
+rutinasRouter.get("/rutinas/sueltas", async (_req, res) => {
+  res.json(await listarRutinasSueltas());
+});
+
+// GET /api/rutinas/borrador?tipo=…  → la planilla en blanco
+rutinasRouter.get("/rutinas/borrador", async (req, res) => {
+  const { tipo } = esquemaModeloRutina.parse(req.query);
+  enviarPdf(res, await borradorRutina(null, tipo));
+});
+
+// POST /api/rutinas?tipo=…  (cuerpo: el PDF completado)
+rutinasRouter.post("/rutinas", recibirPdf, async (req, res) => {
+  const { tipo } = esquemaModeloRutina.parse(req.query);
+  res.status(201).json(await crearRutina(null, tipo, pdfRecibido(req)));
 });
 
 rutinasRouter.get("/rutinas/:id", async (req, res) => {

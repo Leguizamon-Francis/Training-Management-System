@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import Cargando from "./componentes/Cargando";
 import Layout from "./componentes/Layout";
 import RutaProtegida from "./componentes/RutaProtegida";
@@ -36,6 +36,20 @@ const editorRutina = (
   </Suspense>
 );
 
+// Direcciones viejas guardadas, que llevan a las nuevas: Membresías antes estaba en /pagos (e Ingresos en
+// /ingresos), y las evaluaciones de un alumno en /alumnos/:id/evaluaciones.
+const DIRECCIONES_VIEJAS: [RegExp, string][] = [
+  [/^\/ingresos/, "/membresias/ingresos"],
+  [/^\/pagos/, "/membresias"],
+  [/^\/alumnos\/(\d+)\/evaluaciones/, "/evaluaciones/alumnos/$1"],
+];
+
+function DireccionVieja() {
+  const { pathname } = useLocation();
+  const [vieja, nueva] = DIRECCIONES_VIEJAS.find(([patron]) => patron.test(pathname)) ?? [/^/, ""];
+  return <Navigate to={pathname.replace(vieja, nueva) || "/"} replace />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -50,19 +64,23 @@ export default function App() {
               <Route path="alumnos/nuevo" element={<AlumnoFormulario />} />
               <Route path="alumnos/:id" element={<AlumnoFicha />} />
               <Route path="alumnos/:id/editar" element={<AlumnoFormulario />} />
-              <Route path="alumnos/:id/evaluaciones" element={<AlumnoEvaluaciones />} />
-              <Route path="alumnos/:id/evaluaciones/nueva" element={<EvaluacionFormulario />} />
+              <Route path="alumnos/:id/evaluaciones/*" element={<DireccionVieja />} />
+              <Route path="evaluaciones/alumnos/:id" element={<AlumnoEvaluaciones />} />
+              <Route path="evaluaciones/alumnos/:id/nueva" element={<EvaluacionFormulario />} />
               <Route path="evaluaciones" element={<Evaluaciones />} />
               <Route path="evaluaciones/configuracion" element={<Pruebas />} />
               <Route path="evaluaciones/:evaluacionId" element={<EvaluacionDetalle />} />
               <Route path="evaluaciones/:evaluacionId/editar" element={<EvaluacionFormulario />} />
-              <Route path="pagos" element={<Pagos />} />
-              <Route path="pagos/nuevo" element={<PagoNuevo />} />
-              <Route path="pagos/alumnos/:id" element={<PagosDeAlumno />} />
-              <Route path="pagos/configuracion" element={<GestionPlanes />} />
-              <Route path="ingresos" element={<Ingresos />} />
+              <Route path="membresias" element={<Pagos />} />
+              <Route path="membresias/nuevo" element={<PagoNuevo />} />
+              <Route path="membresias/alumnos/:id" element={<PagosDeAlumno />} />
+              <Route path="membresias/configuracion" element={<GestionPlanes />} />
+              <Route path="membresias/ingresos" element={<Ingresos />} />
+              <Route path="pagos/*" element={<DireccionVieja />} />
+              <Route path="ingresos" element={<DireccionVieja />} />
               <Route path="rutinas" element={<Rutinas />} />
               <Route path="rutinas/:alumnoId" element={<RutinasAlumno />} />
+              <Route path="rutinas/sin-alumno/nueva" element={editorRutina} />
               <Route path="rutinas/:alumnoId/nueva" element={editorRutina} />
               <Route path="rutinas/editar/:rutinaId" element={editorRutina} />
               <Route path="asistencias" element={<Asistencias />} />

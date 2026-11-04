@@ -9,6 +9,9 @@ const fechaPago = z.iso
 
 const medio = z.enum(MedioPago, { error: "Elegí el medio de pago" });
 
+// Cuotas que se pueden pagar juntas en un solo registro (un año).
+export const MAXIMO_CUOTAS_JUNTAS = 12;
+
 const concepto = z
   .string({ error: "Indicá el concepto" })
   .trim()
@@ -18,12 +21,14 @@ const concepto = z
 export const esquemaPago = z.discriminatedUnion(
   "tipo",
   [
-    // La cuota se paga completa: "importe" es lo que vale (el frontend propone el precio del plan).
+    // Las cuotas se pagan completas. Con "cantidad" se pagan varias seguidas de una vez: "importe" es el total
+    // y se reparte entre ellas (el frontend propone precio del plan × cantidad).
     z.object({
       tipo: z.literal("CUOTA"),
       fecha: fechaPago,
       importe: esquemaImporte,
       medio,
+      cantidad: z.number({ error: "Indicá cuántas cuotas" }).int().min(1, "Mínimo 1 cuota").max(MAXIMO_CUOTAS_JUNTAS, `Máximo ${MAXIMO_CUOTAS_JUNTAS} cuotas`).default(1),
     }),
     z.object({
       tipo: z.literal("OTRO"),

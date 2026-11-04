@@ -5,7 +5,7 @@ export type TipoBloque = "MICROCICLOS_2_SEMANAS" | "MICROCICLOS_1_SEMANA" | Mode
 
 export interface Rutina {
   id: number;
-  alumnoId: number;
+  alumnoId: number | null; // null = rutina sin alumno
   tipo: TipoBloque;
   objetivo: string | null; // deporte u objetivo copiado de la planilla, para mostrar en listas
   desde: string; // ISO: día de creación
@@ -15,7 +15,11 @@ export interface Rutina {
 }
 
 export interface RutinaConAlumno extends Rutina {
-  alumno: { id: number; nombre: string; apellido: string };
+  alumno: { id: number; nombre: string; apellido: string } | null;
+}
+
+export interface RutinaSuelta extends Rutina {
+  nombre: string | null; // lo escrito en el campo "Nombre" de la planilla
 }
 
 export interface AlumnoConRutinas {
@@ -54,19 +58,22 @@ export const rutinasApi = {
 
   listar: (alumnoId: number) => pedir<Rutina[]>(`/alumnos/${alumnoId}/rutinas`),
 
+  sueltas: () => pedir<RutinaSuelta[]>("/rutinas/sueltas"),
+
   obtener: (id: number) => pedir<RutinaConAlumno>(`/rutinas/${id}`),
 
-  // El PDF para empezar una rutina nueva, con los datos del alumno y lo escrito en la rutina base, si hay.
-  borrador: (alumnoId: number, tipo: ModeloRutina, base: number | null) =>
-    bajarPdf(`/alumnos/${alumnoId}/rutinas/borrador?tipo=${tipo}${base ? `&base=${base}` : ""}`),
+  // El PDF para empezar una rutina nueva, con los datos del alumno (null = sin alumno) y lo escrito
+  // en la rutina base, si hay.
+  borrador: (alumnoId: number | null, tipo: ModeloRutina, base: number | null) =>
+    bajarPdf(`${alumnoId ? `/alumnos/${alumnoId}` : ""}/rutinas/borrador?tipo=${tipo}${base ? `&base=${base}` : ""}`),
 
   pdf: (id: number) => bajarPdf(`/rutinas/${id}/pdf`),
 
   // Link directo para descargar el PDF (la cookie de sesión viaja sola).
   urlDescarga: (id: number) => `/api/rutinas/${id}/pdf?descargar=true`,
 
-  crear: (alumnoId: number, tipo: ModeloRutina, pdf: Uint8Array) =>
-    enviarPdf(`/alumnos/${alumnoId}/rutinas?tipo=${tipo}`, "POST", pdf),
+  crear: (alumnoId: number | null, tipo: ModeloRutina, pdf: Uint8Array) =>
+    enviarPdf(`${alumnoId ? `/alumnos/${alumnoId}` : ""}/rutinas?tipo=${tipo}`, "POST", pdf),
 
   actualizar: (id: number, pdf: Uint8Array) => enviarPdf(`/rutinas/${id}`, "PUT", pdf),
 

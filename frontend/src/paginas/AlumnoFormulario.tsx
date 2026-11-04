@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { alumnosApi, type Alumno, type DatosAlumno } from "../api/alumnos";
 import { ErrorApi } from "../api/cliente";
 import Campo from "../componentes/Campo";
@@ -53,6 +53,7 @@ const CAMPOS_TEXTO_LARGO = [
 export default function AlumnoFormulario() {
   const { id } = useParams();
   const esEdicion = id !== undefined;
+  const desdeInicio = useLocation().state?.desde === "inicio"; // "Nuevo Alumno" de Inicio
   const navigate = useNavigate();
 
   const [datos, setDatos] = useState<DatosAlumno>(VACIO);
@@ -100,7 +101,7 @@ export default function AlumnoFormulario() {
     return <Cargando />;
   }
 
-  const volverA = esEdicion ? `/alumnos/${id}` : "/alumnos";
+  const volverA = esEdicion ? `/alumnos/${id}` : desdeInicio ? "/" : "/alumnos";
 
   return (
     <section>

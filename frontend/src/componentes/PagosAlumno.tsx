@@ -23,7 +23,7 @@ import SelectorPlan from "./SelectorPlan";
 interface Props {
   alumno: { id: number; nombre: string; apellido: string; telefono: string; activo: boolean };
   onCambio: () => void; // para que la pantalla actualice el historial y el estado del alumno
-  enFicha?: boolean; // true: sección desplegable de la ficha; false: abierta, en la pantalla de Pagos
+  enFicha?: boolean; // true: sección desplegable de la ficha; false: abierta, en la pantalla de Membresías
 }
 
 function Contenedor({ enFicha, children }: { enFicha: boolean; children: ReactNode }) {
@@ -108,8 +108,8 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
       <div className="fila-plan">
         <SelectorPlan alumnoId={alumno.id} planActual={plan} onCambio={planCambiado} />
         {enFicha && (
-          <Link to="/pagos" className="link-discreto">
-            Ir a Pagos →
+          <Link to="/membresias" className="link-discreto">
+            Ir a Membresías →
           </Link>
         )}
       </div>

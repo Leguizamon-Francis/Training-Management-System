@@ -42,7 +42,7 @@ npm run db:seed       # catálogo inicial de pruebas y membresías
 npm run crear-admin   # usuario de ingreso
 ```
 
-Después, entrar y definir los precios en Pagos → Configurar pagos.
+Después, entrar y definir los precios en Membresías → Configurar Membresías.
 
 La base de producción arranca vacía. **No cargar datos de ejemplo:** el comando se niega en producción.
 

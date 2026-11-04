@@ -23,7 +23,7 @@ export default function EvaluacionDetalle() {
     if (!window.confirm(pregunta)) return;
     try {
       await evaluacionesApi.eliminar(evaluacion.id);
-      navigate(`/alumnos/${evaluacion.alumnoId}/evaluaciones`);
+      navigate(`/evaluaciones/alumnos/${evaluacion.alumnoId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo eliminar");
     }
@@ -31,7 +31,7 @@ export default function EvaluacionDetalle() {
 
   return (
     <section>
-      <Link to={`/alumnos/${alumno.id}/evaluaciones`} className="volver">
+      <Link to={`/evaluaciones/alumnos/${alumno.id}`} className="volver">
         ← Evaluaciones de {alumno.apellido}, {alumno.nombre}
       </Link>
 

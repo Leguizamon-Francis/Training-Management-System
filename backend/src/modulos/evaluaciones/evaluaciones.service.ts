@@ -8,7 +8,6 @@ import type { DatosEvaluacion } from "./evaluaciones.schemas";
 // Cada cuántos meses se reevalúa según el perfil.
 const MESES_REEVALUACION: Record<Perfil, number> = {
   DEPORTIVO: 2,
-  RECUPERACION: 2,
   SALUD: 4,
 };
 

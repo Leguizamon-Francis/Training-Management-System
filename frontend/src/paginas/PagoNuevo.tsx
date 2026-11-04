@@ -9,7 +9,7 @@ import { claseEstadoCuota, ETIQUETAS_ESTADO_CUOTA, textoPrecioPlan, textoVencimi
 // Cuántos alumnos se muestran como resultado de la búsqueda.
 const MAXIMO_RESULTADOS = 8;
 
-// Registrar un pago desde la pantalla Pagos: primero se elige el alumno y después se carga el pago.
+// Registrar un Pago desde la pantalla Membresías: primero se elige el alumno y después se carga el pago.
 export default function PagoNuevo() {
   const navigate = useNavigate();
   const [buscar, setBuscar] = useState("");
@@ -42,10 +42,10 @@ export default function PagoNuevo() {
 
   return (
     <section>
-      <Link to="/pagos" className="volver">
-        ← Pagos
+      <Link to="/membresias" className="volver">
+        ← Membresías
       </Link>
-      <h1>Registrar un pago</h1>
+      <h1>Registrar un Pago</h1>
 
       {error && <p className="mensaje-error">{error}</p>}
 
@@ -113,8 +113,8 @@ export default function PagoNuevo() {
               plan={datos.plan}
               inicioCuota={datos.situacion.inicioProximaCuota}
               cantidadAdeudadas={datos.situacion.cuotasAdeudadas.length}
-              onGuardado={() => navigate("/pagos")}
-              onCancelar={() => navigate("/pagos")}
+              onGuardado={() => navigate("/membresias")}
+              onCancelar={() => navigate("/membresias")}
             />
           )}
         </div>

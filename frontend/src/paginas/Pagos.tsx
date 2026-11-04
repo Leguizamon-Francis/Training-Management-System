@@ -36,16 +36,16 @@ export default function Pagos() {
   return (
     <section>
       <div className="pagina-encabezado">
-        <h1>Pagos</h1>
-        <div className="acciones-columna">
-          <Link to="/ingresos" className="boton-secundario">
+        <h1>Membresías</h1>
+        <div className="acciones-pagos">
+          <Link to="/membresias/ingresos" className="boton-secundario">
             Historial de Ingresos
           </Link>
-          <Link to="/pagos/nuevo" className="boton">
-            Registrar un pago
+          <Link to="/membresias/nuevo" className="boton">
+            Registrar un Pago
           </Link>
-          <Link to="/pagos/configuracion" className="boton-secundario">
-            Configurar pagos
+          <Link to="/membresias/configuracion" className="boton-secundario">
+            Configurar Membresías
           </Link>
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function Pagos() {
                   {lista.visibles.map((fila) => (
                     <tr key={fila.id}>
                       <td>
-                        <Link to={`/pagos/alumnos/${fila.id}`}>
+                        <Link to={`/membresias/alumnos/${fila.id}`}>
                           {fila.apellido}, {fila.nombre}
                         </Link>
                       </td>

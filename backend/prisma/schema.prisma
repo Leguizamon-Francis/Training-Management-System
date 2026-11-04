@@ -24,7 +24,6 @@ enum Rol {
 enum Perfil {
   DEPORTIVO
   SALUD
-  RECUPERACION
 }
 
 enum TipoAnotacion {
@@ -285,13 +284,13 @@ model Asistencia {
 
 // ---------- Rutinas ----------
 
-// Rutina de entrenamiento de un alumno, armada sobre una plantilla PDF (ver TipoBloque).
-// No se guarda el PDF completo (pesa ~2,4 MB): se guarda lo escrito en cada campo y el PDF
-// se vuelve a armar con la plantilla al verlo o descargarlo.
+// Rutina de entrenamiento armada sobre una plantilla PDF (ver TipoBloque). Sin alumno, es una rutina suelta
+// (para alguien que no es alumno). No se guarda el PDF completo (pesa ~2,4 MB): se guarda lo escrito en cada
+// campo y el PDF se vuelve a armar con la plantilla al verlo o descargarlo.
 model Rutina {
   id            Int        @id @default(autoincrement())
-  alumnoId      Int
-  alumno        Alumno     @relation(fields: [alumnoId], references: [id])
+  alumnoId      Int?
+  alumno        Alumno?    @relation(fields: [alumnoId], references: [id], onDelete: Restrict)
   tipo          TipoBloque
   valores       Json // { "nombre": "Pérez, Juan", "deporte": "Hockey", "A4": "Sentadilla", ... }
   objetivo      String? // deporte u objetivo, copiado de la planilla para mostrarlo en las listas sin abrir el PDF

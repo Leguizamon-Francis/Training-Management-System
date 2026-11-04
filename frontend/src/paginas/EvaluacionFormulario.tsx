@@ -1,33 +1,82 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { ErrorApi } from "../api/cliente";
-import { evaluacionesApi, type DatosEvaluacion, type Lado, type OrigenResultado } from "../api/evaluaciones";
+import { evaluacionesApi, type DatosEvaluacion, type DatosResultado, type Evaluacion, type OrigenResultado } from "../api/evaluaciones";
 import { pruebasApi, type CategoriaPrueba, type Prueba } from "../api/pruebas";
 import Campo from "../componentes/Campo";
 import Cargando from "../componentes/Cargando";
-import { ETIQUETAS_CATEGORIA, ETIQUETAS_LADO, ETIQUETAS_ORIGEN } from "../utils/evaluaciones";
+import { ETIQUETAS_CATEGORIA, ETIQUETAS_ORIGEN } from "../utils/evaluaciones";
 import { hoyComoTexto } from "../utils/formato";
 
-// Una fila del formulario = un resultado. "clave" identifica la fila para React
-// (no se puede usar la posición porque las filas se agregan y se quitan).
+// Una fila del formulario = una prueba. En las que se miden por lado, la fila tiene un valor para cada lado
+// y al guardar se convierte en dos resultados (izquierdo y derecho). "valor" es el de las demás pruebas; en
+// una por lado solo lo tendría un resultado viejo cargado sin lado, que no se muestra pero se conserva.
+// "clave" identifica la fila para React: no sirve la posición porque las filas se agregan y se quitan.
 interface FilaResultado {
   clave: number;
   pruebaId: string;
-  lado: Lado | "";
   valor: string;
+  valorIzq: string;
+  valorDer: string;
   unidad: string;
   origen: OrigenResultado;
   observacion: string;
 }
 
+type CampoValor = "valor" | "valorIzq" | "valorDer";
+
 let ultimaClave = 0;
 
 function filaVacia(): FilaResultado {
   ultimaClave += 1;
-  return { clave: ultimaClave, pruebaId: "", lado: "", valor: "", unidad: "", origen: "MANUAL", observacion: "" };
+  return { clave: ultimaClave, pruebaId: "", valor: "", valorIzq: "", valorDer: "", unidad: "", origen: "MANUAL", observacion: "" };
 }
 
-// Se usa para cargar (/alumnos/:id/evaluaciones/nueva) y para editar (/evaluaciones/:evaluacionId/editar).
+// Resultados guardados → filas: los dos lados de una misma prueba van juntos en una fila.
+function filasDesdeEvaluacion(evaluacion: Evaluacion, pruebas: Prueba[]): FilaResultado[] {
+  const filas: FilaResultado[] = [];
+  for (const resultado of evaluacion.resultados) {
+    const porLado = pruebas.find((p) => p.id === resultado.pruebaId)?.porLado ?? false;
+    let fila = porLado ? filas.find((f) => f.pruebaId === String(resultado.pruebaId)) : undefined;
+    if (!fila) {
+      fila = { ...filaVacia(), pruebaId: String(resultado.pruebaId), unidad: resultado.unidad, origen: resultado.origen };
+      filas.push(fila);
+    }
+    const campo: CampoValor = resultado.lado === "IZQ" ? "valorIzq" : resultado.lado === "DER" ? "valorDer" : "valor";
+    fila[campo] = resultado.valor.replace(".", ",");
+    if (resultado.observacion && !fila.observacion.includes(resultado.observacion)) {
+      fila.observacion = fila.observacion ? `${fila.observacion} / ${resultado.observacion}` : resultado.observacion;
+    }
+  }
+  return filas;
+}
+
+// Filas → resultados para la API. "origenes" dice de qué fila y campo salió cada resultado, para mostrar
+// los errores del backend (que vienen por posición del resultado) en su lugar.
+function resultadosDesdeFilas(filas: FilaResultado[], pruebas: Prueba[]) {
+  const resultados: DatosResultado[] = [];
+  const origenes: { fila: number; campoValor: CampoValor }[] = [];
+  filas.forEach((fila, indice) => {
+    const comun = {
+      pruebaId: fila.pruebaId ? Number(fila.pruebaId) : null,
+      unidad: fila.unidad,
+      origen: fila.origen,
+      observacion: fila.observacion,
+    };
+    const porLado = pruebas.find((p) => String(p.id) === fila.pruebaId)?.porLado;
+    const lados: [CampoValor, DatosResultado["lado"]][] = porLado
+      ? [["valorIzq", "IZQ"], ["valorDer", "DER"], ["valor", null]]
+      : [["valor", null]];
+    for (const [campoValor, lado] of lados) {
+      if (porLado && !fila[campoValor].trim()) continue; // por lado: solo los lados que se cargaron
+      resultados.push({ ...comun, valor: fila[campoValor], lado });
+      origenes.push({ fila: indice, campoValor });
+    }
+  });
+  return { resultados, origenes };
+}
+
+// Se usa para cargar (/evaluaciones/alumnos/:id/nueva) y para editar (/evaluaciones/:evaluacionId/editar).
 export default function EvaluacionFormulario() {
   const parametros = useParams();
   const evaluacionId = parametros.evaluacionId ? Number(parametros.evaluacionId) : null;
@@ -54,17 +103,7 @@ export default function EvaluacionFormulario() {
           setFecha(evaluacion.fecha.slice(0, 10));
           setObservaciones(evaluacion.observaciones ?? "");
           setNumero(evaluacion.idEvaluacion);
-          setFilas(
-            evaluacion.resultados.map((resultado) => ({
-              ...filaVacia(),
-              pruebaId: String(resultado.pruebaId),
-              lado: resultado.lado ?? "",
-              valor: resultado.valor.replace(".", ","),
-              unidad: resultado.unidad,
-              origen: resultado.origen,
-              observacion: resultado.observacion ?? "",
-            })),
-          );
+          setFilas(filasDesdeEvaluacion(evaluacion, listaPruebas));
         }
       })
       .catch((err: Error) => setError(err.message))
@@ -75,20 +114,23 @@ export default function EvaluacionFormulario() {
   const volverA = evaluacionId
     ? `/evaluaciones/${evaluacionId}`
     : alumnoId
-      ? `/alumnos/${alumnoId}/evaluaciones`
+      ? `/evaluaciones/alumnos/${alumnoId}`
       : "/alumnos";
+
+  const pruebaDe = (fila: FilaResultado) => pruebas.find((p) => String(p.id) === fila.pruebaId);
 
   function cambiarFila(clave: number, campo: keyof FilaResultado, valor: string) {
     setFilas((anteriores) =>
       anteriores.map((fila) => {
         if (fila.clave !== clave) return fila;
         const nueva = { ...fila, [campo]: valor };
-        // Al elegir la prueba se completa su unidad (se puede cambiar después).
+        // Al elegir la prueba se completa su unidad (se puede cambiar después) y se vacían los valores
+        // que esa prueba no usa: los de cada lado, o el único.
         if (campo === "pruebaId") {
           const prueba = pruebas.find((p) => String(p.id) === valor);
           nueva.unidad = prueba?.unidad ?? "";
-          // El lado solo existe en las pruebas que se miden por lado.
-          if (!prueba?.porLado) nueva.lado = "";
+          if (prueba?.porLado) nueva.valor = "";
+          else nueva.valorIzq = nueva.valorDer = "";
         }
         return nueva;
       }),
@@ -104,21 +146,18 @@ export default function EvaluacionFormulario() {
     if (!alumnoId) return;
     setError("");
     setErrores({});
+
+    // En una prueba por lado hace falta al menos un lado (puede faltar uno, ej.: por una lesión).
+    const sinLados = filas.findIndex((fila) => pruebaDe(fila)?.porLado && !fila.valorIzq.trim() && !fila.valorDer.trim() && !fila.valor.trim());
+    if (sinLados >= 0) {
+      setErrores({ [`filas.${sinLados}.valorIzq`]: ["Cargá el izquierdo, el derecho o los dos"] });
+      return;
+    }
+
+    const { resultados, origenes } = resultadosDesdeFilas(filas, pruebas);
+    const datos: DatosEvaluacion = { fecha, observaciones, resultados };
+
     setGuardando(true);
-
-    const datos: DatosEvaluacion = {
-      fecha,
-      observaciones,
-      resultados: filas.map((fila) => ({
-        pruebaId: fila.pruebaId ? Number(fila.pruebaId) : null,
-        valor: fila.valor,
-        unidad: fila.unidad,
-        lado: fila.lado || null,
-        origen: fila.origen,
-        observacion: fila.observacion,
-      })),
-    };
-
     try {
       if (evaluacionId) {
         await evaluacionesApi.actualizar(evaluacionId, datos);
@@ -128,7 +167,17 @@ export default function EvaluacionFormulario() {
       navigate(volverA);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar");
-      if (err instanceof ErrorApi) setErrores(err.campos);
+      if (err instanceof ErrorApi) {
+        // "resultados.3.valor" → el campo de la fila de la que salió el resultado 3.
+        const porFila: Record<string, string[]> = {};
+        for (const [clave, mensajes] of Object.entries(err.campos)) {
+          const partes = clave.match(/^resultados\.(\d+)\.(\w+)$/);
+          const origen = partes && origenes[Number(partes[1])];
+          const destino = origen ? `filas.${origen.fila}.${partes[2] === "valor" ? origen.campoValor : partes[2]}` : clave;
+          porFila[destino] = [...(porFila[destino] ?? []), ...mensajes];
+        }
+        setErrores(porFila);
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setGuardando(false);
@@ -150,7 +199,7 @@ export default function EvaluacionFormulario() {
 
       {error && <p className="mensaje-error">{error}</p>}
 
-      <form onSubmit={enviar} noValidate>
+      <form className="formulario-evaluacion" onSubmit={enviar} noValidate>
         <div className="tarjeta seccion">
           <div className="grilla">
             <Campo etiqueta="Fecha" obligatorio errores={errores.fecha}>
@@ -158,25 +207,33 @@ export default function EvaluacionFormulario() {
             </Campo>
           </div>
           <Campo etiqueta="Observaciones" errores={errores.observaciones}>
-            <textarea rows={2} value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
+            <input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
           </Campo>
         </div>
 
         <div className="tarjeta seccion">
-          <h2>Resultados</h2>
-          <p className="texto-suave">
-            Una fila por prueba. En las pruebas que se miden por lado, cargá una fila por cada lado.
-          </p>
+          <h2>Registros</h2>
           {errores.resultados && <p className="mensaje-error">{errores.resultados.join(". ")}</p>}
 
           {filas.map((fila, indice) => {
-            const erroresDe = (campo: string) => errores[`resultados.${indice}.${campo}`];
+            const erroresDe = (campo: string) => errores[`filas.${indice}.${campo}`];
+            const porLado = pruebaDe(fila)?.porLado ?? false;
+            const campoValor = (campo: CampoValor, etiqueta: string, obligatorio: boolean) => (
+              <Campo etiqueta={etiqueta} obligatorio={obligatorio} errores={erroresDe(campo)}>
+                <input
+                  inputMode="decimal"
+                  value={fila[campo]}
+                  onChange={(e) => cambiarFila(fila.clave, campo, e.target.value)}
+                  placeholder="Ej.: 32,5"
+                />
+              </Campo>
+            );
             return (
               <div key={fila.clave} className="fila-resultado">
                 <div className="fila-resultado-campos">
-                  <Campo etiqueta="Prueba" obligatorio errores={erroresDe("pruebaId")}>
+                  <Campo etiqueta="Test" obligatorio errores={erroresDe("pruebaId")}>
                     <select value={fila.pruebaId} onChange={(e) => cambiarFila(fila.clave, "pruebaId", e.target.value)}>
-                      <option value="">Elegí una prueba…</option>
+                      <option value="">Elegí un Test…</option>
                       {categorias.map((categoria) => {
                         // Las inactivas solo aparecen si ya estaban elegidas en esta fila.
                         const opciones = pruebas.filter(
@@ -194,27 +251,14 @@ export default function EvaluacionFormulario() {
                       })}
                     </select>
                   </Campo>
-                  {/* "Lado" solo aparece si la prueba elegida se mide por lado */}
-                  {(pruebas.find((p) => String(p.id) === fila.pruebaId)?.porLado || fila.lado) && (
-                    <Campo etiqueta="Lado" errores={erroresDe("lado")}>
-                      <select value={fila.lado} onChange={(e) => cambiarFila(fila.clave, "lado", e.target.value)}>
-                        <option value="">—</option>
-                        {Object.entries(ETIQUETAS_LADO).map(([valor, etiqueta]) => (
-                          <option key={valor} value={valor}>
-                            {etiqueta}
-                          </option>
-                        ))}
-                      </select>
-                    </Campo>
+                  {porLado ? (
+                    <>
+                      {campoValor("valorIzq", "Izquierdo", false)}
+                      {campoValor("valorDer", "Derecho", false)}
+                    </>
+                  ) : (
+                    campoValor("valor", "Valor", true)
                   )}
-                  <Campo etiqueta="Valor" obligatorio errores={erroresDe("valor")}>
-                    <input
-                      inputMode="decimal"
-                      value={fila.valor}
-                      onChange={(e) => cambiarFila(fila.clave, "valor", e.target.value)}
-                      placeholder="Ej.: 32,5"
-                    />
-                  </Campo>
                   <Campo etiqueta="Unidad" errores={erroresDe("unidad")}>
                     <input value={fila.unidad} onChange={(e) => cambiarFila(fila.clave, "unidad", e.target.value)} />
                   </Campo>
@@ -243,7 +287,7 @@ export default function EvaluacionFormulario() {
           })}
 
           <button type="button" className="boton-secundario" onClick={() => setFilas([...filas, filaVacia()])}>
-            + Agregar resultado
+            + Agregar Test
           </button>
         </div>
 

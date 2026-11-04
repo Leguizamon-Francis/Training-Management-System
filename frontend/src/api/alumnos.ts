@@ -1,7 +1,7 @@
 import { pedir } from "./cliente";
 import type { Plan } from "./planes";
 
-export type Perfil = "DEPORTIVO" | "SALUD" | "RECUPERACION";
+export type Perfil = "DEPORTIVO" | "SALUD";
 export type EstadoFiltro = "activos" | "inactivos" | "todos";
 
 // Lo que devuelve el listado.

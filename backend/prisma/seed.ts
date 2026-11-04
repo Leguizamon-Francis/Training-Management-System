@@ -12,7 +12,7 @@ const pruebas: Prisma.PruebaCreateInput[] = [
   { nombre: "Rango de movimiento de cadera", categoria: "MOVILIDAD", unidad: "°" },
 ];
 
-// Un plan fijo por modalidad. Se crean con precio 0: cada precio se define desde Pagos → Configurar pagos.
+// Un plan fijo por modalidad. Se crean con precio 0: cada precio se define desde Membresías → Configurar Membresías.
 const planes: Prisma.PlanCreateInput[] = [
   { modalidad: "PRESENCIAL", nombre: "Presencial", precioMensual: 0 },
   { modalidad: "SEMIPRESENCIAL", nombre: "Semi presencial", precioMensual: 0 },

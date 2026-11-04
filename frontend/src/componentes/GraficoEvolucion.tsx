@@ -10,14 +10,14 @@ import { formatearFecha } from "../utils/formato";
 
 // Gráfico de líneas de la evolución de una prueba, dibujado en SVG (sin librerías).
 // - Una escala por gráfico: cada prueba tiene su unidad, por eso hay un gráfico por prueba.
-// - Eje X: las evaluaciones en orden, rotuladas con su n° y fecha (así no se enciman las del mismo día).
+// - Eje X: las evaluaciones en orden (no proporcional al tiempo), rotuladas con su fecha. El n° se ve en el punto.
 // - Si la prueba se mide por lado, izquierdo y derecho van juntos para compararlos.
 // - Colores fijos por lado (no por orden): izquierdo/sin lado = azul, derecho = naranja.
 // - Solo se rotula el último valor; el resto se ve al pasar el mouse sobre cada punto.
 
 const ANCHO = 560;
 const ALTO = 236;
-const MARGEN = { izquierda: 56, derecha: 72, arriba: 12, abajo: 44 };
+const MARGEN = { izquierda: 56, derecha: 72, arriba: 12, abajo: 28 };
 const AREA_ANCHO = ANCHO - MARGEN.izquierda - MARGEN.derecha;
 const AREA_ALTO = ALTO - MARGEN.arriba - MARGEN.abajo;
 
@@ -138,16 +138,11 @@ export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
           </g>
         ))}
 
-        {/* Eje X: n° de evaluación y fecha */}
+        {/* Eje X: fecha de cada evaluación */}
         {rotulosX.map((punto) => (
-          <g key={punto.evaluacionId}>
-            <text className="grafico-eje grafico-eje-numero" x={posX(punto)} y={ALTO - 24} textAnchor="middle">
-              {punto.numero}
-            </text>
-            <text className="grafico-eje" x={posX(punto)} y={ALTO - 8} textAnchor="middle">
-              {formatearFecha(punto.fecha)}
-            </text>
-          </g>
+          <text key={punto.evaluacionId} className="grafico-eje" x={posX(punto)} y={ALTO - 8} textAnchor="middle">
+            {formatearFecha(punto.fecha)}
+          </text>
         ))}
 
         {/* Líneas */}

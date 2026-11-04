@@ -40,8 +40,8 @@ export default function Ingresos() {
 
   return (
     <section>
-      <Link to="/pagos" className="volver">
-        ← Pagos
+      <Link to="/membresias" className="volver">
+        ← Membresías
       </Link>
       <h1>Ingresos</h1>
 
@@ -141,7 +141,7 @@ export default function Ingresos() {
                       <tr key={pago.id}>
                         <td className="sin-salto">{formatearFecha(pago.fecha)}</td>
                         <td>
-                          <Link to={`/alumnos/${pago.alumno.id}`}>
+                          <Link to={`/membresias/alumnos/${pago.alumno.id}`} state={{ desde: "ingresos" }}>
                             {pago.alumno.apellido}, {pago.alumno.nombre}
                           </Link>
                         </td>

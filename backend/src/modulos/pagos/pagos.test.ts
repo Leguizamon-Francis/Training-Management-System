@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { afterEach, beforeEach, test, mock } from "node:test";
 import { Prisma, type Cuota } from "@prisma/client";
-import { calcularSituacion, describirPago } from "./pagos.service";
+import { calcularSituacion, describirPago, repartirImporte } from "./pagos.service";
 
 const HOY = "2026-10-19";
 const precio = new Prisma.Decimal(25000);
@@ -96,4 +96,18 @@ test("fin de mes: las cuotas adeudadas no pierden el día 31", () => {
     s.cuotasAdeudadas.map((periodo) => periodo.vence),
     ["2026-02-28", "2026-03-31", "2026-04-30"],
   );
+});
+
+test("varias cuotas juntas: el total se reparte en partes iguales", () => {
+  assert.deepEqual(repartirImporte(new Prisma.Decimal(135000), 3).map(String), ["45000", "45000", "45000"]);
+});
+
+test("varias cuotas juntas: los centavos que sobran van a la última y la suma es el total", () => {
+  const partes = repartirImporte(new Prisma.Decimal(100000), 3);
+  assert.deepEqual(partes.map(String), ["33333.33", "33333.33", "33333.34"]);
+  assert.equal(partes.reduce((suma, parte) => suma.plus(parte), new Prisma.Decimal(0)).toString(), "100000");
+});
+
+test("una sola cuota vale el total", () => {
+  assert.deepEqual(repartirImporte(new Prisma.Decimal("25000.5"), 1).map(String), ["25000.5"]);
 });

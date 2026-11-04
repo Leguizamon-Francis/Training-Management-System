@@ -69,7 +69,7 @@ export default function Evaluaciones() {
                 {lista.visibles.map((alumno) => (
                   <tr key={alumno.id}>
                     <td>
-                      <Link to={`/alumnos/${alumno.id}/evaluaciones${nueva ? "/nueva" : ""}`}>
+                      <Link to={`/evaluaciones/alumnos/${alumno.id}${nueva ? "/nueva" : ""}`}>
                         {alumno.apellido}, {alumno.nombre}
                       </Link>
                     </td>

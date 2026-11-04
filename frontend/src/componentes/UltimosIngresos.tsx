@@ -6,7 +6,7 @@ import { formatearFecha, formatearMoneda } from "../utils/formato";
 import { ETIQUETAS_MEDIO } from "../utils/pagos";
 import BotonVerTodos from "./BotonVerTodos";
 
-// Lista "Últimos ingresos" de la pantalla Pagos: los 20 pagos más recientes de todos los alumnos
+// Lista "Últimos ingresos" de la pantalla Membresías: los 20 pagos más recientes de todos los alumnos
 // (el resto, en Historial de Ingresos).
 export default function UltimosIngresos() {
   const { datos: pagos, error } = useCarga(() => pagosApi.ultimos(20), []);
@@ -37,7 +37,7 @@ export default function UltimosIngresos() {
                     <tr key={pago.id}>
                       <td className="sin-salto">{formatearFecha(pago.fecha)}</td>
                       <td>
-                        <Link to={`/pagos/alumnos/${pago.alumno.id}`}>
+                        <Link to={`/membresias/alumnos/${pago.alumno.id}`}>
                           {pago.alumno.apellido}, {pago.alumno.nombre}
                         </Link>
                       </td>
@@ -52,7 +52,7 @@ export default function UltimosIngresos() {
             <BotonVerTodos lista={lista} />
             {lista.abierta && (
               <p className="nota">
-                <Link to="/ingresos" className="link-discreto">
+                <Link to="/membresias/ingresos" className="link-discreto">
                   Ver el historial completo en Historial de Ingresos →
                 </Link>
               </p>

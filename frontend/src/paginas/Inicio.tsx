@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Link } from "react-router";
 import { panelApi, type FilaPanel, type Panel } from "../api/panel";
 import AlumnoDestacado from "../componentes/AlumnoDestacado";
@@ -18,7 +18,7 @@ const LISTAS: { clave: ListaPanel; etiqueta: string; icono: ReactNode; textoFech
     icono: <IconoCuota />,
     textoFecha: "Vence el",
     vacio: "No hay cuotas por vencer.",
-    ruta: (id) => `/pagos/alumnos/${id}`,
+    ruta: (id) => `/membresias/alumnos/${id}`,
   },
   {
     clave: "evaluacionesProximas",
@@ -26,7 +26,7 @@ const LISTAS: { clave: ListaPanel; etiqueta: string; icono: ReactNode; textoFech
     icono: <IconoEvaluacion />,
     textoFecha: "Evaluar el",
     vacio: "No hay evaluaciones próximas.",
-    ruta: (id) => `/alumnos/${id}/evaluaciones`,
+    ruta: (id) => `/evaluaciones/alumnos/${id}`,
   },
   {
     clave: "rutinasPorCambiar",
@@ -69,7 +69,7 @@ function Indicadores({ panel }: { panel: Panel }) {
   return (
     <>
       <div className="indicadores">
-        <Link to="/alumnos" className="tarjeta indicador">
+        <Link to="/alumnos" state={{ desde: "inicio" }} className="tarjeta indicador">
           <IconoAlumnos />
           <span className="indicador-etiqueta">Alumnos activos</span>
           <strong className="indicador-valor">{panel.alumnosActivos}</strong>
@@ -95,28 +95,69 @@ function Indicadores({ panel }: { panel: Panel }) {
   );
 }
 
+// Distancia entre los botones y el borde de arriba del logo de fondo, en px.
+const ESPACIO_SOBRE_LOGO = 8;
+
+// Deja la fila de botones justo encima del logo de fondo. El logo está fijo en el centro de la ventana y su
+// altura depende del tamaño de la ventana: por eso se mide. Si sobra lugar, baja los botones; si el botón
+// pisaría el logo, baja el logo (solo en Inicio). En el celular no se usa.
+function useBotonesSobreLogo(cabecera: RefObject<HTMLDivElement | null>) {
+  useLayoutEffect(() => {
+    const angosta = window.matchMedia("(max-width: 760px)");
+    const raiz = document.documentElement.style;
+
+    function acomodar() {
+      const elemento = cabecera.current;
+      if (!elemento) return;
+      elemento.style.removeProperty("--separacion-filas");
+      raiz.removeProperty("--bajar-marca-agua");
+      const logo = document.querySelector(".marca-agua .logo");
+      const boton = elemento.querySelector(".boton-asistencia");
+      if (angosta.matches || !logo || !boton) return;
+
+      const finBotones = boton.getBoundingClientRect().bottom + window.scrollY;
+      const inicioLogo = logo.getBoundingClientRect().top; // fijo: no cambia con el desplazamiento
+      const sobrante = inicioLogo - ESPACIO_SOBRE_LOGO - finBotones;
+      if (sobrante >= 0) {
+        const separacion = parseFloat(getComputedStyle(elemento).rowGap) + sobrante;
+        elemento.style.setProperty("--separacion-filas", `${separacion}px`);
+      } else {
+        raiz.setProperty("--bajar-marca-agua", `${-sobrante}px`);
+      }
+    }
+
+    acomodar();
+    window.addEventListener("resize", acomodar);
+    angosta.addEventListener("change", acomodar);
+    return () => {
+      window.removeEventListener("resize", acomodar);
+      angosta.removeEventListener("change", acomodar);
+      raiz.removeProperty("--bajar-marca-agua");
+    };
+  }, [cabecera]);
+}
+
 // Pantalla de Inicio: los números importantes del día de un vistazo y quiénes son.
 export default function Inicio() {
   const { usuario } = useSesion();
   const { datos: panel, error } = useCarga(() => panelApi.obtener(), []);
+  const cabecera = useRef<HTMLDivElement>(null);
+  useBotonesSobreLogo(cabecera);
 
   const hoy = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <section>
-      <div className="saludo-inicio">
+      <div className="cabecera-inicio" ref={cabecera}>
         <h1>Hola, {usuario?.nombre}</h1>
         <p className="texto-suave primera-mayuscula">{hoy}</p>
-      </div>
-
-      <div className="acciones acciones-inicio">
-        <Link to="/asistencias/registrar" className="boton">
-          Registrar asistencia
+        <Link to="/asistencias/registrar" state={{ desde: "inicio" }} className="boton boton-inicio boton-asistencia">
+          Registrar Asistencia
         </Link>
-        <Link to="/alumnos/nuevo" className="boton">
+        <Link to="/alumnos/nuevo" state={{ desde: "inicio" }} className="boton boton-inicio boton-alumno">
           Nuevo Alumno
         </Link>
-        <Link to="/rutinas?nueva=1" className="boton">
+        <Link to="/rutinas?nueva=1" state={{ desde: "inicio" }} className="boton boton-inicio boton-rutina">
           Nueva Rutina
         </Link>
       </div>

@@ -12,6 +12,7 @@ import { obtenerAlumno } from "../alumnos/alumnos.service";
 // (los nombres "untitled…" los puso el programa que armó ese PDF).
 const CAMPO_DEPORTE = "deporte";
 const CAMPO_OBJETIVO_VIEJO = "untitled2";
+const CAMPO_NOMBRE = "nombre";
 
 // Duración de cada tipo de rutina. Los modelos tienen 4 microciclos de 2 semanas.
 const MESES_POR_BLOQUE: Record<TipoBloque, number> = {
@@ -137,6 +138,20 @@ export async function obtenerRutina(id: number) {
   return rutina;
 }
 
+// Rutinas sin alumno, con el nombre escrito en la planilla para reconocerlas en la lista.
+export async function listarRutinasSueltas() {
+  const rutinas = await prisma.rutina.findMany({
+    where: { alumnoId: null },
+    select: { ...datosRutina, valores: true },
+    orderBy: [{ creadoEn: "desc" }, { id: "desc" }],
+  });
+  return rutinas.map(({ valores, ...rutina }) => ({ ...rutina, nombre: nombreEscrito(valores as Valores) }));
+}
+
+function nombreEscrito(valores: Valores) {
+  return valores[CAMPO_NOMBRE]?.trim() || null;
+}
+
 // PDF de una rutina guardada, con un nombre de archivo para descargarlo.
 export async function pdfDeRutina(id: number) {
   const rutina = await prisma.rutina.findUnique({
@@ -146,16 +161,19 @@ export async function pdfDeRutina(id: number) {
   if (!rutina) {
     throw new ErrorHttp(404, "Rutina no encontrada");
   }
+  const valores = rutina.valores as Valores;
+  const para = rutina.alumno ? `${rutina.alumno.apellido} ${rutina.alumno.nombre}` : nombreEscrito(valores);
   return {
-    bytes: await generarPdf(rutina.tipo, rutina.valores as Valores),
-    nombreArchivo: `Rutina ${rutina.alumno.apellido} ${rutina.alumno.nombre} ${formatearFechaTexto(fechaArgentina(rutina.creadoEn))}.pdf`,
+    bytes: await generarPdf(rutina.tipo, valores),
+    nombreArchivo: `Rutina ${para ? `${para} ` : ""}${formatearFechaTexto(fechaArgentina(rutina.creadoEn))}.pdf`,
   };
 }
 
-// PDF para empezar una rutina nueva: la plantilla con el nombre y la edad del alumno. Con una rutina base,
-// copia lo escrito en ella, salvo las fechas, que son del bloque anterior.
-export async function borradorRutina(alumnoId: number, tipo: TipoBloque, baseId?: number) {
-  const alumno = await obtenerAlumno(alumnoId);
+// PDF para empezar una rutina nueva: la plantilla con el nombre y la edad del alumno (una rutina sin alumno
+// arranca en blanco). Con una rutina base del mismo alumno, copia lo escrito en ella, salvo las fechas,
+// que son del bloque anterior.
+export async function borradorRutina(alumnoId: number | null, tipo: TipoBloque, baseId?: number) {
+  const alumno = alumnoId === null ? null : await obtenerAlumno(alumnoId);
   let copiados: Valores = {};
   if (baseId) {
     const base = await prisma.rutina.findUnique({ where: { id: baseId } });
@@ -167,17 +185,18 @@ export async function borradorRutina(alumnoId: number, tipo: TipoBloque, baseId?
     }
     copiados = Object.fromEntries(Object.entries(base.valores as Valores).filter(([campo]) => !campo.startsWith("fecha_")));
   }
+  if (!alumno) return generarPdf(tipo, copiados);
   return generarPdf(tipo, {
     ...copiados,
-    nombre: `${alumno.apellido}, ${alumno.nombre}`,
+    [CAMPO_NOMBRE]: `${alumno.apellido}, ${alumno.nombre}`,
     edad: String(calcularEdad(textoDesdeFecha(alumno.fechaNacimiento))),
   });
 }
 
 // ---------- Altas y cambios ----------
 
-export async function crearRutina(alumnoId: number, tipo: TipoBloque, pdf: Uint8Array) {
-  await obtenerAlumno(alumnoId);
+export async function crearRutina(alumnoId: number | null, tipo: TipoBloque, pdf: Uint8Array) {
+  if (alumnoId !== null) await obtenerAlumno(alumnoId);
   const valores = await extraerValores(pdf);
   // La rutina empieza el día que se crea y dura lo que indica su tipo de bloque.
   const desde = hoyComoTexto();

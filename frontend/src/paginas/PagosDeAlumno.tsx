@@ -1,12 +1,13 @@
-import { Link, useParams } from "react-router";
+import { Link, useLocation, useParams } from "react-router";
 import { alumnosApi } from "../api/alumnos";
 import Cargando from "../componentes/Cargando";
 import PagosAlumno from "../componentes/PagosAlumno";
 import { useCarga } from "../hooks/useCarga";
 
-// Pagos de un alumno, desde la pantalla Pagos: lo mismo que "Membresía" de la ficha, abierto.
+// Pagos de un alumno, desde Membresías o el Historial de Ingresos: lo mismo que "Membresía" de la ficha, abierto.
 export default function PagosDeAlumno() {
   const alumnoId = Number(useParams().id);
+  const desdeIngresos = useLocation().state?.desde === "ingresos";
   // Se recarga después de cambios que afectan al alumno (ej.: "Anular deuda" con baja).
   const { datos: alumno, error, recargar } = useCarga(() => alumnosApi.obtener(alumnoId), [alumnoId]);
 
@@ -14,9 +15,15 @@ export default function PagosDeAlumno() {
 
   return (
     <section>
-      <Link to="/pagos" className="volver">
-        ← Pagos
-      </Link>
+      {desdeIngresos ? (
+        <Link to="/membresias/ingresos" className="volver">
+          ← Historial de Ingresos
+        </Link>
+      ) : (
+        <Link to="/membresias" className="volver">
+          ← Membresías
+        </Link>
+      )}
       <div className="pagina-encabezado">
         <div>
           <h1>

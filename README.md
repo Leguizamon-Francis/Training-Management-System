@@ -19,8 +19,8 @@ It handles client profiles, session notes, attendance, physical assessments with
 - **Training notes:** technique corrections, exercise changes, discomfort, etc., filterable by type.
 - **Assessments:** configurable catalog of tests (CMJ, IMTP, mobility), results recorded for left and right sides, progress charts and a reminder for the next reassessment based on each client's profile.
 - **Attendance:** one-click check-in, monthly reports, clients who stopped coming and the most frequent client of the month and year.
-- **Workout plans:** filled in directly on the page over fillable PDF templates, starting from a blank model or an earlier plan, then downloaded or sent over WhatsApp.
-- **Payments:** memberships with a monthly price, fees that chain month to month, automatic debt calculation, an option to cancel a debt, audited corrections to past payments, WhatsApp reminders with the message already written and income reports by period (cash or bank transfer, by month).
+- **Workout plans:** filled in directly on the page over fillable PDF templates, starting from a blank model or an earlier plan, then downloaded or sent over WhatsApp. Plans can also be made for someone without a client profile.
+- **Payments:** memberships with a monthly price, fees that chain month to month (several months can be paid at once, with the total split to the cent), automatic debt calculation, an option to cancel a debt, audited corrections to past payments, WhatsApp reminders with the message already written and income reports by period (cash or bank transfer, by month).
 - **Dashboard:** active clients, upcoming fees, upcoming assessments and workout plans due for renewal, each opening the list of clients behind the number, without exposing any amounts.
 - **Settings:** name, login email (confirmed with the password), password and dark mode.
 

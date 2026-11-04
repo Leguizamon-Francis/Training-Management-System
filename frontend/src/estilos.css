@@ -26,7 +26,10 @@
   --logo-flecha: #ff6b2c;
   --sombra: 0 1px 2px rgba(16, 42, 67, 0.05), 0 4px 12px rgba(16, 42, 67, 0.05);
   --sombra-alta: 0 2px 4px rgba(16, 42, 67, 0.07), 0 8px 20px rgba(16, 42, 67, 0.09);
-  --radio: 10px;
+  --radio: 0.625rem;
+  --ancho-contenido: 60rem;
+  --ancho-logo: min(36vw, 36vh); /* el logo de fondo; Inicio acomoda botones y cuadros a sus costados */
+  --separacion-logo: 1.5rem;
 
   /* Series de los gráficos (paleta validada para daltonismo): 1 = izquierdo/sin lado, 2 = derecho */
   --serie-1: #2a78d6;
@@ -71,6 +74,19 @@
   box-sizing: border-box;
 }
 
+/* Casi todos los tamaños están en rem: con la letra base crece todo en proporción. Es de 16 px hasta
+   1280 px de ancho de pantalla, unos 18 px en 1920 y 20 px como máximo. Parte de la letra elegida en el navegador. */
+html {
+  font-size: clamp(1rem, 0.75rem + 0.3125vw, 1.25rem);
+}
+
+/* En monitores anchos la columna de contenido se ensancha para aprovechar los costados. */
+@media (min-width: 1440px) {
+  :root {
+    --ancho-contenido: 72rem;
+  }
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -80,7 +96,7 @@ body {
 }
 
 h1 {
-  margin: 0 0 8px;
+  margin: 0 0 0.5rem;
   font-size: 1.6rem;
   letter-spacing: -0.01em;
 }
@@ -91,14 +107,14 @@ h1 {
 }
 
 .icono {
-  width: 22px;
-  height: 22px;
+  width: 1.375rem;
+  height: 1.375rem;
   flex-shrink: 0;
 }
 
 .logo {
-  width: 28px;
-  height: 28px;
+  width: 1.75rem;
+  height: 1.75rem;
   flex-shrink: 0;
 }
 
@@ -128,9 +144,9 @@ h1 {
 
 .contenedor {
   position: relative; /* por encima de la marca de agua */
-  max-width: 960px;
+  max-width: var(--ancho-contenido);
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 1.5rem 1rem;
 }
 
 /* Logo y nombre de fondo: fijos al desplazar la página y sin recibir clics. */
@@ -141,21 +157,22 @@ h1 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
+  gap: 1rem;
   opacity: var(--opacidad-marca-agua);
   color: var(--color-texto);
-  font-size: min(9vw, 4.5rem);
+  font-size: min(7.2vw, 3.6rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   white-space: nowrap;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
+  transform: translateY(var(--bajar-marca-agua, 0)); /* Inicio lo baja si hace falta (ver Inicio.tsx) */
 }
 
 .marca-agua .logo {
-  width: min(45vw, 45vh);
-  height: min(45vw, 45vh);
+  width: var(--ancho-logo);
+  height: var(--ancho-logo);
 }
 
 @media print {
@@ -166,14 +183,14 @@ h1 {
 
 .texto-suave {
   color: var(--color-texto-suave);
-  margin: 0 0 16px;
+  margin: 0 0 1rem;
 }
 
 .tarjeta {
   background: var(--color-superficie);
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
-  padding: 24px;
+  padding: 1.5rem;
   box-shadow: var(--sombra);
 }
 
@@ -182,8 +199,8 @@ h1 {
 .campo {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
   font-weight: 600;
 }
 
@@ -192,7 +209,7 @@ h1 {
 .campo textarea,
 .filtros input,
 .filtros select {
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   font: inherit;
@@ -232,16 +249,16 @@ h1 {
 /* Dos columnas en pantallas anchas, una en angostas. */
 .grilla {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 0 16px;
+  grid-template-columns: repeat(auto-fit, minmax(16.25rem, 1fr));
+  gap: 0 1rem;
 }
 
 .mensaje-error {
   color: var(--color-error);
   background: var(--color-error-fondo);
   border-radius: var(--radio);
-  padding: 8px 12px;
-  margin: 0 0 16px;
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 1rem;
 }
 
 /* ---------- Botones ---------- */
@@ -251,7 +268,7 @@ h1 {
   display: inline-block;
   font: inherit;
   border-radius: var(--radio);
-  padding: 10px 16px;
+  padding: 0.625rem 1rem;
   cursor: pointer;
   text-decoration: none;
   text-align: center;
@@ -274,7 +291,7 @@ h1 {
 .boton-eliminar {
   font: inherit;
   font-weight: 600;
-  padding: 10px 16px;
+  padding: 0.625rem 1rem;
   border: none;
   border-radius: var(--radio);
   background: var(--color-peligro);
@@ -313,7 +330,7 @@ h1 {
 }
 
 .encabezado .boton-secundario {
-  padding: 6px 12px;
+  padding: 0.375rem 0.75rem;
   white-space: nowrap;
 }
 
@@ -329,14 +346,14 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 1rem;
   background: radial-gradient(circle at 50% 0%, var(--color-primario-suave), var(--color-fondo) 60%);
 }
 
 .login-formulario {
   width: 100%;
-  max-width: 400px;
-  padding: 32px;
+  max-width: 25rem;
+  padding: 2rem;
   box-shadow: var(--sombra-alta);
   animation: aparecer 0.25s ease-out;
 }
@@ -344,8 +361,8 @@ h1 {
 .login-marca {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .login-marca h1 {
@@ -359,8 +376,8 @@ h1 {
 }
 
 .login-marca .logo {
-  width: 40px;
-  height: 40px;
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
 .login-formulario .boton {
@@ -377,20 +394,20 @@ h1 {
 }
 
 .encabezado-contenido {
-  max-width: 960px;
+  max-width: var(--ancho-contenido);
   margin: 0 auto;
-  padding: 12px 16px;
+  padding: 0.75rem 1rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 16px;
+  gap: 0.5rem 1rem;
 }
 
 .marca {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   font-weight: 700;
   color: var(--color-texto);
   text-decoration: none;
@@ -400,19 +417,19 @@ h1 {
 .encabezado-usuario {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .menu {
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
   flex: 1;
 }
 
 .menu a {
   color: var(--color-texto-suave);
   text-decoration: none;
-  padding: 6px 10px;
+  padding: 0.375rem 0.625rem;
   border-radius: var(--radio);
   transition: background-color 0.15s, color 0.15s;
 }
@@ -436,7 +453,7 @@ a {
 }
 
 h2 {
-  margin: 0 0 16px;
+  margin: 0 0 1rem;
   font-size: 1.1rem;
 }
 
@@ -444,32 +461,32 @@ h2 {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .volver {
   display: inline-block;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
   text-decoration: none;
 }
 
 .acciones {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .seccion {
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .filtros {
   display: grid;
   grid-template-columns: 1fr auto auto;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .filtros select {
@@ -478,13 +495,13 @@ h2 {
 
 .insignias {
   display: flex;
-  gap: 6px;
+  gap: 0.375rem;
   flex-wrap: wrap;
 }
 
 .insignia {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 2px 0.5rem;
   border-radius: 999px;
   font-size: 0.85rem;
   background: var(--color-fondo);
@@ -508,13 +525,13 @@ h2 {
   width: 100%;
   border-collapse: collapse;
   background: var(--color-superficie);
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
 .tabla th,
 .tabla td {
   text-align: left;
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
   border-bottom: 2px solid var(--color-borde);
   vertical-align: top;
 }
@@ -547,8 +564,8 @@ h2 {
 
 .datos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
+  gap: 1rem;
   margin: 0;
 }
 
@@ -568,23 +585,52 @@ h2 {
 }
 
 .ultimos-ingresos {
-  margin-top: 24px;
+  margin-top: 1.5rem;
 }
 
 /* ---------- Panel principal (Inicio) ---------- */
 
+/* Dos a cada lado del logo de fondo: la columna del medio, del ancho del logo, queda vacía. */
 .indicadores {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin: 8px 0 16px;
+  grid-template-columns: 1fr var(--ancho-logo) 1fr;
+  gap: 0.75rem var(--separacion-logo);
+  margin: 0.5rem 0 1rem;
+}
+
+.indicadores > :nth-child(odd) {
+  grid-column: 1;
+  justify-self: end;
+}
+
+.indicadores > :nth-child(even) {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.indicadores > * {
+  width: min(100%, 15rem);
+}
+
+/* En el celular, como antes: a todo el ancho y tantos por fila como entren. */
+@media (max-width: 760px) {
+  .indicadores {
+    grid-template-columns: repeat(auto-fit, minmax(9.375rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  .indicadores > :nth-child(n) {
+    grid-column: auto;
+    justify-self: stretch;
+    width: auto;
+  }
 }
 
 .indicador {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
+  gap: 0.25rem;
+  padding: 1rem;
   font: inherit;
   font-weight: 600;
   color: inherit;
@@ -614,22 +660,88 @@ button.indicador:hover {
   color: var(--color-primario);
 }
 
-.saludo-inicio {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 4px 16px;
-  margin-bottom: 16px;
+/* Saludo y fecha; debajo, "Registrar Asistencia" sobre el logo de fondo y un botón a cada lado de él.
+   La separación entre las dos filas la calcula Inicio.tsx para que los botones queden justo encima del logo. */
+.cabecera-inicio {
+  display: grid;
+  grid-template-columns: 1fr var(--ancho-logo) 1fr;
+  grid-template-areas:
+    "saludo . fecha"
+    "alumno asistencia rutina";
+  align-items: center;
+  gap: var(--separacion-filas, 2rem) var(--separacion-logo);
+  margin-bottom: 1.5rem; /* + 0.5rem de .indicadores = 2rem */
 }
 
-.saludo-inicio h1,
-.saludo-inicio p {
+.cabecera-inicio h1 {
+  grid-area: saludo;
   margin: 0;
 }
 
-.acciones-inicio {
-  margin-bottom: 16px;
+.cabecera-inicio p {
+  grid-area: fecha;
+  margin: 0;
+  text-align: right;
+}
+
+.boton-inicio {
+  padding-block: 1rem;
+}
+
+.boton-asistencia {
+  grid-area: asistencia;
+  justify-self: center;
+}
+
+/* Afuera del logo, pegados a sus costados. */
+.boton-alumno {
+  grid-area: alumno;
+  justify-self: end;
+}
+
+.boton-rutina {
+  grid-area: rutina;
+  justify-self: start;
+}
+
+/* En el celular, como antes: saludo y fecha en una línea y debajo los tres botones seguidos. */
+@media (max-width: 760px) {
+  .cabecera-inicio {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .cabecera-inicio h1,
+  .cabecera-inicio p {
+    order: -1;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Corte de línea entre el texto y los botones. */
+  .cabecera-inicio::before {
+    content: "";
+    flex-basis: 100%;
+  }
+
+  .boton-inicio {
+    padding-block: 0.625rem;
+  }
+
+  .boton-asistencia {
+    order: 1;
+  }
+
+  .boton-alumno {
+    order: 2;
+  }
+
+  .boton-rutina {
+    order: 3;
+  }
 }
 
 .indicador-etiqueta {
@@ -649,7 +761,7 @@ button.indicador:hover {
 
 .lista-asistencia {
   display: grid;
-  gap: 8px;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -659,9 +771,9 @@ button.indicador:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  gap: 1rem;
   width: 100%;
-  padding: 12px 16px;
+  padding: 0.75rem 1rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   background: var(--color-superficie);
@@ -683,7 +795,7 @@ button.indicador:hover {
 }
 
 .fila-configuracion {
-  padding: 12px 0;
+  padding: 0.75rem 0;
   border-top: 2px solid var(--color-borde);
 }
 
@@ -697,16 +809,16 @@ button.indicador:hover {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 8px 16px;
-  min-height: 40px;
+  gap: 0.5rem 1rem;
+  min-height: 2.5rem;
 }
 
 .fila-configuracion .formulario-pago {
-  margin: 12px 0 0;
+  margin: 0.75rem 0 0;
 }
 
 .mensaje-ok {
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
   border: 2px solid var(--color-ok-borde);
   border-radius: var(--radio);
   background: var(--color-ok-fondo);
@@ -724,8 +836,8 @@ button.indicador:hover {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 4px 16px;
-  padding: 10px 0;
+  gap: 0.25rem 1rem;
+  padding: 0.625rem 0;
   border-top: 2px solid var(--color-borde);
 }
 
@@ -733,16 +845,16 @@ button.indicador:hover {
 
 .opciones-bloque {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .opcion-bloque {
   font: inherit;
   font-weight: 600;
   text-align: left;
-  padding: 20px;
+  padding: 1.25rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   background: var(--color-superficie);
@@ -805,8 +917,8 @@ button.indicador:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 16px 24px;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
   cursor: pointer;
   list-style: none; /* oculta el triángulo propio del navegador */
   border-radius: var(--radio);
@@ -832,8 +944,8 @@ button.indicador:hover {
 /* Flecha: apunta hacia abajo cerrada y hacia arriba abierta. */
 .desplegable summary::after {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
   border-right: 3px solid var(--color-texto-suave);
   border-bottom: 3px solid var(--color-texto-suave);
   transform: rotate(45deg);
@@ -855,26 +967,26 @@ button.indicador:hover {
 }
 
 .desplegable-contenido {
-  padding: 16px 24px 24px;
+  padding: 1rem 1.5rem 1.5rem;
 }
 
 /* ---------- Anotaciones ---------- */
 
 .separador {
   border-top: 2px solid var(--color-borde);
-  margin: 8px 0 16px;
+  margin: 0.5rem 0 1rem;
 }
 
 .lista-encabezado {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .lista-encabezado select {
-  padding: 6px 10px;
+  padding: 0.375rem 0.625rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   font: inherit;
@@ -890,38 +1002,39 @@ button.indicador:hover {
 
 .anotacion {
   border-top: 2px solid var(--color-borde);
-  padding: 12px 0;
+  padding: 0.75rem 0;
 }
 
 .anotacion p {
-  margin: 6px 0 0;
+  margin: 0.375rem 0 0;
 }
 
 .anotacion-cabecera {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .anotacion-acciones {
   margin-left: auto;
   display: flex;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .boton-desplegar {
   width: 100%;
-  margin-top: 4px;
+  margin-top: 0.25rem;
 }
 
 .boton-link {
   background: none;
   border: none;
-  padding: 4px 6px;
+  padding: 0.25rem 0.375rem;
   font: inherit;
   font-size: 0.9rem;
   color: var(--color-primario);
+  text-decoration: none; /* los que son enlaces (<a>), iguales a los que son botones */
   cursor: pointer;
   border-radius: var(--radio);
 }
@@ -931,8 +1044,8 @@ button.indicador:hover {
 }
 
 .boton-ampliar {
-  padding: 0 4px;
-  margin-left: 4px;
+  padding: 0 0.25rem;
+  margin-left: 0.25rem;
 }
 
 .boton-link.peligro {
@@ -956,28 +1069,62 @@ button.indicador:hover {
 .proxima-evaluacion {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  margin: 0 0 16px;
+  margin: 0 0 1rem;
+}
+
+/* Datos secundarios de una pantalla: más chicos y en gris. */
+.proxima-evaluacion.discreta {
+  color: var(--color-texto-suave);
+  font-size: 0.9rem;
+}
+
+.texto-chico {
+  font-size: 0.9rem;
+}
+
+/* Cargar o editar una evaluación: lo que se escribe, en gris, para diferenciarlo del título de cada campo. */
+.formulario-evaluacion .campo :is(input, select) {
+  color: var(--color-texto-suave);
+}
+
+/* "Evolución" más grande, con la ayuda de los gráficos en la misma línea, a la derecha. */
+.titulo-evolucion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.titulo-evolucion h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.titulo-evolucion p {
+  margin: 0;
 }
 
 .fila-resultado {
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
-  padding: 12px 12px 0;
-  margin-bottom: 12px;
+  padding: 0.75rem 0.75rem 0;
+  margin-bottom: 0.75rem;
 }
 
 .fila-resultado-campos {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 0.8fr 1.4fr;
-  gap: 0 12px;
+  gap: 0 0.75rem;
 }
 
 .fila-resultado-pie {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .fila-resultado-pie .campo {
@@ -985,7 +1132,7 @@ button.indicador:hover {
 }
 
 .fila-resultado-pie .boton-link {
-  margin-top: 28px;
+  margin-top: 1.75rem;
 }
 
 /* ---------- Pruebas ---------- */
@@ -993,19 +1140,19 @@ button.indicador:hover {
 .formulario-prueba {
   display: grid;
   grid-template-columns: 2fr 1.2fr 0.8fr auto;
-  gap: 0 12px;
+  gap: 0 0.75rem;
   align-items: start;
 }
 
 .formulario-prueba-acciones {
-  margin-top: 26px;
+  margin-top: 1.625rem;
 }
 
 .casilla {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
 /* ---------- Pagos ---------- */
@@ -1022,13 +1169,13 @@ button.indicador:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
   font-weight: 600;
 }
 
 .pago-plan select {
-  padding: 6px 10px;
+  padding: 0.375rem 0.625rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   font: inherit;
@@ -1040,38 +1187,43 @@ button.indicador:hover {
 .pago-estado {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.625rem;
   flex-wrap: wrap;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
+}
+
+/* Sin el margen de párrafo de .texto-suave: con él, el texto queda más arriba que el resto de la fila. */
+.pago-estado > * {
+  margin: 0;
 }
 
 .pago-saldo {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
   background: var(--color-error-fondo);
   border-radius: var(--radio);
-  padding: 8px 12px;
-  margin-bottom: 12px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
 }
 
 .fila-plan {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
-/* Link secundario, poco llamativo (ej.: "Ir a Pagos"). */
+/* Link secundario, poco llamativo (ej.: "Ir a Membresías"). */
 .link-discreto {
   font-size: 0.9rem;
   color: var(--color-texto-suave);
   text-decoration: none;
   white-space: nowrap;
-  padding-top: 6px;
+  padding-top: 0.375rem;
 }
 
 .link-discreto:hover {
@@ -1080,12 +1232,12 @@ button.indicador:hover {
 }
 
 .deuda-titulo {
-  margin: 0 0 4px;
+  margin: 0 0 0.25rem;
 }
 
 .lista-deuda {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 1.125rem;
   font-size: 0.9rem;
   color: var(--color-texto-suave);
 }
@@ -1097,7 +1249,7 @@ button.indicador:hover {
   text-decoration: none;
   font-weight: 600;
   font-size: 0.9rem;
-  padding: 6px 12px;
+  padding: 0.375rem 0.75rem;
   border-radius: var(--radio);
 }
 
@@ -1108,40 +1260,100 @@ button.indicador:hover {
 .formulario-pago {
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
-  padding: 16px;
-  margin-bottom: 8px;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .formulario-pago h3 {
-  margin: 0 0 12px;
+  margin: 0 0 0.75rem;
   font-size: 1rem;
+}
+
+/* Registrar pago, solo en pantallas anchas (en el celular, como antes): los campos repartidos en columnas
+   iguales, cada uno centrado en la suya y tan ancho como su título (con un mínimo para que entren la fecha
+   y el importe; contain hace que el control no imponga su ancho propio). */
+@media (min-width: 761px) {
+  /* El recuadro se divide en 2 columnas iguales: fecha y cantidad (o concepto) centrados en la izquierda,
+     medio de pago e importe centrados en la derecha. */
+  .formulario-registrar-pago > .grilla-pago {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0 1.5rem;
+  }
+
+  .grilla-pago > * {
+    justify-self: center;
+  }
+
+  /* Con lugar para los cuatro (desde ~1100 px), en una sola fila, cada uno centrado en un cuarto. */
+  @media (min-width: 1100px) {
+    .formulario-registrar-pago > .grilla-pago {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .grilla-pago .campo > :is(input, select) {
+    contain: inline-size;
+    min-width: 10rem;
+  }
+
+  /* El título y el tipo de pago, a la izquierda; el resto en una columna del ancho de los campos, centrada
+     en el recuadro. Los textos se acomodan a ese ancho (contain) en lugar de estirarlo. */
+  .formulario-registrar-pago {
+    display: grid;
+    grid-template-columns: 1fr max-content 1fr;
+  }
+
+  .formulario-registrar-pago > * {
+    grid-column: 2;
+  }
+
+  /* Título, tipo de pago y el texto de qué período cubre: a la izquierda y a todo el ancho (en una línea). */
+  .formulario-registrar-pago > :is(h3, .opciones-tipo, p.texto-suave) {
+    grid-column: 1 / -1;
+    contain: none;
+  }
+
+  .formulario-registrar-pago > p {
+    contain: inline-size;
+  }
+
+  /* Botones a la derecha: primero Cancelar, después Registrar. */
+  .formulario-registrar-pago > .acciones {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .formulario-registrar-pago > .acciones > .boton {
+    order: 1;
+  }
 }
 
 .opciones-tipo {
   display: flex;
-  gap: 16px;
+  gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .opciones-tipo label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   cursor: pointer;
 }
 
 .filtros-chips {
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .chip {
   font: inherit;
   font-size: 0.9rem;
-  padding: 6px 12px;
+  padding: 0.375rem 0.75rem;
   border-radius: 999px;
   border: 2px solid var(--color-borde);
   background: var(--color-superficie);
@@ -1158,9 +1370,9 @@ button.indicador:hover {
 .filtros-rango {
   display: flex;
   align-items: flex-end;
-  gap: 12px;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
 .filtros-rango .campo input {
@@ -1168,31 +1380,30 @@ button.indicador:hover {
 }
 
 .filtros-rango .acciones {
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 
 .totales {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .total {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 16px;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+  text-align: center;
 }
 
 .total strong {
   font-size: 1.2rem;
 }
 
-.total-principal {
-  border-color: var(--color-primario);
-}
-
+/* El total se distingue solo por el color del monto: un borde de color se confundiría con algo seleccionado. */
 .total-principal strong {
   color: var(--color-primario);
 }
@@ -1201,31 +1412,27 @@ button.indicador:hover {
 
 .graficos {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(23.75rem, 100%), 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 .grafico {
   margin: 0;
-  padding: 16px;
+  padding: 1rem;
 }
 
 .grafico h3 {
-  margin: 0 0 8px;
+  margin: 0 0 0.5rem;
   font-size: 1rem;
 }
 
 .grafico-metricas {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 24px;
-  margin: 0 0 8px;
+  gap: 0.25rem 1.5rem;
+  margin: 0 0 0.5rem;
   font-size: 0.9rem;
-}
-
-.grafico-metricas dd {
-  margin: 0;
   color: var(--color-texto-suave);
 }
 
@@ -1265,10 +1472,6 @@ button.indicador:hover {
   cursor: default;
 }
 
-.grafico-eje-numero {
-  fill: var(--color-texto);
-  font-weight: 700;
-}
 
 .subtitulo {
   margin: 0;
@@ -1282,42 +1485,48 @@ button.indicador:hover {
 
 .grafico-leyenda {
   display: flex;
-  gap: 16px;
+  gap: 1rem;
   font-size: 0.85rem;
   color: var(--color-texto-suave);
-  margin-top: 4px;
+  margin-top: 0.25rem;
 }
 
 .muestra-serie {
   display: inline-block;
-  width: 14px;
-  height: 5px;
+  width: 0.875rem;
+  height: 0.3125rem;
   border-radius: 2px;
   vertical-align: middle;
-  margin-right: 6px;
+  margin-right: 0.375rem;
 }
 
 /* ---------- Listas y búsqueda ---------- */
 
 .filtros-simple {
-  grid-template-columns: minmax(0, 420px);
+  grid-template-columns: minmax(0, 26.25rem);
 }
 
-.acciones-columna {
+/* Botones de Pagos: en una fila; en el celular, uno debajo del otro. */
+.acciones-pagos {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
+}
+
+@media (max-width: 760px) {
+  .acciones-pagos {
+    flex-direction: column;
+  }
 }
 
 .buscador {
   width: 100%;
-  padding: 10px 12px;
+  padding: 0.625rem 0.75rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   font: inherit;
   background: var(--color-superficie);
   color: inherit;
-  margin-bottom: 12px;
+  margin-bottom: 0.75rem;
 }
 
 .lista-seleccion {
@@ -1333,7 +1542,7 @@ button.indicador:hover {
   background: none;
   border: none;
   border-top: 2px solid var(--color-borde);
-  padding: 10px 8px;
+  padding: 0.625rem 0.5rem;
   cursor: pointer;
   color: inherit;
 }
@@ -1343,7 +1552,7 @@ button.indicador:hover {
 }
 
 .texto-recortado {
-  max-width: 420px;
+  max-width: 26.25rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1356,27 +1565,27 @@ button.indicador:hover {
 .edicion-precio {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .edicion-precio input {
-  padding: 8px 10px;
+  padding: 0.5rem 0.625rem;
   border: 2px solid var(--color-borde);
   border-radius: var(--radio);
   font: inherit;
   background: var(--color-superficie);
   color: inherit;
-  width: 160px;
+  width: 10rem;
 }
 
 .edicion-precio .boton,
 .edicion-precio .boton-secundario {
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
 }
 
 .nota {
-  margin: 12px 0 0;
+  margin: 0.75rem 0 0;
   font-size: 0.85rem;
 }
 
@@ -1388,7 +1597,7 @@ button.indicador:hover {
 
   .formulario-prueba-acciones {
     margin-top: 0;
-    margin-bottom: 16px;
+    margin-bottom: 1rem;
   }
 }
 
@@ -1396,7 +1605,7 @@ button.indicador:hover {
 @media (max-width: 760px) {
   .boton-menu {
     display: inline-block;
-    min-height: 40px;
+    min-height: 2.5rem;
   }
 
   .solo-angosto {
@@ -1419,7 +1628,7 @@ button.indicador:hover {
   }
 
   .menu-abierto .menu a {
-    padding: 12px;
+    padding: 0.75rem;
   }
 
   .menu-abierto .encabezado-usuario {
@@ -1427,11 +1636,11 @@ button.indicador:hover {
     flex-direction: column;
     align-items: stretch;
     width: 100%;
-    gap: 8px;
+    gap: 0.5rem;
   }
 
   .menu-abierto .encabezado-usuario .boton-secundario {
-    padding: 10px 12px;
+    padding: 0.625rem 0.75rem;
   }
 }
 
@@ -1444,11 +1653,11 @@ button.indicador:hover {
   }
 
   .contenedor {
-    padding: 16px 12px;
+    padding: 1rem 0.75rem;
   }
 
   .tarjeta {
-    padding: 16px;
+    padding: 1rem;
   }
 
   .desplegable {
@@ -1456,15 +1665,15 @@ button.indicador:hover {
   }
 
   .desplegable summary {
-    padding: 14px 16px;
+    padding: 0.875rem 1rem;
   }
 
   .desplegable-contenido {
-    padding: 12px 16px 16px;
+    padding: 0.75rem 1rem 1rem;
   }
 
   .indicador {
-    padding: 12px;
+    padding: 0.75rem;
   }
 
   .filtros,
@@ -1482,27 +1691,28 @@ button.indicador:hover {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .acciones-columna {
+  .acciones-pagos {
     width: 100%;
   }
 
   .acciones .boton,
   .acciones .boton-secundario,
-  .acciones .boton-eliminar {
+  .acciones .boton-eliminar,
+  .boton-inicio {
     flex: 1 1 auto;
   }
 
   .boton-link {
-    min-height: 40px;
-    padding: 8px 10px;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
   }
 
   .chip {
-    padding: 8px 14px;
+    padding: 0.5rem 0.875rem;
   }
 
   .link-discreto {
-    padding: 8px 0;
+    padding: 0.5rem 0;
   }
 
   .pago-plan select {
@@ -1536,8 +1746,8 @@ button.indicador:hover {
   }
 
   .tabla tbody tr {
-    margin-bottom: 10px;
-    padding: 4px 12px;
+    margin-bottom: 0.625rem;
+    padding: 0.25rem 0.75rem;
     border: 2px solid var(--color-borde);
     border-radius: var(--radio);
     background: var(--color-superficie);
@@ -1549,8 +1759,8 @@ button.indicador:hover {
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-    gap: 2px 12px;
-    padding: 8px 0;
+    gap: 2px 0.75rem;
+    padding: 0.5rem 0;
     border-bottom: 2px solid var(--color-borde);
     text-align: right;
   }
@@ -1586,11 +1796,11 @@ button.indicador:hover {
   }
 
   .tabla td a:not(.boton-link, .boton-whatsapp) {
-    padding: 4px 0;
+    padding: 0.25rem 0;
   }
 
   .boton-whatsapp {
-    padding: 10px 14px;
+    padding: 0.625rem 0.875rem;
   }
 
   /* El gráfico se achica entero: su texto necesita más tamaño para seguir legible. */

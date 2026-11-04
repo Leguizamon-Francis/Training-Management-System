@@ -3,10 +3,13 @@ import { ErrorApi } from "../api/cliente";
 import { pagosApi, type DatosPago, type MedioPago } from "../api/pagos";
 import type { Plan } from "../api/planes";
 import { formatearFecha, hoyComoTexto, sumarMeses } from "../utils/formato";
-import { ETIQUETAS_MEDIO, importeParaEditar, textoPrecioPlan } from "../utils/pagos";
+import { ETIQUETAS_MEDIO, importeParaEditar } from "../utils/pagos";
 import Campo from "./Campo";
 
 type TipoPago = DatosPago["tipo"];
+
+// Cuotas que se pueden pagar juntas (el backend tiene el mismo tope).
+const MAXIMO_CUOTAS_JUNTAS = 12;
 
 interface Props {
   alumnoId: number;
@@ -17,14 +20,17 @@ interface Props {
   onCancelar: () => void;
 }
 
-// Registro de un pago: cuota mensual (se paga completa) u otro concepto.
+// Registro de un pago: cuotas mensuales (una o varias juntas, cada una completa) u otro concepto.
 export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAdeudadas, onGuardado, onCancelar }: Props) {
-  // Si el plan todavía no tiene precio (0), el importe queda vacío para completarlo a mano.
-  const precioPlan = plan && Number(plan.precioMensual) > 0 ? importeParaEditar(plan.precioMensual) : "";
+  // Importe que se propone para las cuotas: precio de la membresía × cantidad. Si todavía no tiene precio (0),
+  // queda vacío para completarlo a mano.
+  const importeSugerido = (cantidad: number) =>
+    plan && Number(plan.precioMensual) > 0 ? importeParaEditar(Number(plan.precioMensual) * cantidad) : "";
   const [tipo, setTipo] = useState<TipoPago>("CUOTA");
   const [fecha, setFecha] = useState(hoyComoTexto());
   const [medio, setMedio] = useState<MedioPago>("EFECTIVO");
-  const [importe, setImporte] = useState(precioPlan);
+  const [importe, setImporte] = useState(importeSugerido(1));
+  const [cantidad, setCantidad] = useState(1);
   const [concepto, setConcepto] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +41,14 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
     setTipo(nuevo);
     setErrores({});
     setError("");
-    setImporte(nuevo === "CUOTA" ? precioPlan : "");
+    setImporte(nuevo === "CUOTA" ? importeSugerido(1) : "");
+    setCantidad(1);
+  }
+
+  // Con varias cuotas se propone el total; se puede cambiar a mano.
+  function cambiarCantidad(nueva: number) {
+    setCantidad(nueva);
+    setImporte(importeSugerido(nueva));
   }
 
   async function enviar(evento: FormEvent<HTMLFormElement>) {
@@ -44,7 +57,8 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
     setErrores({});
     setGuardando(true);
 
-    const datos: DatosPago = tipo === "CUOTA" ? { tipo, fecha, importe, medio } : { tipo, fecha, importe, concepto, medio };
+    const datos: DatosPago =
+      tipo === "CUOTA" ? { tipo, fecha, importe, medio, cantidad } : { tipo, fecha, importe, concepto, medio };
 
     try {
       await pagosApi.registrar(alumnoId, datos);
@@ -58,9 +72,11 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
   }
 
   const sinPlan = tipo === "CUOTA" && !plan;
+  const varias = tipo === "CUOTA" && cantidad > 1;
+  const inicio = inicioCuota ?? (/^\d{4}-\d{2}-\d{2}$/.test(fecha) ? fecha : null);
 
   return (
-    <form className="formulario-pago" onSubmit={enviar} noValidate>
+    <form className="formulario-pago formulario-registrar-pago" onSubmit={enviar} noValidate>
       <h3>Registrar pago</h3>
       {error && <p className="mensaje-error">{error}</p>}
 
@@ -81,7 +97,7 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
         </p>
       )}
 
-      <div className="grilla">
+      <div className="grilla grilla-pago">
         <Campo etiqueta="Fecha de pago" obligatorio errores={errores.fecha}>
           <input type="date" value={fecha} max={hoyComoTexto()} onChange={(e) => setFecha(e.target.value)} />
         </Campo>
@@ -95,6 +111,18 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
           </select>
         </Campo>
 
+        {tipo === "CUOTA" && (
+          <Campo etiqueta="Cantidad de cuotas" obligatorio errores={errores.cantidad}>
+            <select value={cantidad} onChange={(e) => cambiarCantidad(Number(e.target.value))}>
+              {Array.from({ length: MAXIMO_CUOTAS_JUNTAS }, (_, i) => i + 1).map((numero) => (
+                <option key={numero} value={numero}>
+                  {numero === 1 ? "1 cuota" : `${numero} cuotas`}
+                </option>
+              ))}
+            </select>
+          </Campo>
+        )}
+
         {tipo === "OTRO" && (
           <Campo etiqueta="Concepto" obligatorio errores={errores.concepto}>
             <input value={concepto} onChange={(e) => setConcepto(e.target.value)} placeholder="Ej.: remera, evaluación extra" />
@@ -102,25 +130,26 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
         )}
 
         <Campo
-          etiqueta={tipo === "CUOTA" ? "Importe de la cuota" : "Importe"}
+          etiqueta={tipo === "OTRO" ? "Importe" : varias ? "Importe Total" : "Importe de la cuota"}
           obligatorio
           errores={errores.importe}
-          ayuda={tipo === "CUOTA" && plan ? `Precio de la membresía: ${textoPrecioPlan(plan.precioMensual)}` : undefined}
         >
           <input inputMode="decimal" value={importe} onChange={(e) => setImporte(e.target.value)} placeholder="Ej.: 25.000" />
         </Campo>
       </div>
 
-      {tipo === "CUOTA" && (inicioCuota || /^\d{4}-\d{2}-\d{2}$/.test(fecha)) && (
+      {tipo === "CUOTA" && inicio && (
         <p className="texto-suave">
-          La cuota cubre del {formatearFecha(inicioCuota ?? fecha)} al {formatearFecha(sumarMeses(inicioCuota ?? fecha, 1))}.
-          {cantidadAdeudadas > 1 && ` Debe ${cantidadAdeudadas} cuotas: este pago cubre la más vieja.`}
+          {varias ? `Las ${cantidad} cuotas cubren` : "La cuota cubre"} del {formatearFecha(inicio)} al{" "}
+          {formatearFecha(sumarMeses(inicio, cantidad))}.
+          {cantidadAdeudadas > 1 &&
+            ` Debe ${cantidadAdeudadas} cuotas: ${varias ? `estos pagos cubren las ${Math.min(cantidad, cantidadAdeudadas)} más viejas` : "este pago cubre la más vieja"}.`}
         </p>
       )}
 
       <div className="acciones">
         <button type="submit" className="boton" disabled={guardando || sinPlan}>
-          {guardando ? "Guardando…" : "Registrar pago"}
+          {guardando ? "Guardando…" : varias ? `Registrar ${cantidad} cuotas` : "Registrar pago"}
         </button>
         <button type="button" className="boton-secundario" onClick={onCancelar}>
           Cancelar

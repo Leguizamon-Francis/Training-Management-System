@@ -5,7 +5,7 @@ import { Logo } from "./Iconos";
 import { useSesion } from "./Sesion";
 
 // El editor de rutinas va sin marca de agua: ahí importa solo la planilla.
-const ES_EDITOR_RUTINA = /^\/rutinas\/(editar\/\d+|\d+\/nueva)/;
+const ES_EDITOR_RUTINA = /^\/rutinas\/(editar\/\d+|(\d+|sin-alumno)\/nueva)/;
 
 // Estructura común de las pantallas internas: encabezado con menú + contenido.
 export default function Layout() {
@@ -36,10 +36,7 @@ export default function Layout() {
           </button>
           <nav className="menu">
             <NavLink to="/alumnos">Alumnos</NavLink>
-            {/* Ingresos no está en el menú: se abre desde Pagos, que queda resaltado */}
-            <NavLink to="/pagos" className={() => (/^\/(pagos|ingresos)/.test(pathname) ? "active" : "")}>
-              Pagos
-            </NavLink>
+            <NavLink to="/membresias">Membresías</NavLink>
             <NavLink to="/rutinas">Rutinas</NavLink>
             <NavLink to="/evaluaciones">Evaluaciones</NavLink>
             <NavLink to="/asistencias">Asistencias</NavLink>

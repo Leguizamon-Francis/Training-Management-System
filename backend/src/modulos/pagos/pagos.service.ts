@@ -140,6 +140,13 @@ export async function obtenerPagosAlumno(alumnoId: number) {
   return { plan: alumno.plan, situacion, pagos };
 }
 
+// Reparte un total entre varias cuotas: todas iguales, al centavo, y lo que sobra en la última,
+// para que la suma dé exactamente lo que se cobró. Ej.: 100.000 en 3 → 33.333,33 + 33.333,33 + 33.333,34.
+export function repartirImporte(total: Prisma.Decimal, cantidad: number) {
+  const parte = total.div(cantidad).toDecimalPlaces(2, Prisma.Decimal.ROUND_DOWN);
+  return [...Array<Prisma.Decimal>(cantidad - 1).fill(parte), total.minus(parte.times(cantidad - 1))];
+}
+
 export async function registrarPago(alumnoId: number, datos: DatosPago) {
   const { alumno, situacion } = await cargarSituacion(alumnoId);
   const fecha = fechaDesdeTexto(datos.fecha);
@@ -149,22 +156,29 @@ export async function registrarPago(alumnoId: number, datos: DatosPago) {
     if (!planId) {
       throw new ErrorHttp(400, "El alumno no tiene una membresía asignada. Asignale una antes de registrar la cuota.");
     }
-    // La cuota cubre el período más viejo que debe (o el siguiente, si está al día).
-    // Si nunca pagó, empieza en la fecha de pago.
-    const desde = situacion.inicioProximaCuota ?? datos.fecha;
+    // La primera cuota cubre el período más viejo que debe (o el siguiente, si está al día); si nunca pagó,
+    // empieza en la fecha de pago. Con varias cuotas, cada una sigue a la anterior: una cuota con su pago
+    // por mes, como si se hubieran pagado de a una. Cada período se calcula desde el inicio (inicio + k meses)
+    // para no "correr" los fines de mes. Devuelve el último pago, el que define el nuevo vencimiento.
+    const inicio = situacion.inicioProximaCuota ?? datos.fecha;
+    const importes = repartirImporte(datos.importe, datos.cantidad);
     return prisma.$transaction(async (tx) => {
-      const cuota = await tx.cuota.create({
-        data: {
-          alumnoId,
-          planId,
-          desde: fechaDesdeTexto(desde),
-          vence: fechaDesdeTexto(sumarMeses(desde, 1)),
-          importe: datos.importe,
-        },
-      });
-      return tx.pago.create({
-        data: { alumnoId, cuotaId: cuota.id, fecha, importe: datos.importe, medio: datos.medio, concepto: "Cuota mensual" },
-      });
+      let ultimo;
+      for (const [k, importe] of importes.entries()) {
+        const cuota = await tx.cuota.create({
+          data: {
+            alumnoId,
+            planId,
+            desde: fechaDesdeTexto(sumarMeses(inicio, k)),
+            vence: fechaDesdeTexto(sumarMeses(inicio, k + 1)),
+            importe,
+          },
+        });
+        ultimo = await tx.pago.create({
+          data: { alumnoId, cuotaId: cuota.id, fecha, importe, medio: datos.medio, concepto: "Cuota mensual" },
+        });
+      }
+      return ultimo!;
     });
   }
 

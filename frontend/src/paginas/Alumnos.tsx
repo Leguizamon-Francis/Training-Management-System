@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { alumnosApi, type AlumnoResumen, type FiltrosAlumnos } from "../api/alumnos";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
@@ -8,6 +8,7 @@ import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { calcularEdad } from "../utils/formato";
 
 export default function Alumnos() {
+  const desdeInicio = useLocation().state?.desde === "inicio"; // tarjeta "Alumnos activos" de Inicio
   const [filtros, setFiltros] = useState<FiltrosAlumnos>({ buscar: "", estado: "activos", perfil: "" });
   const [alumnos, setAlumnos] = useState<AlumnoResumen[] | null>(null);
   const [error, setError] = useState("");
@@ -40,6 +41,11 @@ export default function Alumnos() {
 
   return (
     <section>
+      {desdeInicio && (
+        <Link to="/" className="volver">
+          ← Inicio
+        </Link>
+      )}
       <div className="pagina-encabezado">
         <h1>Alumnos</h1>
         <Link to="/alumnos/nuevo" className="boton">

@@ -74,7 +74,7 @@ export interface ReporteIngresos {
 
 // Dos tipos de pago; "tipo" indica cuáles son los demás campos.
 export type DatosPago =
-  | { tipo: "CUOTA"; fecha: string; importe: string; medio: MedioPago }
+  | { tipo: "CUOTA"; fecha: string; importe: string; medio: MedioPago; cantidad: number } // importe = total de las cuotas
   | { tipo: "OTRO"; fecha: string; importe: string; concepto: string; medio: MedioPago };
 
 export interface CorreccionPago {

@@ -10,7 +10,7 @@ import Desplegable from "./Desplegable";
 import ProximaEvaluacion from "./ProximaEvaluacion";
 
 // Resumen de evaluaciones dentro de la ficha: próxima evaluación y último valor de cada prueba
-// comparado con la medición anterior. El historial completo está en /alumnos/:id/evaluaciones.
+// comparado con la medición anterior. El historial completo está en /evaluaciones/alumnos/:id.
 export default function EvaluacionesAlumno({ alumnoId }: { alumnoId: number }) {
   const { datos, error } = useCarga(() => evaluacionesApi.listar(alumnoId), [alumnoId]);
 
@@ -33,11 +33,11 @@ export default function EvaluacionesAlumno({ alumnoId }: { alumnoId: number }) {
     <Desplegable titulo="Evaluaciones">
       <div className="pagina-encabezado">
         <div className="acciones">
-          <Link to={`/alumnos/${alumnoId}/evaluaciones/nueva`} className="boton">
+          <Link to={`/evaluaciones/alumnos/${alumnoId}/nueva`} className="boton">
             Nueva evaluación
           </Link>
           {cantidad > 0 && (
-            <Link to={`/alumnos/${alumnoId}/evaluaciones`} className="boton-secundario">
+            <Link to={`/evaluaciones/alumnos/${alumnoId}`} className="boton-secundario">
               Historial y Métricas ({cantidad})
             </Link>
           )}

@@ -37,19 +37,21 @@ export default function AlumnoEvaluaciones() {
           </h1>
           <Link to={`/alumnos/${alumnoId}`}>Ver ficha del alumno</Link>
         </div>
-        <Link to={`/alumnos/${alumnoId}/evaluaciones/nueva`} className="boton">
+        <Link to={`/evaluaciones/alumnos/${alumnoId}/nueva`} className="boton">
           Nueva evaluación
         </Link>
       </div>
 
-      <ProximaEvaluacion datos={proximaEvaluacion} />
+      <ProximaEvaluacion datos={proximaEvaluacion} discreta />
 
       {evaluaciones.length === 0 ? (
         <p className="texto-suave">Todavía no tiene evaluaciones.</p>
       ) : (
         <>
-          <h2>Evolución</h2>
-          <p className="texto-suave solo-ancho">Pasá el mouse sobre un punto para ver su fecha y valor.</p>
+          <div className="titulo-evolucion">
+            <h2>Evolución</h2>
+            <p className="texto-suave texto-chico solo-ancho">Pasá el mouse sobre un punto para ver su fecha y valor.</p>
+          </div>
           <div className="graficos">
             {armarGraficos(evaluaciones).map((grafico) => (
               <GraficoEvolucion key={grafico.pruebaId} datos={grafico} />

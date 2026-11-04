@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { asistenciasApi, type AlumnoDelDia } from "../api/asistencias";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
@@ -7,6 +7,8 @@ import { coincideBusqueda, hoyComoTexto } from "../utils/formato";
 
 // Un clic en el alumno registra la asistencia; otro clic la quita, por si se tocó el nombre equivocado.
 export default function RegistrarAsistencia() {
+  // Se vuelve a la pantalla de la que se vino: Inicio o Asistencias.
+  const desdeInicio = useLocation().state?.desde === "inicio";
   const [fecha, setFecha] = useState(hoyComoTexto());
   const [buscar, setBuscar] = useState("");
   const [guardando, setGuardando] = useState<number | null>(null);
@@ -33,9 +35,15 @@ export default function RegistrarAsistencia() {
 
   return (
     <section>
-      <Link to="/asistencias" className="volver">
-        ← Asistencias
-      </Link>
+      {desdeInicio ? (
+        <Link to="/" className="volver">
+          ← Inicio
+        </Link>
+      ) : (
+        <Link to="/asistencias" className="volver">
+          ← Asistencias
+        </Link>
+      )}
 
       <h1>Registrar asistencia</h1>
       <p className="texto-suave">

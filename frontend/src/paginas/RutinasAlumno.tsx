@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { alumnosApi } from "../api/alumnos";
 import { rutinasApi, type Rutina } from "../api/rutinas";
 import Cargando from "../componentes/Cargando";
@@ -17,6 +17,9 @@ export default function RutinasAlumno() {
   );
   const [busqueda] = useSearchParams();
   const [eligiendoTipo, setEligiendoTipo] = useState(busqueda.has("nueva"));
+  // Con "Nueva Rutina" de Inicio, todo el recorrido vuelve a Inicio.
+  const origen = useLocation().state;
+  const desdeInicio = origen?.desde === "inicio";
 
   async function eliminar(rutina: Rutina) {
     const fecha = formatearFechaHora(rutina.creadoEn).slice(0, 10);
@@ -35,8 +38,8 @@ export default function RutinasAlumno() {
 
   return (
     <section>
-      <Link to="/rutinas" className="volver">
-        ← Rutinas
+      <Link to={desdeInicio ? "/" : "/rutinas"} className="volver">
+        {desdeInicio ? "← Inicio" : "← Rutinas"}
       </Link>
 
       <div className="pagina-encabezado">
@@ -65,7 +68,7 @@ export default function RutinasAlumno() {
                 key={tipo}
                 type="button"
                 className="opcion-bloque"
-                onClick={() => navigate(`/rutinas/${alumno.id}/nueva?tipo=${tipo}`)}
+                onClick={() => navigate(`/rutinas/${alumno.id}/nueva?tipo=${tipo}`, { state: origen })}
               >
                 {ETIQUETAS_TIPO_BLOQUE[tipo]}
               </button>
