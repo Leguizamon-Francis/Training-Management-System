@@ -46,9 +46,9 @@ npm run respaldo:descifrar -- ..\respaldos\<archivo>.dump.cifrado
 Sobre la base real (borra lo que haya):
 
 ```powershell
-pg_restore --clean --no-owner -U postgres -d entrenamiento respaldos\<archivo>.dump
+pg_restore --clean --no-owner --no-privileges -U postgres -d entrenamiento respaldos\<archivo>.dump
 ```
 
-`pg_restore` está en `C:\Program Files\PostgreSQL\17\bin`.
+`pg_restore` está en `C:\Program Files\PostgreSQL\18\bin` (para las copias de Render hace falta la versión 18; alcanza con instalar las "Command Line Tools"). Es la carpeta que usan los scripts por defecto en Windows.
 
 Las copias contienen datos personales de los alumnos: no compartirlas. Si se eliminó un alumno, sus datos siguen en las copias anteriores hasta que se reemplacen; restaurar una copia vieja lo trae de vuelta.

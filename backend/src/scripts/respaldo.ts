@@ -21,8 +21,9 @@ const ejecutar = promisify(execFile);
 // Carpeta de las copias (relativa a la carpeta backend). Conviene que esté sincronizada con la nube
 // (ej.: Google Drive para escritorio): si la notebook se rompe, la copia en el mismo disco no sirve.
 const CARPETA = path.resolve(process.env.RESPALDOS_DIR ?? "../respaldos");
-// Carpeta de los programas de PostgreSQL (pg_dump, pg_restore...).
-const BIN_POSTGRES = process.env.PG_BIN ?? (process.platform === "win32" ? "C:/Program Files/PostgreSQL/17/bin" : "");
+// Carpeta de los programas de PostgreSQL (pg_dump, pg_restore...). En Windows, los del 18: Render hace las copias
+// con pg_dump 18 y pg_restore no lee copias de una versión más nueva que la suya.
+const BIN_POSTGRES = process.env.PG_BIN ?? (process.platform === "win32" ? "C:/Program Files/PostgreSQL/18/bin" : "");
 const COPIAS_A_CONSERVAR = 30;
 const PREFIJO = "entrenamiento-";
 const EXTENSION_CIFRADA = ".dump.cifrado";
@@ -63,6 +64,22 @@ function credencialesBackblaze() {
   return null;
 }
 
+// "aaaa-mm-dd_hh-mm" siempre en hora de Argentina (el servidor está en UTC): así las copias de la compu
+// y las del servidor se ordenan bien por nombre.
+function selloArgentina(momento: Date) {
+  const partes = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(momento);
+  const parte = (tipo: string) => partes.find((p) => p.type === tipo)?.value;
+  return `${parte("year")}-${parte("month")}-${parte("day")}_${parte("hour")}-${parte("minute")}`;
+}
+
 function programa(nombre: string) {
   return path.join(BIN_POSTGRES, nombre);
 }
@@ -78,11 +95,7 @@ async function respaldar() {
   const clave = claveDeRespaldo();
   const backblaze = credencialesBackblaze();
   await mkdir(CARPETA, { recursive: true });
-  // "aaaa-mm-dd_hh-mm" en hora local.
-  const ahora = new Date();
-  const dos = (n: number) => String(n).padStart(2, "0");
-  const sello = `${ahora.getFullYear()}-${dos(ahora.getMonth() + 1)}-${dos(ahora.getDate())}_${dos(ahora.getHours())}-${dos(ahora.getMinutes())}`;
-  const archivo = path.join(CARPETA, `${PREFIJO}${sello}.dump`);
+  const archivo = path.join(CARPETA, `${PREFIJO}${selloArgentina(new Date())}.dump`);
 
   // -Fc: formato propio de PostgreSQL, comprimido; se restaura con pg_restore.
   await ejecutar(programa("pg_dump"), [...args, "-Fc", "-f", archivo, base], { env });
@@ -126,7 +139,8 @@ async function probarRestauracion() {
   await ejecutar(programa("dropdb"), [...args, "--if-exists", basePrueba], { env });
   await ejecutar(programa("createdb"), [...args, basePrueba], { env });
   try {
-    await ejecutar(programa("pg_restore"), [...args, "--no-owner", "-d", basePrueba, dump], { env });
+    // Sin dueños ni permisos: los usuarios de la base de origen (ej.: el de Render) no existen acá.
+    await ejecutar(programa("pg_restore"), [...args, "--no-owner", "--no-privileges", "-d", basePrueba, dump], { env });
     const { stdout } = await ejecutar(
       programa("psql"),
       [...args, "-d", basePrueba, "-tAc", 'SELECT (SELECT count(*) FROM "Alumno") || \' alumnos, \' || (SELECT count(*) FROM "Pago") || \' pagos\''],
