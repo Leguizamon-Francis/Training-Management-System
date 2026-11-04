@@ -31,7 +31,12 @@ const EXTENSION_CIFRADA = ".dump.cifrado";
 // y no en la línea de comandos; los parámetros de Prisma (?schema=public) pg_dump no los entiende.
 function conexion() {
   if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL en backend/.env");
-  const url = new URL(process.env.DATABASE_URL);
+  let url: URL;
+  try {
+    url = new URL(process.env.DATABASE_URL);
+  } catch {
+    throw new Error("DATABASE_URL no es una dirección válida: tiene que empezar con postgresql:// (sin comillas ni espacios).");
+  }
   return {
     base: decodeURIComponent(url.pathname.slice(1)),
     args: ["-h", url.hostname, "-p", url.port || "5432", "-U", decodeURIComponent(url.username)],
