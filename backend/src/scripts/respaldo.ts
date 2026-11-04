@@ -6,11 +6,14 @@
 // Una copia que nunca se probó restaurar no es una copia segura: conviene probarla cada tanto.
 // Con RESPALDO_CLAVE las copias se guardan cifradas (en producción es obligatoria). Sin esa clave no se
 // pueden recuperar: hay que guardarla fuera del servidor.
+// Con B2_KEY_ID y B2_APPLICATION_KEY cada copia se sube además a Backblaze B2. En producción es obligatorio:
+// el disco del servidor se borra en cada ejecución.
 import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
+import { subirABackblaze } from "../lib/backblaze";
 import { cifrar, descifrar } from "../lib/cifrado";
 
 const ejecutar = promisify(execFile);
@@ -45,6 +48,16 @@ function claveDeRespaldo() {
   return clave;
 }
 
+function credencialesBackblaze() {
+  const idClave = process.env.B2_KEY_ID;
+  const clave = process.env.B2_APPLICATION_KEY;
+  if (idClave && clave) return { idClave, clave };
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Faltan B2_KEY_ID y B2_APPLICATION_KEY: en producción la copia se guarda fuera del servidor.");
+  }
+  return null;
+}
+
 function programa(nombre: string) {
   return path.join(BIN_POSTGRES, nombre);
 }
@@ -58,6 +71,7 @@ async function listarCopias() {
 async function respaldar() {
   const { base, args, env } = conexion();
   const clave = claveDeRespaldo();
+  const backblaze = credencialesBackblaze();
   await mkdir(CARPETA, { recursive: true });
   // "aaaa-mm-dd_hh-mm" en hora local.
   const ahora = new Date();
@@ -74,6 +88,11 @@ async function respaldar() {
     await rm(archivo);
   }
   console.log(`Copia guardada: ${guardado}`);
+
+  if (backblaze) {
+    await subirABackblaze(path.basename(guardado), await readFile(guardado), backblaze);
+    console.log(`Copia subida a Backblaze: ${path.basename(guardado)}`);
+  }
 
   const copias = await listarCopias();
   for (const vieja of copias.slice(0, Math.max(0, copias.length - COPIAS_A_CONSERVAR))) {

@@ -57,7 +57,7 @@ Programar en el hosting una tarea diaria, desde `backend`, con estas variables a
 npx tsx src/scripts/respaldo.ts
 ```
 
-Las copias salen cifradas. Hay que enviarlas fuera del servidor (por ejemplo, a un almacenamiento en la nube): una copia en el mismo lugar no sirve si el servidor falla. Si el hosting ya hace copias de la base, activarlas también.
+Las copias salen cifradas y, con `B2_KEY_ID` y `B2_APPLICATION_KEY`, se suben a Backblaze B2: una copia en el mismo lugar no sirve si el servidor falla. En producción el script se niega a correr sin esas variables. Si el hosting ya hace copias de la base, activarlas también. La configuración para Render está en [respaldos.md](respaldos.md).
 
 Una vez por mes, comprobar que se pueden restaurar: ver [respaldos.md](respaldos.md).
 
