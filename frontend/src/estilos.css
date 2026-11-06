@@ -527,12 +527,6 @@ h2 {
   width: auto;
 }
 
-.insignias {
-  display: flex;
-  gap: 0.375rem;
-  flex-wrap: wrap;
-}
-
 .insignia {
   display: inline-block;
   padding: 2px 0.5rem;

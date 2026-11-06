@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import { z } from "zod";
 import { ErrorHttp } from "../lib/errores";
@@ -18,6 +19,17 @@ export const manejarErrores: ErrorRequestHandler = (error, _req, res, _next) => 
   if (error instanceof z.ZodError) {
     res.status(400).json({ error: "Datos inválidos", campos: erroresPorCampo(error) });
     return;
+  }
+  // Choques con la base que los servicios no alcanzan a prever (ej.: dos pedidos casi simultáneos).
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error.code === "P2002") {
+      res.status(409).json({ error: "Ya existe un registro con esos datos" });
+      return;
+    }
+    if (error.code === "P2003") {
+      res.status(409).json({ error: "No se pudo guardar: un dato relacionado ya no existe o todavía está en uso" });
+      return;
+    }
   }
   if (error?.type === "entity.parse.failed") {
     res.status(400).json({ error: "El cuerpo del pedido no es un JSON válido" });
