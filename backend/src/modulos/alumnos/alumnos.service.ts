@@ -5,7 +5,8 @@ import { prisma } from "../../lib/prisma";
 import { esquemaAlumno, type DatosAlumno, type FiltrosAlumnos } from "./alumnos.schemas";
 
 // Campos que se comparan al editar para registrar el historial (los mismos del formulario).
-const CAMPOS_FICHA = Object.keys(esquemaAlumno.shape) as (keyof DatosAlumno)[];
+// El perfil se registra aparte, con su nombre en vez del id (ver actualizarAlumno).
+const CAMPOS_FICHA = (Object.keys(esquemaAlumno.shape) as (keyof DatosAlumno)[]).filter((campo) => campo !== "perfilId");
 
 function datosParaPrisma(datos: DatosAlumno) {
   return { ...datos, fechaNacimiento: fechaDesdeTexto(datos.fechaNacimiento) };
@@ -26,7 +27,7 @@ function normalizar(texto: string) {
 export async function listarAlumnos(filtros: FiltrosAlumnos) {
   const where: Prisma.AlumnoWhereInput = {
     activo: filtros.estado === "todos" ? undefined : filtros.estado === "activos",
-    perfil: filtros.perfil,
+    perfilId: filtros.perfilId,
   };
 
   const alumnos = await prisma.alumno.findMany({
@@ -38,7 +39,7 @@ export async function listarAlumnos(filtros: FiltrosAlumnos) {
       dni: true,
       fechaNacimiento: true,
       telefono: true,
-      perfil: true,
+      perfil: { select: { id: true, nombre: true } },
       activo: true,
     },
     orderBy: [{ apellido: "asc" }, { nombre: "asc" }],
@@ -61,7 +62,10 @@ export async function listarAlumnos(filtros: FiltrosAlumnos) {
 export async function obtenerAlumno(id: number) {
   const alumno = await prisma.alumno.findUnique({
     where: { id },
-    include: { plan: { select: { id: true, nombre: true, modalidad: true, precioMensual: true } } },
+    include: {
+      plan: { select: { id: true, nombre: true, modalidad: true, precioMensual: true } },
+      perfil: { select: { id: true, nombre: true, mesesReevaluacion: true } },
+    },
   });
   if (!alumno) {
     throw new ErrorHttp(404, "Alumno no encontrado");
@@ -101,8 +105,17 @@ async function verificarDniLibre(dni: string, idActual?: number) {
   }
 }
 
+async function obtenerPerfilElegido(perfilId: number) {
+  const perfil = await prisma.perfil.findUnique({ where: { id: perfilId } });
+  if (!perfil) {
+    throw new ErrorHttp(400, "Ese perfil ya no existe: elegí otro");
+  }
+  return perfil;
+}
+
 export async function crearAlumno(datos: DatosAlumno) {
   await verificarDniLibre(datos.dni);
+  await obtenerPerfilElegido(datos.perfilId);
   return prisma.alumno.create({ data: datosParaPrisma(datos) });
 }
 
@@ -110,14 +123,18 @@ export async function crearAlumno(datos: DatosAlumno) {
 export async function actualizarAlumno(id: number, datos: DatosAlumno) {
   const actual = await obtenerAlumno(id);
   await verificarDniLibre(datos.dni, id);
+  const perfil = await obtenerPerfilElegido(datos.perfilId);
 
   const nuevos = datosParaPrisma(datos);
-  const cambios = CAMPOS_FICHA.map((campo) => ({
+  const cambios: Prisma.CambioAlumnoCreateManyInput[] = CAMPOS_FICHA.map((campo) => ({
     alumnoId: id,
     campo,
     valorAnterior: valorComoTexto(actual[campo]),
     valorNuevo: valorComoTexto(nuevos[campo]),
   })).filter((cambio) => cambio.valorAnterior !== cambio.valorNuevo);
+  if (actual.perfilId !== perfil.id) {
+    cambios.push({ alumnoId: id, campo: "perfil", valorAnterior: actual.perfil.nombre, valorNuevo: perfil.nombre });
+  }
 
   return prisma.$transaction(async (tx) => {
     const alumno = await tx.alumno.update({ where: { id }, data: nuevos });

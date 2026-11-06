@@ -1,5 +1,5 @@
 import { pedir } from "./cliente";
-import type { Perfil } from "./alumnos";
+import type { PerfilAlumno } from "./alumnos";
 import type { CategoriaPrueba } from "./pruebas";
 
 export type Lado = "IZQ" | "DER";
@@ -56,7 +56,7 @@ export interface ResumenEvaluacionAlumno {
   id: number;
   nombre: string;
   apellido: string;
-  perfil: Perfil;
+  perfil: PerfilAlumno;
   cantidad: number;
   ultimaEvaluacion: string | null; // "aaaa-mm-dd"
   proximaEvaluacion: ProximaEvaluacion;

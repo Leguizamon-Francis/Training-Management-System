@@ -12,6 +12,7 @@ import Asistencias from "./paginas/Asistencias";
 import AsistenciasAlumno from "./paginas/AsistenciasAlumno";
 import Configuracion from "./paginas/Configuracion";
 import EliminarAlumno from "./paginas/EliminarAlumno";
+import Perfiles from "./paginas/Perfiles";
 import EvaluacionDetalle from "./paginas/EvaluacionDetalle";
 import EvaluacionFormulario from "./paginas/EvaluacionFormulario";
 import Evaluaciones from "./paginas/Evaluaciones";
@@ -92,6 +93,7 @@ export default function App() {
               <Route path="asistencias/:alumnoId" element={<AsistenciasAlumno />} />
               <Route path="configuracion" element={<Configuracion />} />
               <Route path="configuracion/eliminar-alumno" element={<EliminarAlumno />} />
+              <Route path="configuracion/perfiles" element={<Perfiles />} />
             </Route>
           </Route>
 

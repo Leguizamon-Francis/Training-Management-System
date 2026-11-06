@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { alumnosApi, type AlumnoResumen, type FiltrosAlumnos } from "../api/alumnos";
+import { perfilesApi } from "../api/perfiles";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
+import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
-import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { calcularEdad } from "../utils/formato";
 
 export default function Alumnos() {
   const desdeInicio = useLocation().state?.desde === "inicio"; // tarjeta "Alumnos activos" de Inicio
-  const [filtros, setFiltros] = useState<FiltrosAlumnos>({ buscar: "", estado: "activos", perfil: "" });
+  const [filtros, setFiltros] = useState<FiltrosAlumnos>({ buscar: "", estado: "activos", perfilId: "" });
+  const { datos: perfiles } = useCarga(() => perfilesApi.listar(), []);
   const [alumnos, setAlumnos] = useState<AlumnoResumen[] | null>(null);
   const [error, setError] = useState("");
   const lista = useListaCorta(alumnos ?? [], ALUMNOS_POR_LISTA);
@@ -67,14 +69,14 @@ export default function Alumnos() {
           <option value="todos">Todos</option>
         </select>
         <select
-          value={filtros.perfil}
-          onChange={(e) => cambiarFiltro("perfil", e.target.value as FiltrosAlumnos["perfil"])}
+          value={filtros.perfilId}
+          onChange={(e) => cambiarFiltro("perfilId", e.target.value)}
           aria-label="Perfil"
         >
           <option value="">Todos los perfiles</option>
-          {Object.entries(ETIQUETAS_PERFIL).map(([valor, etiqueta]) => (
-            <option key={valor} value={valor}>
-              {etiqueta}
+          {perfiles?.map((perfil) => (
+            <option key={perfil.id} value={perfil.id}>
+              {perfil.nombre}
             </option>
           ))}
         </select>
@@ -107,7 +109,7 @@ export default function Alumnos() {
                     </Link>
                   </td>
                   <td>{calcularEdad(alumno.fechaNacimiento)}</td>
-                  <td>{ETIQUETAS_PERFIL[alumno.perfil]}</td>
+                  <td>{alumno.perfil.nombre}</td>
                   <td>{alumno.telefono}</td>
                   {verEstado && (
                     <td>

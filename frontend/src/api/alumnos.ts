@@ -1,7 +1,11 @@
 import { pedir } from "./cliente";
 import type { Plan } from "./planes";
 
-export type Perfil = "DEPORTIVO" | "SALUD";
+// El perfil que se muestra con cada alumno (se configuran en Configuración → Perfiles).
+export interface PerfilAlumno {
+  id: number;
+  nombre: string;
+}
 export type EstadoFiltro = "activos" | "inactivos" | "todos";
 
 // Lo que devuelve el listado.
@@ -12,7 +16,7 @@ export interface AlumnoResumen {
   dni: string;
   fechaNacimiento: string; // ISO; la fecha son los primeros 10 caracteres
   telefono: string;
-  perfil: Perfil;
+  perfil: PerfilAlumno;
   activo: boolean;
 }
 
@@ -46,7 +50,7 @@ export interface DatosAlumno {
   telefono: string;
   email: string;
   profesion: string;
-  perfil: Perfil | "";
+  perfilId: string; // id del perfil elegido ("" = sin elegir)
   detallePerfil: string;
   lesiones: string;
   molestias: string;
@@ -57,7 +61,7 @@ export interface DatosAlumno {
 export interface FiltrosAlumnos {
   buscar: string;
   estado: EstadoFiltro;
-  perfil: Perfil | "";
+  perfilId: string; // "" = todos los perfiles
 }
 
 export const alumnosApi = {

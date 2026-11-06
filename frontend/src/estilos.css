@@ -112,6 +112,14 @@ h1 {
   flex-shrink: 0;
 }
 
+/* Botón con solo un ícono (ej.: modo oscuro en Configuración). */
+.boton-secundario.boton-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+}
+
 .logo {
   width: 1.75rem;
   height: 1.75rem;
@@ -1231,6 +1239,14 @@ button.indicador:hover {
   margin-top: 1.625rem;
 }
 
+/* Configuración → Perfiles: nombre, meses y botones en una fila. */
+.formulario-perfil {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 0 0.75rem;
+  align-items: start;
+}
+
 .casilla {
   display: flex;
   align-items: center;
@@ -1857,7 +1873,8 @@ button.indicador:hover {
   }
 
   .fila-resultado-campos,
-  .formulario-prueba {
+  .formulario-prueba,
+  .formulario-perfil {
     grid-template-columns: minmax(0, 1fr);
   }
 

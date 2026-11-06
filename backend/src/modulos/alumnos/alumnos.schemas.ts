@@ -1,4 +1,3 @@
-import { Perfil } from "@prisma/client";
 import { z } from "zod";
 import { hoyComoTexto } from "../../lib/fechas";
 
@@ -56,7 +55,7 @@ export const esquemaAlumno = z.object({
     .transform((valor) => valor || null)
     .pipe(z.email("Email inválido").nullable()),
   profesion: textoObligatorio("La profesión es obligatoria"),
-  perfil: z.enum(Perfil, { error: "Elegí un perfil" }),
+  perfilId: z.coerce.number({ error: "Elegí un perfil" }).int("Elegí un perfil").positive("Elegí un perfil"),
   detallePerfil: textoLargo,
   lesiones: textoLargo,
   molestias: textoLargo,
@@ -74,11 +73,11 @@ export const esquemaPlanAlumno = z.object({
   planId: z.number({ error: "Elegí una membresía" }).int().positive().nullable(),
 });
 
-// Filtros del listado: llegan por query string (?buscar=...&estado=...&perfil=...).
+// Filtros del listado: llegan por query string (?buscar=...&estado=...&perfilId=...).
 export const esquemaFiltros = z.object({
   buscar: z.string().trim().optional(),
   estado: z.enum(["activos", "inactivos", "todos"]).default("activos"),
-  perfil: z.enum(Perfil).optional(),
+  perfilId: z.coerce.number().int().positive().optional(),
 });
 
 export type FiltrosAlumnos = z.infer<typeof esquemaFiltros>;

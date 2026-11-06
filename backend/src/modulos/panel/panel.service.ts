@@ -97,7 +97,7 @@ export async function resumenAlumno(alumnoId: number) {
       deudaTotal: situacion.deudaTotal,
     },
     ultimaAsistencia: fechaAsistencia ? { fecha: fechaAsistencia, diasDesde: diasEntre(fechaAsistencia, hoy) } : null,
-    proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil, ultimaEvaluacion?.fecha ?? null, alumno.creadoEn),
+    proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil.mesesReevaluacion, ultimaEvaluacion?.fecha ?? null, alumno.creadoEn),
     rutina: hastaRutina ? { hasta: hastaRutina, diasRestantes: diasEntre(hoy, hastaRutina) } : null,
   };
 }

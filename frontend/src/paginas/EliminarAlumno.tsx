@@ -66,7 +66,7 @@ function Confirmacion({ alumno, onEliminado, onCancelar }: PropsConfirmacion) {
 
 // Eliminación permanente de un alumno. Para que deje de venir alcanza con darlo de baja desde su ficha.
 export default function EliminarAlumno() {
-  const { datos: alumnos, error, recargar } = useCarga(() => alumnosApi.listar({ buscar: "", estado: "todos", perfil: "" }), []);
+  const { datos: alumnos, error, recargar } = useCarga(() => alumnosApi.listar({ buscar: "", estado: "todos", perfilId: "" }), []);
   const [buscar, setBuscar] = useState("");
   const [seleccionado, setSeleccionado] = useState<AlumnoResumen | null>(null);
   const [mensaje, setMensaje] = useState("");

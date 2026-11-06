@@ -23,7 +23,7 @@ export default function PagoNuevo() {
     if (alumno) return;
     const espera = setTimeout(() => {
       alumnosApi
-        .listar({ buscar, estado: "activos", perfil: "" })
+        .listar({ buscar, estado: "activos", perfilId: "" })
         .then((lista) => setResultados(lista.slice(0, MAXIMO_RESULTADOS)))
         .catch((err: Error) => setError(err.message));
     }, 300);

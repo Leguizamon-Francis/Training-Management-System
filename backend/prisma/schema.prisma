@@ -21,11 +21,6 @@ enum Rol {
   ADMIN
 }
 
-enum Perfil {
-  DEPORTIVO
-  SALUD
-}
-
 enum TipoAnotacion {
   OBSERVACION
   CORRECCION_TECNICA
@@ -124,7 +119,8 @@ model Alumno {
   profesion        String
   telefono         String
   email            String?
-  perfil           Perfil
+  perfilId         Int
+  perfil           Perfil   @relation(fields: [perfilId], references: [id], onDelete: Restrict)
   detallePerfil    String?
   lesiones         String?
   molestias        String? // en pantalla: "Molestias/contracturas"
@@ -145,6 +141,18 @@ model Alumno {
   asistencias  Asistencia[]
 
   @@index([apellido, nombre])
+}
+
+// Perfil del alumno (ej.: Deportivo, Salud). Se crean, editan y eliminan desde Configuración.
+// mesesReevaluacion: cada cuántos meses le toca la próxima evaluación a quien tiene este perfil.
+// No se puede eliminar mientras algún alumno lo tenga (onDelete: Restrict).
+model Perfil {
+  id                Int      @id @default(autoincrement())
+  nombre            String   @unique
+  mesesReevaluacion Int
+  alumnos           Alumno[]
+  creadoEn          DateTime @default(now())
+  actualizadoEn     DateTime @updatedAt
 }
 
 // Historial de cambios de la ficha: una fila por campo modificado.

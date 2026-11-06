@@ -17,7 +17,7 @@ import {
 
 export const alumnosRouter = Router();
 
-// GET /api/alumnos?buscar=&estado=activos|inactivos|todos&perfil=
+// GET /api/alumnos?buscar=&estado=activos|inactivos|todos&perfilId=
 alumnosRouter.get("/", async (req, res) => {
   const filtros = esquemaFiltros.parse(req.query);
   res.json(await listarAlumnos(filtros));

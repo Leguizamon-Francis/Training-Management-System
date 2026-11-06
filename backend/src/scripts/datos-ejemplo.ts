@@ -1,7 +1,7 @@
 // Carga datos inventados para probar el sistema o grabar una demostración, sin usar datos reales.
 // Uso (desde la carpeta backend):  npm run datos-ejemplo  (usa la base de .env.prueba)
 // Por seguridad solo funciona fuera de producción y si el nombre de la base contiene "prueba".
-import { Prisma, type Perfil } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { fechaDesdeTexto, hoyComoTexto, sumarMeses } from "../lib/fechas";
 import { prisma } from "../lib/prisma";
 import { hashearPassword } from "../modulos/auth/auth.service";
@@ -9,19 +9,19 @@ import { hashearPassword } from "../modulos/auth/auth.service";
 const EMAIL_DEMO = "demo@dvtraining.test";
 const PASSWORD_DEMO = "demo-1234";
 
-const ALUMNOS: [nombre: string, apellido: string, perfil: Perfil, detalle: string][] = [
-  ["Lucas", "Ferreyra", "DEPORTIVO", "Hockey"],
-  ["Martina", "Quiroga", "DEPORTIVO", "Básquet"],
-  ["Julián", "Sosa", "DEPORTIVO", "Recuperación / post lesión: esguince de tobillo"],
-  ["Camila", "Ibarra", "SALUD", "Actividad general"],
-  ["Tomás", "Aguirre", "DEPORTIVO", "Fútbol"],
-  ["Valentina", "Luna", "SALUD", "Actividad general"],
-  ["Nicolás", "Medina", "DEPORTIVO", "Rugby"],
-  ["Sofía", "Carrizo", "DEPORTIVO", "Recuperación / post lesión: hombro"],
-  ["Mateo", "Rojas", "DEPORTIVO", "Hockey"],
-  ["Florencia", "Vega", "SALUD", "Actividad general"],
-  ["Agustina", "Paz", "DEPORTIVO", "Vóley"],
-  ["Bruno", "Molina", "SALUD", "Actividad general"],
+const ALUMNOS: [nombre: string, apellido: string, perfil: string, detalle: string][] = [
+  ["Lucas", "Ferreyra", "Deportivo", "Hockey"],
+  ["Martina", "Quiroga", "Deportivo", "Básquet"],
+  ["Julián", "Sosa", "Deportivo", "Recuperación / post lesión: esguince de tobillo"],
+  ["Camila", "Ibarra", "Salud", "Actividad general"],
+  ["Tomás", "Aguirre", "Deportivo", "Fútbol"],
+  ["Valentina", "Luna", "Salud", "Actividad general"],
+  ["Nicolás", "Medina", "Deportivo", "Rugby"],
+  ["Sofía", "Carrizo", "Deportivo", "Recuperación / post lesión: hombro"],
+  ["Mateo", "Rojas", "Deportivo", "Hockey"],
+  ["Florencia", "Vega", "Salud", "Actividad general"],
+  ["Agustina", "Paz", "Deportivo", "Vóley"],
+  ["Bruno", "Molina", "Salud", "Actividad general"],
 ];
 
 function diasAtras(hoy: string, dias: number) {
@@ -52,6 +52,8 @@ async function main() {
     create: { email: EMAIL_DEMO, nombre: "Demo", passwordHash: await hashearPassword(PASSWORD_DEMO) },
   });
 
+  // Los perfiles los crea la migración (Deportivo y Salud); si se cambiaron, se usa el primero.
+  const perfiles = await prisma.perfil.findMany({ orderBy: { id: "asc" } });
   for (const [i, [nombre, apellido, perfil, detallePerfil]] of ALUMNOS.entries()) {
     const dni = String(90000000 + i);
     if (await prisma.alumno.findUnique({ where: { dni } })) continue; // se puede ejecutar varias veces
@@ -66,7 +68,7 @@ async function main() {
         profesion: "Ejemplo",
         telefono: `34100000${String(i).padStart(2, "0")}`,
         email: `${nombre.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase()}@ejemplo.test`,
-        perfil,
+        perfilId: (perfiles.find((p) => p.nombre === perfil) ?? perfiles[0]).id,
         detallePerfil,
         planId: plan.id,
       },

@@ -2,9 +2,11 @@ import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { alumnosApi, type Alumno, type DatosAlumno } from "../api/alumnos";
 import { ErrorApi } from "../api/cliente";
+import { perfilesApi } from "../api/perfiles";
 import Campo from "../componentes/Campo";
 import Cargando from "../componentes/Cargando";
-import { ETIQUETAS_CAMPO, ETIQUETAS_PERFIL } from "../utils/alumnos";
+import { useCarga } from "../hooks/useCarga";
+import { ETIQUETAS_CAMPO } from "../utils/alumnos";
 import { hoyComoTexto } from "../utils/formato";
 
 const VACIO: DatosAlumno = {
@@ -15,7 +17,7 @@ const VACIO: DatosAlumno = {
   telefono: "",
   email: "",
   profesion: "",
-  perfil: "",
+  perfilId: "",
   detallePerfil: "",
   lesiones: "",
   molestias: "",
@@ -33,7 +35,7 @@ function datosDesdeAlumno(alumno: Alumno): DatosAlumno {
     telefono: alumno.telefono,
     email: alumno.email ?? "",
     profesion: alumno.profesion,
-    perfil: alumno.perfil,
+    perfilId: String(alumno.perfil.id),
     detallePerfil: alumno.detallePerfil ?? "",
     lesiones: alumno.lesiones ?? "",
     molestias: alumno.molestias ?? "",
@@ -57,6 +59,7 @@ export default function AlumnoFormulario() {
   const navigate = useNavigate();
 
   const [datos, setDatos] = useState<DatosAlumno>(VACIO);
+  const { datos: perfiles } = useCarga(() => perfilesApi.listar(), []);
   const [cargando, setCargando] = useState(esEdicion);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
@@ -148,12 +151,12 @@ export default function AlumnoFormulario() {
         <div className="tarjeta seccion">
           <h2>Perfil</h2>
           <div className="grilla">
-            <Campo etiqueta="Perfil" obligatorio errores={errores.perfil}>
-              <select {...control("perfil")}>
+            <Campo etiqueta="Perfil" obligatorio errores={errores.perfilId}>
+              <select {...control("perfilId")}>
                 <option value="">Elegí un perfil…</option>
-                {Object.entries(ETIQUETAS_PERFIL).map(([valor, etiqueta]) => (
-                  <option key={valor} value={valor}>
-                    {etiqueta}
+                {perfiles?.map((perfil) => (
+                  <option key={perfil.id} value={perfil.id}>
+                    {perfil.nombre}
                   </option>
                 ))}
               </select>

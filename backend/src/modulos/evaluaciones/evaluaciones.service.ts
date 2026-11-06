@@ -1,21 +1,16 @@
-import type { Perfil, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { ErrorHttp } from "../../lib/errores";
 import { diasEntre, fechaArgentina, fechaDesdeTexto, hoyComoTexto, sumarMeses, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
 import type { DatosEvaluacion } from "./evaluaciones.schemas";
 
-// Cada cuántos meses se reevalúa según el perfil.
-const MESES_REEVALUACION: Record<Perfil, number> = {
-  DEPORTIVO: 2,
-  SALUD: 4,
-};
-
-// Próxima evaluación = última evaluación (o, si nunca se evaluó, la fecha de alta) + plazo del perfil.
-// Se calcula siempre, no se guarda: si se evalúa antes, el plazo se cuenta desde esa evaluación.
-export function calcularProximaEvaluacion(perfil: Perfil, ultimaEvaluacion: Date | null, alta: Date) {
+// Próxima evaluación = última evaluación (o, si nunca se evaluó, la fecha de alta) + los meses de
+// reevaluación del perfil (se configuran en Perfiles). Se calcula siempre, no se guarda: si se evalúa
+// antes, o si cambian los meses del perfil, el plazo se cuenta de nuevo.
+export function calcularProximaEvaluacion(mesesReevaluacion: number, ultimaEvaluacion: Date | null, alta: Date) {
   const base = ultimaEvaluacion ? textoDesdeFecha(ultimaEvaluacion) : fechaArgentina(alta);
-  const fecha = sumarMeses(base, MESES_REEVALUACION[perfil]);
+  const fecha = sumarMeses(base, mesesReevaluacion);
   return {
     fecha,
     desde: ultimaEvaluacion ? ("ultimaEvaluacion" as const) : ("alta" as const),
@@ -31,7 +26,7 @@ export async function resumenAlumnos() {
       id: true,
       nombre: true,
       apellido: true,
-      perfil: true,
+      perfil: { select: { id: true, nombre: true, mesesReevaluacion: true } },
       creadoEn: true,
       evaluaciones: { select: { fecha: true }, orderBy: { fecha: "desc" }, take: 1 },
       _count: { select: { evaluaciones: true } },
@@ -45,10 +40,10 @@ export async function resumenAlumnos() {
       id: alumno.id,
       nombre: alumno.nombre,
       apellido: alumno.apellido,
-      perfil: alumno.perfil,
+      perfil: { id: alumno.perfil.id, nombre: alumno.perfil.nombre },
       cantidad: alumno._count.evaluaciones,
       ultimaEvaluacion: ultima ? textoDesdeFecha(ultima) : null,
-      proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil, ultima, alumno.creadoEn),
+      proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil.mesesReevaluacion, ultima, alumno.creadoEn),
     };
   });
 }
@@ -97,7 +92,7 @@ export async function listarEvaluaciones(alumnoId: number) {
   });
   return {
     evaluaciones,
-    proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil, evaluaciones[0]?.fecha ?? null, alumno.creadoEn),
+    proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil.mesesReevaluacion, evaluaciones[0]?.fecha ?? null, alumno.creadoEn),
   };
 }
 

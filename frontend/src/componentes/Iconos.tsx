@@ -58,6 +58,16 @@ export function IconoMensaje() {
 
 // Logo de DV Training (el mismo dibujo que frontend/public/favicon.svg). El fondo
 // cambia con el tema: en oscuro el cuadrado es blanco.
+// Medio sol, media luna: botón del modo oscuro.
+export function IconoTema() {
+  return (
+    <Icono>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" />
+    </Icono>
+  );
+}
+
 export function Logo() {
   return (
     <svg className="logo" viewBox="100 100 600 600" aria-hidden="true">

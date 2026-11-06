@@ -49,6 +49,7 @@ Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la i
 - Cambiá tu nombre de usuario, email y contraseña.
 - **¿Te olvidaste la contraseña?** En la pantalla de ingreso, tocá "¿Olvidaste tu contraseña?" y escribí tu email: te llega un link para elegir una nueva (vence en 30 minutos). Por eso es importante que el email de tu cuenta sea uno que uses.
 - **Modo oscuro:** se guarda por dispositivo.
+- **Perfiles de los alumnos** (botón **Configurar**): creá, renombrá o eliminá los perfiles de los alumnos (ej.: Deportivo, Salud) y elegí cada cuántos meses se reevalúa a quienes lo tienen. Si cambiás los meses, la próxima evaluación de esos alumnos se recalcula desde su última evaluación. Un perfil solo se puede eliminar si ningún alumno lo tiene: primero cambiales el perfil desde su ficha.
 - **Eliminar alumno:** borra para siempre su ficha y todos sus datos, incluidos sus pagos, que dejan de contar en Ingresos. Pide tu contraseña y no se puede deshacer. Usalo solo si alguien pide que borren sus datos; si dejó de venir, dalo de baja.
 
 ## Cuidados

@@ -4,6 +4,7 @@ import { authApi } from "../api/auth";
 import { ErrorApi } from "../api/cliente";
 import Campo from "../componentes/Campo";
 import { useSesion } from "../componentes/Sesion";
+import { IconoTema } from "../componentes/Iconos";
 import { aplicarTema, leerTema } from "../utils/tema";
 
 type Dato = "nombre" | "email" | "password";
@@ -152,11 +153,12 @@ interface PropsFila {
   etiqueta: string;
   valor: string;
   onCambiar?: () => void;
-  textoBoton?: string;
+  textoBoton?: ReactNode;
+  ayudaBoton?: string; // para botones que muestran solo un ícono: lo lee el lector de pantalla y aparece al pasar el mouse
   children?: ReactNode;
 }
 
-function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", children }: PropsFila) {
+function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", ayudaBoton, children }: PropsFila) {
   return (
     <div className="fila-configuracion">
       <div className="fila-configuracion-dato">
@@ -164,7 +166,13 @@ function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", children }: 
           <span className="texto-suave">{etiqueta}:</span> {valor}
         </span>
         {onCambiar && (
-          <button type="button" className="boton-secundario" onClick={onCambiar}>
+          <button
+            type="button"
+            className={ayudaBoton ? "boton-secundario boton-icono" : "boton-secundario"}
+            onClick={onCambiar}
+            aria-label={ayudaBoton}
+            title={ayudaBoton}
+          >
             {textoBoton}
           </button>
         )}
@@ -222,8 +230,16 @@ export default function Configuracion() {
           etiqueta="Modo oscuro"
           valor={tema === "oscuro" ? "Activado" : "Desactivado"}
           onCambiar={cambiarTema}
-          textoBoton={tema === "oscuro" ? "Desactivar" : "Activar"}
+          textoBoton={<IconoTema />}
+          ayudaBoton={tema === "oscuro" ? "Desactivar el modo oscuro" : "Activar el modo oscuro"}
         />
+      </div>
+
+      <div className="tarjeta seccion fila-configuracion-dato">
+        <span>Perfiles de los alumnos</span>
+        <Link to="/configuracion/perfiles" className="boton-secundario">
+          Configurar
+        </Link>
       </div>
 
       <div className="tarjeta seccion fila-configuracion-dato">

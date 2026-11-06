@@ -3,7 +3,6 @@ import { Link } from "react-router";
 import type { Alumno } from "../api/alumnos";
 import { panelApi } from "../api/panel";
 import { useCarga } from "../hooks/useCarga";
-import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { claseProximaEvaluacion, textoDiasRestantes } from "../utils/evaluaciones";
 import { formatearFecha, formatearMoneda } from "../utils/formato";
 import { claseEstadoCuota, ETIQUETAS_ESTADO_CUOTA } from "../utils/pagos";
@@ -47,7 +46,7 @@ export default function ResumenAlumno({ alumno }: { alumno: Alumno }) {
           <span className="casilla-resumen-titulo">Membresía:</span> {membresia.plan ?? "Sin membresía"}
         </span>
         <span className="casilla-resumen-linea">
-          <span className="casilla-resumen-titulo">Perfil:</span> {ETIQUETAS_PERFIL[alumno.perfil]}
+          <span className="casilla-resumen-titulo">Perfil:</span> {alumno.perfil.nombre}
         </span>
         <span className="casilla-resumen-linea">
           <span className="casilla-resumen-titulo">Estado:</span>{" "}

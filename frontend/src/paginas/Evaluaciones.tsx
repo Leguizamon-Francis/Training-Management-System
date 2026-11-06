@@ -4,7 +4,6 @@ import { evaluacionesApi } from "../api/evaluaciones";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
-import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { claseProximaEvaluacion, textoDiasRestantes } from "../utils/evaluaciones";
 import { coincideBusqueda, formatearFecha } from "../utils/formato";
 
@@ -61,7 +60,7 @@ export default function Evaluaciones() {
                         {alumno.apellido}, {alumno.nombre}
                       </Link>
                     </td>
-                    <td>{ETIQUETAS_PERFIL[alumno.perfil]}</td>
+                    <td>{alumno.perfil.nombre}</td>
                     <td className="numero">{alumno.cantidad}</td>
                     <td className="sin-salto">
                       {alumno.ultimaEvaluacion ? formatearFecha(alumno.ultimaEvaluacion) : <span className="texto-suave">—</span>}

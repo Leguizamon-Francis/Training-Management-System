@@ -12,7 +12,7 @@ import ResumenAlumno from "../componentes/ResumenAlumno";
 import RutinasFicha from "../componentes/RutinasFicha";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
-import { ETIQUETAS_CAMPO, ETIQUETAS_PERFIL, formatearValorCambio } from "../utils/alumnos";
+import { ETIQUETAS_CAMPO, formatearValorCambio } from "../utils/alumnos";
 import { calcularEdad, formatearFecha, formatearFechaHora } from "../utils/formato";
 
 function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
@@ -98,7 +98,7 @@ export default function AlumnoFicha() {
           <Dato etiqueta="Email">{alumno.email}</Dato>
           <Dato etiqueta="Profesión">{alumno.profesion}</Dato>
           <Dato etiqueta="Alta en el sistema">{formatearFecha(alumno.creadoEn)}</Dato>
-          <Dato etiqueta="Perfil">{ETIQUETAS_PERFIL[alumno.perfil]}</Dato>
+          <Dato etiqueta="Perfil">{alumno.perfil.nombre}</Dato>
           <Dato etiqueta="Detalle del perfil">{alumno.detallePerfil}</Dato>
         </dl>
       </Desplegable>
