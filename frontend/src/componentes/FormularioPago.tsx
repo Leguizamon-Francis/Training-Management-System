@@ -130,7 +130,7 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
         )}
 
         <Campo
-          etiqueta={tipo === "OTRO" ? "Importe" : varias ? "Importe Total" : "Importe de la cuota"}
+          etiqueta={tipo === "OTRO" ? "Importe" : varias ? "Importe total" : "Importe de la cuota"}
           obligatorio
           errores={errores.importe}
         >
@@ -147,7 +147,7 @@ export default function FormularioPago({ alumnoId, plan, inicioCuota, cantidadAd
         </p>
       )}
 
-      <div className="acciones">
+      <div className="acciones acciones-formulario">
         <button type="submit" className="boton" disabled={guardando || sinPlan}>
           {guardando ? "Guardando…" : varias ? `Registrar ${cantidad} cuotas` : "Registrar pago"}
         </button>

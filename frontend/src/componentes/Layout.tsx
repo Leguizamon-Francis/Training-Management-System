@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useEtiquetasTablas } from "../hooks/useEtiquetasTablas";
 import { Logo } from "./Iconos";
@@ -6,6 +6,15 @@ import { useSesion } from "./Sesion";
 
 // El editor de rutinas va sin marca de agua: ahí importa solo la planilla.
 const ES_EDITOR_RUTINA = /^\/rutinas\/(editar\/\d+|(\d+|sin-alumno)\/nueva)/;
+
+// En las tablas, un clic en cualquier parte de una fila abre su enlace principal (el que tiene la clase
+// "enlace-fila", normalmente el nombre). Los otros botones y enlaces de la fila funcionan como siempre.
+function abrirFila(evento: MouseEvent) {
+  const objetivo = evento.target as HTMLElement;
+  if (objetivo.closest("a, button, input, select, label")) return;
+  if (window.getSelection()?.toString()) return; // estaba seleccionando texto para copiarlo
+  objetivo.closest(".tabla tr")?.querySelector<HTMLAnchorElement>("a.enlace-fila")?.click();
+}
 
 // Estructura común de las pantallas internas: encabezado con menú + contenido.
 export default function Layout() {
@@ -51,7 +60,7 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main className="contenedor" ref={contenido}>
+      <main className="contenedor" ref={contenido} onClick={abrirFila}>
         <Outlet />
       </main>
     </>

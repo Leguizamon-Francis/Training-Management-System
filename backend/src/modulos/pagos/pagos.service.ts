@@ -118,7 +118,7 @@ export function calcularSituacion(cuota: Cuota | null, contexto: ContextoAlumno)
   };
 }
 
-async function cargarSituacion(alumnoId: number) {
+export async function cargarSituacion(alumnoId: number) {
   const alumno = await obtenerAlumno(alumnoId);
   const [cuotas, reactivaciones] = await Promise.all([
     prisma.cuota.findMany({ where: { alumnoId }, ...ultimaCuota }),

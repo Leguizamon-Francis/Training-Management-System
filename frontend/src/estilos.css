@@ -20,6 +20,7 @@
   --color-aviso: #b45309;
   --color-aviso-fondo: #fffbeb;
   --color-aviso-borde: #fde68a;
+  --color-whatsapp: #15803d;
   --color-visor: #cbd2d9;
   --opacidad-marca-agua: 0.07;
   --logo-fondo: #0f2a44;
@@ -28,8 +29,6 @@
   --sombra-alta: 0 2px 4px rgba(16, 42, 67, 0.07), 0 8px 20px rgba(16, 42, 67, 0.09);
   --radio: 0.625rem;
   --ancho-contenido: 60rem;
-  --ancho-logo: min(36vw, 36vh); /* el logo de fondo; Inicio acomoda botones y cuadros a sus costados */
-  --separacion-logo: 1.5rem;
 
   /* Series de los gráficos (paleta validada para daltonismo): 1 = izquierdo/sin lado, 2 = derecho */
   --serie-1: #2a78d6;
@@ -60,6 +59,7 @@
   --color-aviso: #fcd34d;
   --color-aviso-fondo: #3a2c0f;
   --color-aviso-borde: #7a5a14;
+  --color-whatsapp: #4ade80;
   --color-visor: #2a3642;
   --opacidad-marca-agua: 0.13;
   --logo-fondo: #ffffff;
@@ -149,7 +149,7 @@ h1 {
   padding: 1.5rem 1rem;
 }
 
-/* Logo y nombre de fondo: fijos al desplazar la página y sin recibir clics. */
+/* Logo grande y nombre de fondo, en el centro: fijos al desplazar la página y sin recibir clics. */
 .marca-agua {
   position: fixed;
   inset: 0;
@@ -167,12 +167,11 @@ h1 {
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  transform: translateY(var(--bajar-marca-agua, 0)); /* Inicio lo baja si hace falta (ver Inicio.tsx) */
 }
 
 .marca-agua .logo {
-  width: var(--ancho-logo);
-  height: var(--ancho-logo);
+  width: min(36vw, 36vh);
+  height: min(36vw, 36vh);
 }
 
 @media print {
@@ -221,6 +220,16 @@ h1 {
 
 .campo textarea {
   resize: vertical;
+}
+
+/* Dato que completa el sistema (ej.: la unidad de un test): se ve como campo pero no se escribe. */
+.campo input[readonly] {
+  background: var(--color-fondo);
+  cursor: default;
+}
+
+.campo input[readonly]:focus {
+  outline: none;
 }
 
 .campo input:focus,
@@ -384,6 +393,14 @@ h1 {
   width: 100%;
 }
 
+/* "¿Olvidaste tu contraseña?" y "Volver a ingresar", debajo del botón. */
+.enlace-login {
+  display: block;
+  margin-top: 1rem;
+  text-align: center;
+  text-decoration: none;
+}
+
 /* ---------- Encabezado ---------- */
 
 .encabezado {
@@ -482,6 +499,15 @@ h2 {
   margin-bottom: 1rem;
 }
 
+/* Botones de un formulario, en toda la app: abajo a la derecha, primero Cancelar y después Guardar. */
+.acciones-formulario {
+  justify-content: flex-end;
+}
+
+.acciones-formulario > :is(.boton, .boton-eliminar) {
+  order: 1;
+}
+
 .filtros {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -552,6 +578,20 @@ h2 {
   background: var(--color-primario-suave);
 }
 
+/* Filas que se abren con un clic en cualquier parte (ver abrirFila en Layout.tsx): el nombre sin subrayar. */
+.tabla tr:has(.enlace-fila) {
+  cursor: pointer;
+}
+
+.enlace-fila {
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.tabla tr:hover .enlace-fila {
+  color: var(--color-primario);
+}
+
 .sin-salto {
   white-space: nowrap;
 }
@@ -575,13 +615,70 @@ h2 {
 
 .dato dt {
   font-size: 0.85rem;
-  color: var(--color-texto-suave);
   margin-bottom: 2px;
 }
 
 .dato dd {
   margin: 0;
+  color: var(--color-texto-suave);
   white-space: pre-line;
+}
+
+/* Franja de resumen arriba de la ficha del alumno: cuatro casillas, dos por fila en el celular. */
+.resumen-alumno {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.resumen-alumno-cargando {
+  min-height: 6.5rem;
+}
+
+.casilla-resumen {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.casilla-resumen:hover {
+  border-color: var(--color-primario);
+  box-shadow: var(--sombra-alta);
+}
+
+.casilla-resumen-titulo {
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
+
+.casilla-resumen-valor {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* Primera casilla: "Membresía:", "Perfil:" y "Estado:", uno por línea. */
+.casilla-resumen-linea {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.375rem;
+}
+
+.casilla-resumen-detalle {
+  font-size: 0.9rem;
+  color: var(--color-texto-suave);
+}
+
+@media (max-width: 760px) {
+  .resumen-alumno {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .ultimos-ingresos {
@@ -590,39 +687,23 @@ h2 {
 
 /* ---------- Panel principal (Inicio) ---------- */
 
-/* Dos a cada lado del logo de fondo: la columna del medio, del ancho del logo, queda vacía. */
+/* Números destacados (Inicio y Asistencias): tantos por fila como entren. Uno solo no se estira a todo el ancho. */
 .indicadores {
   display: grid;
-  grid-template-columns: 1fr var(--ancho-logo) 1fr;
-  gap: 0.75rem var(--separacion-logo);
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
   margin: 0.5rem 0 1rem;
 }
 
-.indicadores > :nth-child(odd) {
-  grid-column: 1;
-  justify-self: end;
+/* Asistencias: los cuadros no se estiran a todo el ancho; todos del mismo tamaño. */
+.indicadores-compactos {
+  grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 18rem));
 }
 
-.indicadores > :nth-child(even) {
-  grid-column: 3;
-  justify-self: start;
-}
-
-.indicadores > * {
-  width: min(100%, 15rem);
-}
-
-/* En el celular, como antes: a todo el ancho y tantos por fila como entren. */
+/* En el celular, uno debajo del otro a todo el ancho (de a dos no entran los nombres largos). */
 @media (max-width: 760px) {
-  .indicadores {
-    grid-template-columns: repeat(auto-fit, minmax(9.375rem, 1fr));
-    gap: 0.75rem;
-  }
-
-  .indicadores > :nth-child(n) {
-    grid-column: auto;
-    justify-self: stretch;
-    width: auto;
+  .indicadores-compactos {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -639,6 +720,7 @@ h2 {
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
+/* Las tarjetas de Inicio se tocan: llevan a Alumnos o abren la lista de nombres. */
 a.indicador,
 button.indicador {
   cursor: pointer;
@@ -651,6 +733,15 @@ button.indicador:hover {
   transform: translateY(-2px);
 }
 
+/* En pantallas táctiles el "hover" queda pegado después de tocar. */
+@media (hover: none) {
+  a.indicador:hover,
+  button.indicador:hover {
+    transform: none;
+    box-shadow: var(--sombra);
+  }
+}
+
 .indicador.activo {
   border-color: var(--color-primario);
   background: var(--color-primario-suave);
@@ -660,87 +751,53 @@ button.indicador:hover {
   color: var(--color-primario);
 }
 
-/* Saludo y fecha; debajo, "Registrar Asistencia" sobre el logo de fondo y un botón a cada lado de él.
-   La separación entre las dos filas la calcula Inicio.tsx para que los botones queden justo encima del logo. */
+/* Inicio: saludo y fecha en una línea; debajo, las tarjetas y al final los tres accesos, con Registrar
+   asistencia en el medio. */
 .cabecera-inicio {
-  display: grid;
-  grid-template-columns: 1fr var(--ancho-logo) 1fr;
-  grid-template-areas:
-    "saludo . fecha"
-    "alumno asistencia rutina";
-  align-items: center;
-  gap: var(--separacion-filas, 2rem) var(--separacion-logo);
-  margin-bottom: 1.5rem; /* + 0.5rem de .indicadores = 2rem */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  margin-bottom: 2.75rem; /* las tarjetas, unos 20 px más abajo que el resto de las pantallas */
 }
 
-.cabecera-inicio h1 {
-  grid-area: saludo;
-  margin: 0;
-}
-
+.cabecera-inicio h1,
 .cabecera-inicio p {
-  grid-area: fecha;
   margin: 0;
-  text-align: right;
+}
+
+.accesos-inicio {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1.5rem;
+  margin-top: 5.125rem;
 }
 
 .boton-inicio {
+  min-width: 14rem;
   padding-block: 1rem;
 }
 
-.boton-asistencia {
-  grid-area: asistencia;
-  justify-self: center;
-}
-
-/* Afuera del logo, pegados a sus costados. */
-.boton-alumno {
-  grid-area: alumno;
-  justify-self: end;
-}
-
-.boton-rutina {
-  grid-area: rutina;
-  justify-self: start;
-}
-
-/* En el celular, como antes: saludo y fecha en una línea y debajo los tres botones seguidos. */
+/* En el celular: Registrar asistencia primero (es lo que más se usa) y los botones más bajos. */
 @media (max-width: 760px) {
   .cabecera-inicio {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: baseline;
+    margin-bottom: 1.5rem;
+  }
+
+  .accesos-inicio {
     gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .cabecera-inicio h1,
-  .cabecera-inicio p {
-    order: -1;
-    margin-bottom: 0.5rem;
-  }
-
-  /* Corte de línea entre el texto y los botones. */
-  .cabecera-inicio::before {
-    content: "";
-    flex-basis: 100%;
+    margin-top: 1rem;
   }
 
   .boton-inicio {
+    min-width: 0;
     padding-block: 0.625rem;
   }
 
   .boton-asistencia {
-    order: 1;
-  }
-
-  .boton-alumno {
-    order: 2;
-  }
-
-  .boton-rutina {
-    order: 3;
+    order: -1;
   }
 }
 
@@ -753,6 +810,12 @@ button.indicador:hover {
   font-size: 2rem;
   font-weight: 700;
   line-height: 1.15;
+}
+
+/* Un nombre en lugar de un número: más chico, y abajo, a la altura del número del cuadro de al lado. */
+.indicador-valor-texto {
+  margin-top: auto;
+  font-size: 1.25rem;
 }
 
 .filtros-asistencia {
@@ -841,6 +904,14 @@ button.indicador:hover {
   border-top: 2px solid var(--color-borde);
 }
 
+.lista-panel li > :is(a, span) {
+  margin: 0;
+}
+
+.lista-panel a {
+  text-decoration: none;
+}
+
 /* ---------- Rutinas ---------- */
 
 .opciones-bloque {
@@ -895,6 +966,10 @@ button.indicador:hover {
 /* Sin el tinte azul de pdf.js, para que se vean los colores de la planilla. */
 .visor-pdf .annotationLayer {
   --annotation-unfocused-field-background: none;
+}
+
+.acciones-planilla {
+  margin-top: 1rem;
 }
 
 .visor-pdf-cargando {
@@ -1084,11 +1159,6 @@ button.indicador:hover {
   font-size: 0.9rem;
 }
 
-/* Cargar o editar una evaluación: lo que se escribe, en gris, para diferenciarlo del título de cada campo. */
-.formulario-evaluacion .campo :is(input, select) {
-  color: var(--color-texto-suave);
-}
-
 /* "Evolución" más grande, con la ayuda de los gráficos en la misma línea, a la derecha. */
 .titulo-evolucion {
   display: flex;
@@ -1106,6 +1176,19 @@ button.indicador:hover {
 
 .titulo-evolucion p {
   margin: 0;
+}
+
+/* Fecha (angosta, del ancho de la fecha) y Observaciones en la misma fila. */
+.fecha-y-observaciones {
+  display: grid;
+  grid-template-columns: minmax(11rem, 14rem) 1fr;
+  gap: 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .fecha-y-observaciones {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .fila-resultado {
@@ -1242,19 +1325,33 @@ button.indicador:hover {
   color: var(--color-texto-suave);
 }
 
+/* Con borde y sin relleno: el botón que más resalta en cada pantalla tiene que ser la acción principal. */
 .boton-whatsapp {
-  display: inline-block;
-  background: #16a34a;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 600;
-  font-size: 0.9rem;
-  padding: 0.375rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border: 2px solid var(--color-whatsapp);
   border-radius: var(--radio);
+  background: var(--color-superficie);
+  color: var(--color-whatsapp);
+  font-size: 0.9rem;
+  text-decoration: none;
+  vertical-align: middle;
 }
 
 .boton-whatsapp:hover {
-  background: #15803d;
+  background: var(--color-ok-fondo);
+}
+
+.boton-whatsapp .icono {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.celda-acciones {
+  white-space: nowrap;
+  text-align: right;
 }
 
 .formulario-pago {
@@ -1318,14 +1415,8 @@ button.indicador:hover {
     contain: inline-size;
   }
 
-  /* Botones a la derecha: primero Cancelar, después Registrar. */
   .formulario-registrar-pago > .acciones {
     grid-column: 1 / -1;
-    justify-content: flex-end;
-  }
-
-  .formulario-registrar-pago > .acciones > .boton {
-    order: 1;
   }
 }
 
@@ -1469,7 +1560,25 @@ button.indicador:hover {
 
 .grafico-zona {
   fill: transparent;
-  cursor: default;
+  cursor: pointer;
+}
+
+.grafico-detalle {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+}
+
+/* Ayudas que dependen de si hay mouse (PC) o se toca la pantalla (celular, tablet). */
+@media (hover: none) {
+  .solo-mouse {
+    display: none;
+  }
+}
+
+@media (hover: hover) {
+  .solo-tactil {
+    display: none;
+  }
 }
 
 
@@ -1506,16 +1615,77 @@ button.indicador:hover {
   grid-template-columns: minmax(0, 26.25rem);
 }
 
-/* Botones de Pagos: en una fila; en el celular, uno debajo del otro. */
+/* Botones de Membresías: en una fila. En el celular, "Registrar pago" a lo ancho y el menú "⋯" al lado. */
 .acciones-pagos {
   display: flex;
   gap: 0.5rem;
 }
 
+.menu-mas {
+  display: none;
+  position: relative;
+}
+
+.menu-mas summary {
+  list-style: none;
+  padding-inline: 1rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.menu-mas summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-mas-opciones {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.375rem);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 15rem;
+  padding: 0.375rem;
+  box-shadow: var(--sombra-alta);
+}
+
+.menu-mas-opciones a {
+  padding: 0.75rem;
+  border-radius: var(--radio);
+  color: var(--color-texto);
+  text-decoration: none;
+}
+
+.menu-mas-opciones a:hover {
+  background: var(--color-fondo);
+}
+
 @media (max-width: 760px) {
-  .acciones-pagos {
-    flex-direction: column;
+  .menu-mas {
+    display: block;
   }
+
+  .acciones-pagos > .boton {
+    flex: 1;
+  }
+}
+
+/* Fila debajo de la lista principal de una pantalla: los botones a la derecha y, si hay, un texto a la izquierda. */
+.pie-lista {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.pie-lista.acciones {
+  gap: 0.5rem;
+}
+
+.pie-lista > p {
+  margin: 0 auto 0 0;
 }
 
 .buscador {
@@ -1795,12 +1965,44 @@ button.indicador:hover {
     justify-content: flex-start;
   }
 
-  .tabla td a:not(.boton-link, .boton-whatsapp) {
+  .tabla td a:not(.boton-link, .boton-whatsapp, .boton) {
     padding: 0.25rem 0;
   }
 
   .boton-whatsapp {
-    padding: 0.625rem 0.875rem;
+    padding: 0.5rem 0.875rem;
+  }
+
+  /* Membresías en el celular: cada alumno en dos líneas (nombre y estado; deuda o vencimiento, y acciones). */
+  .tabla-cuotas tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.25rem 0.75rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  .tabla-cuotas td,
+  .tabla-cuotas td.numero {
+    display: block;
+    width: auto;
+    padding: 0;
+    border: none;
+    text-align: left;
+  }
+
+  .tabla-cuotas td::before {
+    display: none;
+  }
+
+  .tabla-cuotas .celda-membresia,
+  .tabla-cuotas .oculta-celular {
+    display: none;
+  }
+
+  .tabla-cuotas .celda-estado,
+  .tabla-cuotas .celda-acciones {
+    justify-self: end;
   }
 
   /* El gráfico se achica entero: su texto necesita más tamaño para seguir legible. */
@@ -1813,11 +2015,10 @@ button.indicador:hover {
   }
 }
 
-/* En pantallas táctiles el "hover" queda pegado después de tocar. */
-@media (hover: none) {
-  a.indicador:hover,
-  button.indicador:hover {
-    transform: none;
-    box-shadow: var(--sombra);
-  }
+/* En toda la app, el título de cada campo va en el color del texto y lo que se escribe, en gris:
+   se distinguen sin cambiar el tamaño ni el peso de la letra. Va al final para que ninguna regla de
+   un control en particular (color: inherit) lo pise. */
+:is(.campo, .filtros, .edicion-precio, .pago-plan, .lista-encabezado) :is(input, select, textarea),
+.buscador {
+  color: var(--color-texto-suave);
 }

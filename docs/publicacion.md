@@ -21,6 +21,9 @@ Se cargan en el panel del hosting. **Nunca en el repositorio.**
 | `DATABASE_URL` | La conexión a la base, con un usuario y una contraseña propios y largos |
 | `TRUST_PROXY` | `1` si hay un proxy delante, que es lo habitual en un hosting. Sin esto, el límite de intentos de ingreso no funciona bien |
 | `RESPALDO_CLAVE` | Mínimo 16 caracteres. Guardarla también fuera del servidor: **sin ella los respaldos no se recuperan** |
+| `URL_PUBLICA` | La dirección del sistema, ej.: `https://dvtraining.com.ar`. Arma el link del mail de "¿Olvidaste tu contraseña?" |
+| `RESEND_API_KEY` | Clave de Resend para mandar ese mail (solo con permiso de envío). Sin ella o sin `URL_PUBLICA`, la recuperación por email avisa que no está configurada |
+| `EMAIL_REMITENTE` | Opcional. Por defecto `DV Training <no-responder@dvtraining.com.ar>`; el dominio tiene que estar verificado en Resend |
 | `PORT` | Solo si el hosting no la define |
 
 ## Comandos
@@ -42,7 +45,7 @@ npm run db:seed       # catálogo inicial de pruebas y membresías
 npm run crear-admin   # usuario de ingreso
 ```
 
-Después, entrar y definir los precios en Membresías → Configurar Membresías.
+Después, entrar y definir los precios en Membresías → Configurar membresías.
 
 La base de producción arranca vacía. **No cargar datos de ejemplo:** el comando se niega en producción.
 
@@ -66,10 +69,13 @@ Una vez por mes, comprobar que se pueden restaurar: ver [respaldos.md](respaldos
 - [ ] La dirección abre con HTTPS, y por `http://` redirige a `https://`.
 - [ ] El ingreso funciona, y cerrar sesión también.
 - [ ] Cinco contraseñas incorrectas bloquean el ingreso (si no bloquea, revisar `TRUST_PROXY`).
+- [ ] "¿Olvidaste tu contraseña?" manda el mail (revisar spam), el link lleva a `URL_PUBLICA` y permite elegir una contraseña nueva.
 - [ ] Se puede crear y descargar una rutina.
 - [ ] El respaldo diario corre, y una copia se restauró bien.
 - [ ] Probado en un Android y en un iPhone.
 
 ## Si se pierde la contraseña
 
-No hay recuperación por email. Desde `backend`, en el servidor, ejecutar `npm run crear-admin` con el mismo email: cambia la contraseña y cierra todas las sesiones.
+El usuario la recupera solo desde "¿Olvidaste tu contraseña?" en la pantalla de ingreso: recibe un link por mail que vence en 30 minutos y sirve una sola vez. Al elegir la contraseña nueva se cierran todas las sesiones abiertas.
+
+Si el mail no llega (o se perdió el acceso a ese email), desde `backend`, en el servidor, ejecutar `npm run crear-admin` con el mismo email: cambia la contraseña.

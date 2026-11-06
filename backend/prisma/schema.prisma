@@ -76,14 +76,28 @@ enum MedioPago {
 // ---------- Usuario y sesión ----------
 
 model Usuario {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  nombre        String
-  passwordHash  String
-  rol           Rol      @default(ADMIN)
-  sesiones      Sesion[]
-  creadoEn      DateTime @default(now())
-  actualizadoEn DateTime @updatedAt
+  id             Int                    @id @default(autoincrement())
+  email          String                 @unique
+  nombre         String
+  passwordHash   String
+  rol            Rol                    @default(ADMIN)
+  sesiones       Sesion[]
+  recuperaciones RecuperacionPassword[]
+  creadoEn       DateTime               @default(now())
+  actualizadoEn  DateTime               @updatedAt
+}
+
+// Link de "¿Olvidaste tu contraseña?". Como en las sesiones, se guarda solo el hash del token
+// (el token viaja en el link del mail). Vence a los 30 minutos y se borra al usarlo.
+model RecuperacionPassword {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiraEn  DateTime
+  creadoEn  DateTime @default(now())
+
+  @@index([usuarioId])
 }
 
 // En la base se guarda solo el hash del token; el token viaja en una cookie httpOnly.
@@ -174,6 +188,8 @@ model Prueba {
   // true = se carga por lado (izquierdo / derecho), ej.: movilidad de tobillo.
   porLado       Boolean               @default(false)
   activa        Boolean               @default(true)
+  // true = se eliminó pero tenía resultados: no aparece más en el catálogo y sus resultados se conservan.
+  eliminada     Boolean               @default(false)
   resultados    ResultadoEvaluacion[]
   creadoEn      DateTime              @default(now())
   actualizadoEn DateTime              @updatedAt

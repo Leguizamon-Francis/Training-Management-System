@@ -13,6 +13,13 @@ const esquemaEnv = z.object({
   DATABASE_URL: z.string().min(1, "Falta DATABASE_URL"),
   // Plantilla PDF de las rutinas (relativa a la carpeta backend). Nunca se modifica: cada rutina parte de ella.
   PLANTILLA_RUTINA: z.string().default("../rutina.pdf"),
+  // "¿Olvidaste tu contraseña?": el mail se manda con Resend. Sin clave, en desarrollo el link se muestra
+  // en la consola; en producción la recuperación queda desactivada hasta cargarla.
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_REMITENTE: z.string().default("DV Training <no-responder@dvtraining.com.ar>"),
+  // Dirección pública del sistema, para armar el link del mail. No se toma del pedido: alguien podría
+  // falsificarla para que el link apunte a otro sitio y robar el token.
+  URL_PUBLICA: z.url("URL_PUBLICA tiene que ser una dirección completa (ej.: https://dvtraining.com.ar)").optional(),
 });
 
 const resultado = esquemaEnv.safeParse(process.env);

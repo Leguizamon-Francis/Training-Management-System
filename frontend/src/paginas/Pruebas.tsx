@@ -85,7 +85,7 @@ function FormularioPrueba({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
           checked={datos.porLado}
           onChange={(e) => setDatos({ ...datos, porLado: e.target.checked })}
         />
-        Se mide por lado (izquierdo / derecho)
+        Es unilateral (un resultado por lado)
       </label>
     </form>
   );
@@ -107,10 +107,9 @@ export default function Pruebas() {
     await recargar();
   }
 
-  // "Eliminar" en realidad desactiva: la evaluación deja de ofrecerse, pero no se borra
-  // de la base para no perder los resultados ya cargados. "Restaurar" la vuelve a activar.
+  // "Desactivar": deja de ofrecerse al cargar evaluaciones; "Restaurar" la vuelve a activar.
   async function alternarActiva(prueba: Prueba) {
-    if (prueba.activa && !window.confirm(`¿Eliminar "${prueba.nombre}"? Se puede restaurar más adelante.`)) {
+    if (prueba.activa && !window.confirm(`¿Desactivar "${prueba.nombre}"? Se puede restaurar más adelante.`)) {
       return;
     }
     try {
@@ -121,16 +120,24 @@ export default function Pruebas() {
     }
   }
 
+  // "Eliminar": permanente. Los resultados que ya se cargaron con esa prueba se conservan.
+  async function eliminar(prueba: Prueba) {
+    const pregunta = `¿Eliminar "${prueba.nombre}" para siempre? Deja de aparecer acá y no se puede deshacer. Los resultados que ya se cargaron se conservan en las evaluaciones de cada alumno.`;
+    if (!window.confirm(pregunta)) return;
+    try {
+      await pruebasApi.eliminar(prueba.id);
+      await recargar();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo eliminar");
+    }
+  }
+
   return (
     <section>
       <Link to="/evaluaciones" className="volver">
         ← Evaluaciones
       </Link>
       <h1>Configuración de evaluaciones</h1>
-      <p className="texto-suave">
-        Catálogo de evaluaciones a realizar. Las desactivadas dejan de ofrecerse, pero sus resultados anteriores se
-        conservan.
-      </p>
 
       <div className="tarjeta seccion">
         <h2>Nueva prueba</h2>
@@ -141,7 +148,7 @@ export default function Pruebas() {
 
       <label className="casilla">
         <input type="checkbox" checked={incluirInactivas} onChange={(e) => setIncluirInactivas(e.target.checked)} />
-        Mostrar también las eliminadas
+        Mostrar también las desactivadas
       </label>
 
       {pruebas && (
@@ -178,7 +185,7 @@ export default function Pruebas() {
                     <td>{prueba.porLado ? "Sí" : "No"}</td>
                     <td>
                       <span className={prueba.activa ? "insignia insignia-ok" : "insignia"}>
-                        {prueba.activa ? "Activa" : "Eliminada"}
+                        {prueba.activa ? "Activa" : "Desactivada"}
                       </span>
                     </td>
                     <td className="sin-salto">
@@ -186,14 +193,17 @@ export default function Pruebas() {
                         Editar
                       </button>
                       {prueba.activa ? (
-                        <button type="button" className="boton-link peligro" onClick={() => alternarActiva(prueba)}>
-                          Eliminar
+                        <button type="button" className="boton-link" onClick={() => alternarActiva(prueba)}>
+                          Desactivar
                         </button>
                       ) : (
                         <button type="button" className="boton-link" onClick={() => alternarActiva(prueba)}>
                           Restaurar
                         </button>
                       )}
+                      <button type="button" className="boton-link peligro" onClick={() => eliminar(prueba)}>
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ),

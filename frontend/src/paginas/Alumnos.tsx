@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 import { alumnosApi, type AlumnoResumen, type FiltrosAlumnos } from "../api/alumnos";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
-import { useListaCorta } from "../hooks/useListaCorta";
+import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { calcularEdad } from "../utils/formato";
 
@@ -12,7 +12,8 @@ export default function Alumnos() {
   const [filtros, setFiltros] = useState<FiltrosAlumnos>({ buscar: "", estado: "activos", perfil: "" });
   const [alumnos, setAlumnos] = useState<AlumnoResumen[] | null>(null);
   const [error, setError] = useState("");
-  const lista = useListaCorta(alumnos ?? [], 10);
+  const lista = useListaCorta(alumnos ?? [], ALUMNOS_POR_LISTA);
+  const verEstado = filtros.estado === "todos"; // con un solo estado elegido, la columna diría lo mismo en todas las filas
 
   // Se busca 300 ms después de la última tecla, para no consultar la API con cada letra.
   useEffect(() => {
@@ -46,12 +47,7 @@ export default function Alumnos() {
           ← Inicio
         </Link>
       )}
-      <div className="pagina-encabezado">
-        <h1>Alumnos</h1>
-        <Link to="/alumnos/nuevo" className="boton">
-          Nuevo alumno
-        </Link>
-      </div>
+      <h1>Alumnos</h1>
 
       <div className="filtros">
         <input
@@ -96,40 +92,49 @@ export default function Alumnos() {
             <thead>
               <tr>
                 <th>Alumno</th>
-                <th>DNI</th>
                 <th>Edad</th>
                 <th>Perfil</th>
                 <th>Teléfono</th>
-                <th>Estado</th>
+                {verEstado && <th>Estado</th>}
               </tr>
             </thead>
             <tbody>
               {lista.visibles.map((alumno) => (
                 <tr key={alumno.id}>
                   <td>
-                    <Link to={`/alumnos/${alumno.id}`}>
+                    <Link to={`/alumnos/${alumno.id}`} className="enlace-fila">
                       {alumno.apellido}, {alumno.nombre}
                     </Link>
                   </td>
-                  <td>{alumno.dni}</td>
                   <td>{calcularEdad(alumno.fechaNacimiento)}</td>
                   <td>{ETIQUETAS_PERFIL[alumno.perfil]}</td>
                   <td>{alumno.telefono}</td>
-                  <td>
-                    <span className={alumno.activo ? "insignia insignia-ok" : "insignia"}>
-                      {alumno.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </td>
+                  {verEstado && (
+                    <td>
+                      <span className={alumno.activo ? "insignia insignia-ok" : "insignia"}>
+                        {alumno.activo ? "Activo" : "Inactivo"}
+                      </span>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
           <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
+        </div>
+      )}
+
+      {/* Debajo de la lista: el total a la izquierda y "Nuevo alumno" a la derecha. */}
+      <div className="pie-lista">
+        {alumnos && alumnos.length > 0 && (
           <p className="texto-suave">
             {alumnos.length} {alumnos.length === 1 ? "alumno" : "alumnos"}
           </p>
-        </div>
-      )}
+        )}
+        <Link to="/alumnos/nuevo" className="boton">
+          Nuevo alumno
+        </Link>
+      </div>
     </section>
   );
 }

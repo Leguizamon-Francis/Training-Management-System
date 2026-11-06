@@ -4,6 +4,7 @@ import { alumnosApi } from "../api/alumnos";
 import { rutinasApi, type Rutina } from "../api/rutinas";
 import Cargando from "../componentes/Cargando";
 import ListaRutinas from "../componentes/ListaRutinas";
+import VolverAlumno from "../componentes/VolverAlumno";
 import { useCarga } from "../hooks/useCarga";
 import { formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
@@ -17,7 +18,7 @@ export default function RutinasAlumno() {
   );
   const [busqueda] = useSearchParams();
   const [eligiendoTipo, setEligiendoTipo] = useState(busqueda.has("nueva"));
-  // Con "Nueva Rutina" de Inicio, todo el recorrido vuelve a Inicio.
+  // Con "Nueva rutina" de Inicio, todo el recorrido vuelve a Inicio.
   const origen = useLocation().state;
   const desdeInicio = origen?.desde === "inicio";
 
@@ -38,9 +39,7 @@ export default function RutinasAlumno() {
 
   return (
     <section>
-      <Link to={desdeInicio ? "/" : "/rutinas"} className="volver">
-        {desdeInicio ? "← Inicio" : "← Rutinas"}
-      </Link>
+      <VolverAlumno alumno={alumno} a={desdeInicio ? "/" : "/rutinas"} texto={desdeInicio ? "Inicio" : "Rutinas"} />
 
       <div className="pagina-encabezado">
         <div>

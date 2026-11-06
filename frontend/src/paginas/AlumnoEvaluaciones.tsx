@@ -5,6 +5,7 @@ import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
 import GraficoEvolucion from "../componentes/GraficoEvolucion";
 import ProximaEvaluacion from "../componentes/ProximaEvaluacion";
+import VolverAlumno from "../componentes/VolverAlumno";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
 import { armarGraficos } from "../utils/evaluaciones";
@@ -26,9 +27,7 @@ export default function AlumnoEvaluaciones() {
 
   return (
     <section>
-      <Link to="/evaluaciones" className="volver">
-        ← Evaluaciones
-      </Link>
+      <VolverAlumno alumno={alumno} a="/evaluaciones" texto="Evaluaciones" />
 
       <div className="pagina-encabezado">
         <div>
@@ -50,7 +49,10 @@ export default function AlumnoEvaluaciones() {
         <>
           <div className="titulo-evolucion">
             <h2>Evolución</h2>
-            <p className="texto-suave texto-chico solo-ancho">Pasá el mouse sobre un punto para ver su fecha y valor.</p>
+            <p className="texto-suave texto-chico">
+              <span className="solo-mouse">Pasá el mouse sobre un punto para ver su fecha y valor.</span>
+              <span className="solo-tactil">Tocá un punto para ver su fecha y valor.</span>
+            </p>
           </div>
           <div className="graficos">
             {armarGraficos(evaluaciones).map((grafico) => (
@@ -66,23 +68,19 @@ export default function AlumnoEvaluaciones() {
                   <tr>
                     <th>N°</th>
                     <th>Fecha</th>
-                    <th className="numero">Resultados</th>
                     <th>Observaciones</th>
-                    <th />
                   </tr>
                 </thead>
                 <tbody>
                   {lista.visibles.map((evaluacion) => (
                     <tr key={evaluacion.id}>
                       <td className="sin-salto">
-                        <Link to={`/evaluaciones/${evaluacion.id}`}>{evaluacion.idEvaluacion}</Link>
+                        <Link to={`/evaluaciones/${evaluacion.id}`} className="enlace-fila">
+                          Evaluación {evaluacion.idEvaluacion}
+                        </Link>
                       </td>
                       <td className="sin-salto">{formatearFecha(evaluacion.fecha)}</td>
-                      <td className="numero">{evaluacion.resultados.length}</td>
                       <td className="texto-recortado">{evaluacion.observaciones ?? <span className="texto-suave">—</span>}</td>
-                      <td className="sin-salto">
-                        <Link to={`/evaluaciones/${evaluacion.id}`}>Ver detalle</Link>
-                      </td>
                     </tr>
                   ))}
                 </tbody>

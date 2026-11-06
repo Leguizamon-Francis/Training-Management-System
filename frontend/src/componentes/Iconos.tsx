@@ -46,6 +46,16 @@ export function IconoRutina() {
   );
 }
 
+// Globo de chat, para el aviso por WhatsApp.
+export function IconoMensaje() {
+  return (
+    <Icono>
+      <path d="M20.5 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20.5l1.6-4.2A8.5 8.5 0 1 1 20.5 11.5Z" />
+      <path d="M8.5 10.5h7M8.5 13.5h4" />
+    </Icono>
+  );
+}
+
 // Logo de DV Training (el mismo dibujo que frontend/public/favicon.svg). El fondo
 // cambia con el tema: en oscuro el cuadrado es blanco.
 export function Logo() {

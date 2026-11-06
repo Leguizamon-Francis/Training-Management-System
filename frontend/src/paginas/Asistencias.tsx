@@ -1,65 +1,108 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { asistenciasApi } from "../api/asistencias";
-import AlumnoDestacado from "../componentes/AlumnoDestacado";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
-import { useListaCorta } from "../hooks/useListaCorta";
+import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda, formatearFecha, hoyComoTexto, nombreDelMes } from "../utils/formato";
 
-function Indicador({ etiqueta, valor }: { etiqueta: string; valor: number }) {
-  return (
-    <div className="tarjeta indicador">
-      <span className="indicador-etiqueta">{etiqueta}</span>
-      <strong className="indicador-valor">{valor}</strong>
-    </div>
-  );
-}
+// Cuántos alumnos muestra "Alumnos con más asistencias".
+const CANTIDAD_MAS_ASISTENCIAS = 3;
 
 // Reportes de asistencia de un mes y lista de alumnos: al entrar a uno se ve su historial.
 export default function Asistencias() {
   const mesActual = hoyComoTexto().slice(0, 7);
   const [mes, setMes] = useState(mesActual);
   const [buscar, setBuscar] = useState("");
-  const [verDestacados, setVerDestacados] = useState(false);
+  const [abierto, setAbierto] = useState<"hoy" | "masAsistencias" | null>(null); // un cuadro abierto a la vez
   const { datos: resumen, error } = useCarga(() => asistenciasApi.resumen(mes), [mes]);
+  // "Asistencias de hoy" no depende del mes elegido: siempre es el día de hoy.
+  const { datos: vinieronHoy } = useCarga(
+    () => asistenciasApi.dia(hoyComoTexto()).then((alumnos) => alumnos.filter((alumno) => alumno.presente)),
+    [],
+  );
 
   const visibles = resumen?.alumnos.filter((a) => coincideBusqueda(`${a.nombre} ${a.apellido}`, buscar)) ?? [];
 
-  const lista = useListaCorta(visibles, 10);
+  const lista = useListaCorta(visibles, ALUMNOS_POR_LISTA);
+  // El resumen ya viene ordenado de más a menos asistencias en el mes elegido.
+  const masAsistencias = resumen?.alumnos.filter((alumno) => alumno.cantidad > 0).slice(0, CANTIDAD_MAS_ASISTENCIAS) ?? [];
+
+  const alternar = (cuadro: "hoy" | "masAsistencias") => setAbierto(abierto === cuadro ? null : cuadro);
 
   return (
     <section>
-      <div className="pagina-encabezado">
-        <div>
-          <h1>Asistencias</h1>
-          <p className="texto-suave primera-mayuscula">{nombreDelMes(mes)}</p>
-        </div>
-        <div className="acciones">
-          <button type="button" className="boton-secundario" aria-expanded={verDestacados} onClick={() => setVerDestacados(!verDestacados)}>
-            Alumno con más asistencias
-          </button>
-          <Link to="/asistencias/registrar" className="boton">
-            Registrar asistencia
-          </Link>
-        </div>
-      </div>
+      <h1>Asistencias</h1>
+      <p className="texto-suave primera-mayuscula">{nombreDelMes(mes)}</p>
 
       {!resumen ? (
         <Cargando error={error} />
       ) : (
         <>
-          <div className="indicadores">
-            <Indicador etiqueta="Asistencias del mes" valor={resumen.total} />
-            <Indicador etiqueta="Alumnos que vinieron" valor={resumen.alumnosQueVinieron} />
+          <div className="indicadores indicadores-compactos">
+            <button
+              type="button"
+              className={`tarjeta indicador${abierto === "hoy" ? " activo" : ""}`}
+              aria-expanded={abierto === "hoy"}
+              onClick={() => alternar("hoy")}
+            >
+              <span className="indicador-etiqueta">Asistencias de hoy</span>
+              <strong className="indicador-valor">{vinieronHoy?.length ?? "…"}</strong>
+            </button>
+            {/* El ranking es del mes elegido abajo; el cuadro muestra al primero. */}
+            <button
+              type="button"
+              className={`tarjeta indicador${abierto === "masAsistencias" ? " activo" : ""}`}
+              aria-expanded={abierto === "masAsistencias"}
+              onClick={() => alternar("masAsistencias")}
+            >
+              <span className="indicador-etiqueta">Alumnos con más asistencias</span>
+              <strong className="indicador-valor indicador-valor-texto">
+                {masAsistencias[0] ? `${masAsistencias[0].apellido}, ${masAsistencias[0].nombre}` : "—"}
+              </strong>
+            </button>
           </div>
 
-          {verDestacados && (
-            <>
-              <AlumnoDestacado periodo={nombreDelMes(mes)} destacado={resumen.destacadoMes} />
-              <AlumnoDestacado periodo={`año ${mes.slice(0, 4)}`} destacado={resumen.destacadoAnio} />
-            </>
+          {abierto === "masAsistencias" && (
+            <div className="tarjeta seccion">
+              <h2 className="primera-mayuscula">Más asistencias en {nombreDelMes(mes)}</h2>
+              {masAsistencias.length === 0 ? (
+                <p className="texto-suave">Todavía no hay asistencias en este mes.</p>
+              ) : (
+                <ul className="lista-panel">
+                  {masAsistencias.map((alumno) => (
+                    <li key={alumno.id}>
+                      <Link to={`/asistencias/${alumno.id}`}>
+                        {alumno.apellido}, {alumno.nombre}
+                      </Link>
+                      <span className="texto-suave">
+                        {alumno.cantidad} {alumno.cantidad === 1 ? "asistencia" : "asistencias"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {abierto === "hoy" && vinieronHoy && (
+            <div className="tarjeta seccion">
+              <h2>Vinieron hoy</h2>
+              {vinieronHoy.length === 0 ? (
+                <p className="texto-suave">Todavía no se registró ninguna asistencia hoy.</p>
+              ) : (
+                <ul className="lista-panel">
+                  {vinieronHoy.map((alumno) => (
+                    <li key={alumno.id}>
+                      <Link to={`/asistencias/${alumno.id}`}>
+                        {alumno.apellido}, {alumno.nombre}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
 
           <div className="tarjeta seccion">
@@ -118,7 +161,7 @@ export default function Asistencias() {
                   {lista.visibles.map((alumno) => (
                     <tr key={alumno.id}>
                       <td>
-                        <Link to={`/asistencias/${alumno.id}`}>
+                        <Link to={`/asistencias/${alumno.id}`} className="enlace-fila">
                           {alumno.apellido}, {alumno.nombre}
                         </Link>
                         {!alumno.activo && <span className="texto-suave"> (inactivo)</span>}
@@ -135,6 +178,12 @@ export default function Asistencias() {
               <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
             </div>
           )}
+
+          <div className="pie-lista">
+            <Link to="/asistencias/registrar" className="boton">
+              Registrar asistencia
+            </Link>
+          </div>
         </>
       )}
     </section>

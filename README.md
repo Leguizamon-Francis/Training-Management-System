@@ -22,12 +22,13 @@ It handles client profiles, session notes, attendance, physical assessments with
 - **Workout plans:** filled in directly on the page over fillable PDF templates, starting from a blank model or an earlier plan, then downloaded or sent over WhatsApp. Plans can also be made for someone without a client profile.
 - **Payments:** memberships with a monthly price, fees that chain month to month (several months can be paid at once, with the total split to the cent), automatic debt calculation, an option to cancel a debt, audited corrections to past payments, WhatsApp reminders with the message already written and income reports by period (cash or bank transfer, by month).
 - **Dashboard:** active clients, upcoming fees, upcoming assessments and workout plans due for renewal, each opening the list of clients behind the number, without exposing any amounts.
-- **Settings:** name, login email (confirmed with the password), password and dark mode.
+- **Settings:** name, login email (confirmed with the password), password and dark mode. A forgotten password is reset through an emailed single-use link that expires in 30 minutes.
 
 ## Technical decisions
 
 - **Amounts stored as `Decimal(12,2)` instead of float**, to avoid rounding errors. Amounts can also be entered in Argentine format ("25.000,50").
 - **Dates without time**, stored as `DATE` and handled as `yyyy-mm-dd` strings, so time zones never shift a date by one day. Adding months respects month ends (Jan 31 + 1 month = Feb 28).
+- **Password reset without leaking accounts:** the same answer whether the email exists or not, only a hash of the link token is stored, the link expires in 30 minutes and works once, its address comes from configuration (not from the request, so it cannot be spoofed) and using it closes every session.
 - **Custom sessions instead of JWT:** a random token in an `httpOnly` cookie, with only its hash stored in the database. Logging out revokes the session immediately. Passwords are hashed with bcrypt, and accounts are locked for 15 minutes after 5 failed attempts.
 - **Change history in a single transaction:** editing a profile saves the data and one history row per modified field. If anything fails, nothing is saved.
 - **Workout plans without storing the PDF:** only the field values are saved (as JSON), and the PDF is rebuilt on the template when downloaded.

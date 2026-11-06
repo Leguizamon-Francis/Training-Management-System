@@ -5,12 +5,12 @@ import BotonVerTodos from "../componentes/BotonVerTodos";
 import Desplegable from "../componentes/Desplegable";
 import ListaRutinas from "../componentes/ListaRutinas";
 import { useCarga } from "../hooks/useCarga";
-import { useListaCorta } from "../hooks/useListaCorta";
+import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda, formatearFecha, formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 
 // Lista de alumnos activos: al entrar a uno se ven sus rutinas y se crea una nueva. Abajo, las rutinas sin alumno.
-// Con ?nueva=1 (botón "Nueva Rutina"), al elegir el alumno ya se ofrecen los modelos; también se puede armar
+// Con ?nueva=1 (botón "Nueva rutina"), al elegir el alumno ya se ofrecen los modelos; también se puede armar
 // una sin alumno con el botón "Rutina sin datos de alumno".
 export default function Rutinas() {
   const { datos: alumnos, error } = useCarga(() => rutinasApi.alumnos(), []);
@@ -24,7 +24,7 @@ export default function Rutinas() {
 
   const visibles = alumnos?.filter((a) => coincideBusqueda(`${a.nombre} ${a.apellido}`, buscar)) ?? [];
 
-  const lista = useListaCorta(visibles, 10);
+  const lista = useListaCorta(visibles, ALUMNOS_POR_LISTA);
   const listaSueltas = useListaCorta(sueltas ?? [], 3);
 
   async function eliminar(rutina: Rutina) {
@@ -45,46 +45,10 @@ export default function Rutinas() {
           ← Inicio
         </Link>
       )}
-      <div className="pagina-encabezado">
-        <div>
-          <h1>{nueva ? "Nueva rutina" : "Rutinas"}</h1>
-          <p className="texto-suave">
-            {nueva ? "Seleccioná el alumno para el que vas a hacer la rutina." : "Seleccioná un alumno para ver sus rutinas o hacer una nueva."}
-          </p>
-        </div>
-        {!nueva && (
-          <Link to="/rutinas?nueva=1" className="boton">
-            Nueva Rutina
-          </Link>
-        )}
-        {nueva && !sinAlumno && (
-          <button type="button" className="boton-secundario" onClick={() => setSinAlumno(true)}>
-            Rutina sin datos de alumno
-          </button>
-        )}
-      </div>
-
-      {sinAlumno && (
-        <div className="tarjeta seccion">
-          <h2>Rutina sin datos de alumno</h2>
-          <p className="texto-suave">Elegí el modelo. La rutina queda guardada en "Rutinas sin alumno".</p>
-          <div className="opciones-bloque">
-            {MODELOS_RUTINA.map((tipo) => (
-              <button
-                key={tipo}
-                type="button"
-                className="opcion-bloque"
-                onClick={() => navigate(`/rutinas/sin-alumno/nueva?tipo=${tipo}`, { state: origen })}
-              >
-                {ETIQUETAS_TIPO_BLOQUE[tipo]}
-              </button>
-            ))}
-          </div>
-          <button type="button" className="boton-secundario" onClick={() => setSinAlumno(false)}>
-            Cancelar
-          </button>
-        </div>
-      )}
+      <h1>{nueva ? "Nueva rutina" : "Rutinas"}</h1>
+      <p className="texto-suave">
+        {nueva ? "Seleccioná el alumno para el que vas a hacer la rutina." : "Seleccioná un alumno para ver sus rutinas o hacer una nueva."}
+      </p>
 
       <div className="filtros filtros-simple">
         <input
@@ -115,7 +79,7 @@ export default function Rutinas() {
                 {lista.visibles.map((alumno) => (
                   <tr key={alumno.id}>
                     <td>
-                      <Link to={`/rutinas/${alumno.id}${nueva ? "?nueva=1" : ""}`} state={desdeInicio ? { desde: "inicio" } : undefined}>
+                      <Link to={`/rutinas/${alumno.id}${nueva ? "?nueva=1" : ""}`} state={desdeInicio ? { desde: "inicio" } : undefined} className="enlace-fila">
                         {alumno.apellido}, {alumno.nombre}
                       </Link>
                     </td>
@@ -130,6 +94,49 @@ export default function Rutinas() {
             <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
           </div>
         ))}
+
+      {/* Debajo de la lista. Con "Rutina sin datos de alumno", la elección del modelo se abre acá mismo. */}
+      {!sinAlumno && (
+        <div className="pie-lista acciones">
+          {nueva ? (
+            <>
+              {/* Sin confirmación: todavía no se cargó nada. Vuelve a donde se tocó "Nueva rutina". */}
+              <Link to={desdeInicio ? "/" : "/rutinas"} className="boton-secundario">
+                Cancelar
+              </Link>
+              <button type="button" className="boton-secundario" onClick={() => setSinAlumno(true)}>
+                Rutina sin datos de alumno
+              </button>
+            </>
+          ) : (
+            <Link to="/rutinas?nueva=1" className="boton">
+              Nueva rutina
+            </Link>
+          )}
+        </div>
+      )}
+
+      {sinAlumno && (
+        <div className="tarjeta seccion">
+          <h2>Rutina sin datos de alumno</h2>
+          <p className="texto-suave">Elegí el modelo. La rutina queda guardada en "Rutinas sin alumno".</p>
+          <div className="opciones-bloque">
+            {MODELOS_RUTINA.map((tipo) => (
+              <button
+                key={tipo}
+                type="button"
+                className="opcion-bloque"
+                onClick={() => navigate(`/rutinas/sin-alumno/nueva?tipo=${tipo}`, { state: origen })}
+              >
+                {ETIQUETAS_TIPO_BLOQUE[tipo]}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="boton-secundario" onClick={() => setSinAlumno(false)}>
+            Cancelar
+          </button>
+        </div>
+      )}
 
       {!nueva && sueltas && sueltas.length > 0 && (
         <Desplegable titulo={`Rutinas sin alumno (${sueltas.length})`}>

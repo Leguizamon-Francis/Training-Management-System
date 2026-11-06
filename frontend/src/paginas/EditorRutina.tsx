@@ -89,23 +89,24 @@ export default function EditorRutina() {
             {baseId && " · A partir de una rutina anterior"}
           </p>
         </div>
-        <div className="acciones">
-          <button type="button" className="boton" onClick={guardar} disabled={guardando}>
-            {guardando ? "Guardando…" : rutinaId ? "Guardar cambios" : "Guardar rutina"}
-          </button>
-          <button type="button" className="boton-secundario" onClick={cancelar} disabled={guardando}>
-            Cancelar
-          </button>
-        </div>
       </div>
 
-      {error && <p className="mensaje-error">{error}</p>}
       <p className="texto-suave">
         Completá los campos de la planilla haciendo clic sobre ellos.
         <span className="solo-angosto"> Deslizá con el dedo para ver toda la hoja.</span>
       </p>
 
       <PlanillaEditable ref={visor} datos={datos.pdf} />
+
+      {error && <p className="mensaje-error">{error}</p>}
+      <div className="acciones acciones-formulario acciones-planilla">
+        <button type="button" className="boton" onClick={guardar} disabled={guardando}>
+          {guardando ? "Guardando…" : rutinaId ? "Guardar cambios" : "Guardar rutina"}
+        </button>
+        <button type="button" className="boton-secundario" onClick={cancelar} disabled={guardando}>
+          Cancelar
+        </button>
+      </div>
     </section>
   );
 }

@@ -39,7 +39,7 @@ export default function FormularioCorregirPago({ pago, onGuardado, onCancelar }:
 
   return (
     <form className="formulario-pago" onSubmit={enviar} noValidate>
-      <h3>Corregir pago</h3>
+      <h3>Editar pago</h3>
       {error && <p className="mensaje-error">{error}</p>}
 
       <div className="grilla">
@@ -72,7 +72,7 @@ export default function FormularioCorregirPago({ pago, onGuardado, onCancelar }:
         </p>
       )}
 
-      <div className="acciones">
+      <div className="acciones acciones-formulario">
         <button type="submit" className="boton" disabled={guardando}>
           {guardando ? "Guardando…" : "Guardar corrección"}
         </button>

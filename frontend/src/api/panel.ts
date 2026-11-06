@@ -1,5 +1,7 @@
 import type { Destacado } from "./asistencias";
 import { pedir } from "./cliente";
+import type { ProximaEvaluacion } from "./evaluaciones";
+import type { EstadoCuota } from "./pagos";
 
 export interface FilaPanel {
   id: number;
@@ -18,6 +20,21 @@ export interface Panel {
   destacadoAnio: Destacado | null; // solo del 29 al 31 de diciembre
 }
 
+// Franja de resumen de la ficha del alumno.
+export interface ResumenAlumno {
+  membresia: {
+    plan: string | null;
+    estado: EstadoCuota;
+    cuotasAdeudadas: number;
+    deudaTotal: string;
+  };
+  ultimaAsistencia: { fecha: string; diasDesde: number } | null; // fecha "aaaa-mm-dd"
+  proximaEvaluacion: ProximaEvaluacion;
+  rutina: { hasta: string; diasRestantes: number } | null; // la última rutina; diasRestantes negativo = terminó
+}
+
 export const panelApi = {
   obtener: () => pedir<Panel>("/panel"),
+
+  resumenAlumno: (alumnoId: number) => pedir<ResumenAlumno>(`/panel/alumnos/${alumnoId}`),
 };

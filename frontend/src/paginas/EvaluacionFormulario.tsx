@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import { alumnosApi } from "../api/alumnos";
 import { ErrorApi } from "../api/cliente";
 import { evaluacionesApi, type DatosEvaluacion, type DatosResultado, type Evaluacion, type OrigenResultado } from "../api/evaluaciones";
 import { pruebasApi, type CategoriaPrueba, type Prueba } from "../api/pruebas";
 import Campo from "../componentes/Campo";
 import Cargando from "../componentes/Cargando";
+import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_CATEGORIA, ETIQUETAS_ORIGEN } from "../utils/evaluaciones";
 import { hoyComoTexto } from "../utils/formato";
 
@@ -94,8 +96,8 @@ export default function EvaluacionFormulario() {
   const [errores, setErrores] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    // Se traen todas las pruebas (también las inactivas) para poder mostrar las de evaluaciones viejas.
-    Promise.all([pruebasApi.listar(true), evaluacionId ? evaluacionesApi.obtener(evaluacionId) : null])
+    // Se traen todas las pruebas (también las desactivadas y eliminadas) para poder mostrar las de evaluaciones viejas.
+    Promise.all([pruebasApi.listar(true, true), evaluacionId ? evaluacionesApi.obtener(evaluacionId) : null])
       .then(([listaPruebas, evaluacion]) => {
         setPruebas(listaPruebas);
         if (evaluacion) {
@@ -109,6 +111,8 @@ export default function EvaluacionFormulario() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setCargando(false));
   }, [evaluacionId]);
+
+  const { datos: alumno } = useCarga(() => (alumnoId ? alumnosApi.obtener(alumnoId) : Promise.resolve(null)), [alumnoId]);
 
   // Al editar se vuelve al detalle de la evaluación; al crear, a las evaluaciones del alumno.
   const volverA = evaluacionId
@@ -124,8 +128,9 @@ export default function EvaluacionFormulario() {
       anteriores.map((fila) => {
         if (fila.clave !== clave) return fila;
         const nueva = { ...fila, [campo]: valor };
-        // Al elegir la prueba se completa su unidad (se puede cambiar después) y se vacían los valores
-        // que esa prueba no usa: los de cada lado, o el único.
+        // Al elegir la prueba se completa su unidad (la del catálogo: no se escribe a mano, para que todos
+        // los resultados de una prueba queden en la misma unidad) y se vacían los valores que esa prueba
+        // no usa: los de cada lado, o el único.
         if (campo === "pruebaId") {
           const prueba = pruebas.find((p) => String(p.id) === valor);
           nueva.unidad = prueba?.unidad ?? "";
@@ -193,19 +198,17 @@ export default function EvaluacionFormulario() {
   return (
     <section>
       <Link to={volverA} className="volver">
-        ← Volver
+        ← {evaluacionId ? `Evaluación n° ${numero ?? ""}` : alumno ? `${alumno.apellido}, ${alumno.nombre}` : "Evaluaciones"}
       </Link>
       <h1>{evaluacionId ? `Editar evaluación n° ${numero ?? ""}` : "Nueva evaluación"}</h1>
 
       {error && <p className="mensaje-error">{error}</p>}
 
       <form className="formulario-evaluacion" onSubmit={enviar} noValidate>
-        <div className="tarjeta seccion">
-          <div className="grilla">
-            <Campo etiqueta="Fecha" obligatorio errores={errores.fecha}>
-              <input type="date" value={fecha} max={hoyComoTexto()} onChange={(e) => setFecha(e.target.value)} />
-            </Campo>
-          </div>
+        <div className="tarjeta seccion fecha-y-observaciones">
+          <Campo etiqueta="Fecha" obligatorio errores={errores.fecha}>
+            <input type="date" value={fecha} max={hoyComoTexto()} onChange={(e) => setFecha(e.target.value)} />
+          </Campo>
           <Campo etiqueta="Observaciones" errores={errores.observaciones}>
             <input value={observaciones} onChange={(e) => setObservaciones(e.target.value)} />
           </Campo>
@@ -233,7 +236,7 @@ export default function EvaluacionFormulario() {
                 <div className="fila-resultado-campos">
                   <Campo etiqueta="Test" obligatorio errores={erroresDe("pruebaId")}>
                     <select value={fila.pruebaId} onChange={(e) => cambiarFila(fila.clave, "pruebaId", e.target.value)}>
-                      <option value="">Elegí un Test…</option>
+                      <option value="">Elegí un test…</option>
                       {categorias.map((categoria) => {
                         // Las inactivas solo aparecen si ya estaban elegidas en esta fila.
                         const opciones = pruebas.filter(
@@ -260,7 +263,7 @@ export default function EvaluacionFormulario() {
                     campoValor("valor", "Valor", true)
                   )}
                   <Campo etiqueta="Unidad" errores={erroresDe("unidad")}>
-                    <input value={fila.unidad} onChange={(e) => cambiarFila(fila.clave, "unidad", e.target.value)} />
+                    <input value={fila.unidad || "—"} readOnly tabIndex={-1} />
                   </Campo>
                   <Campo etiqueta="Origen" errores={erroresDe("origen")}>
                     <select value={fila.origen} onChange={(e) => cambiarFila(fila.clave, "origen", e.target.value)}>
@@ -287,11 +290,11 @@ export default function EvaluacionFormulario() {
           })}
 
           <button type="button" className="boton-secundario" onClick={() => setFilas([...filas, filaVacia()])}>
-            + Agregar Test
+            + Agregar test
           </button>
         </div>
 
-        <div className="acciones">
+        <div className="acciones acciones-formulario">
           <button type="submit" className="boton" disabled={guardando}>
             {guardando ? "Guardando…" : evaluacionId ? "Guardar cambios" : "Guardar evaluación"}
           </button>

@@ -39,7 +39,7 @@ function useEnvio() {
 
 function Botones({ guardando, onCancelar }: { guardando: boolean; onCancelar: () => void }) {
   return (
-    <div className="acciones">
+    <div className="acciones acciones-formulario">
       <button type="submit" className="boton" disabled={guardando}>
         {guardando ? "Guardando…" : "Guardar"}
       </button>
@@ -68,7 +68,7 @@ function FormularioNombre({ onListo, onCancelar }: PropsFormulario) {
     >
       {error && <p className="mensaje-error">{error}</p>}
       <div className="grilla">
-        <Campo etiqueta="Nombre" obligatorio errores={errores.nombre}>
+        <Campo etiqueta="Nombre de usuario" obligatorio errores={errores.nombre}>
           <input value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
         </Campo>
       </div>
@@ -206,7 +206,7 @@ export default function Configuracion() {
       {mensaje && <p className="mensaje-ok">{mensaje}</p>}
 
       <div className="tarjeta seccion">
-        <Fila etiqueta="Nombre" valor={usuario?.nombre ?? ""} onCambiar={abierto === "nombre" ? undefined : () => abrir("nombre")}>
+        <Fila etiqueta="Nombre de usuario" valor={usuario?.nombre ?? ""} onCambiar={abierto === "nombre" ? undefined : () => abrir("nombre")}>
           {abierto === "nombre" && <FormularioNombre {...formulario} />}
         </Fila>
         <Fila etiqueta="Email" valor={usuario?.email ?? ""} onCambiar={abierto === "email" ? undefined : () => abrir("email")}>

@@ -38,7 +38,7 @@ export default function EvaluacionesAlumno({ alumnoId }: { alumnoId: number }) {
           </Link>
           {cantidad > 0 && (
             <Link to={`/evaluaciones/alumnos/${alumnoId}`} className="boton-secundario">
-              Historial y Métricas ({cantidad})
+              Historial y métricas ({cantidad})
             </Link>
           )}
         </div>

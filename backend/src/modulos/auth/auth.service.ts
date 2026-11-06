@@ -8,6 +8,9 @@ export const NOMBRE_COOKIE = "sesion";
 // También se usa desde el celular, que se puede perder: la sesión dura 7 días, no más.
 const DURACION_SESION_MS = 7 * 24 * 60 * 60 * 1000;
 
+// El link de "¿Olvidaste tu contraseña?" vence a los 30 minutos.
+export const MINUTOS_LINK_RECUPERACION = 30;
+
 // Costo de bcrypt: más alto = más lento de adivinar por fuerza bruta (12 tarda ~0,2 s).
 const COSTO_BCRYPT = 12;
 
@@ -119,4 +122,34 @@ export async function cambiarEmail(usuarioId: number, email: string, actual: str
 
 export async function cerrarSesion(token: string) {
   await prisma.sesion.deleteMany({ where: { tokenHash: hashearToken(token) } });
+}
+
+// ---------- "¿Olvidaste tu contraseña?" ----------
+
+// Crea el link de recuperación (null si el email no es de ningún usuario). Pedir uno nuevo anula los anteriores.
+export async function crearRecuperacion(email: string) {
+  const usuario = await prisma.usuario.findUnique({ where: { email } });
+  if (!usuario) return null;
+  const token = crypto.randomBytes(32).toString("base64url");
+  await prisma.$transaction([
+    prisma.recuperacionPassword.deleteMany({ where: { usuarioId: usuario.id } }),
+    prisma.recuperacionPassword.create({
+      data: { usuarioId: usuario.id, tokenHash: hashearToken(token), expiraEn: new Date(Date.now() + MINUTOS_LINK_RECUPERACION * 60_000) },
+    }),
+  ]);
+  return { token, usuario: datosPublicos(usuario) };
+}
+
+// Cambia la contraseña con el token del link. Después borra el link (sirve una sola vez) y cierra todas
+// las sesiones, por si alguien más estaba usando la cuenta. false si el link no existe o venció.
+export async function restablecerPassword(token: string, nueva: string) {
+  const recuperacion = await prisma.recuperacionPassword.findUnique({ where: { tokenHash: hashearToken(token) } });
+  if (!recuperacion || recuperacion.expiraEn < new Date()) return false;
+  const { usuarioId } = recuperacion;
+  await prisma.$transaction([
+    prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: await hashearPassword(nueva) } }),
+    prisma.recuperacionPassword.deleteMany({ where: { usuarioId } }),
+    prisma.sesion.deleteMany({ where: { usuarioId } }),
+  ]);
+  return true;
 }

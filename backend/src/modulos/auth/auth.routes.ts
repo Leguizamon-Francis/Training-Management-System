@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { env } from "../../config/env";
+import { enviarEmail, escaparHtml } from "../../lib/email";
 import { requiereSesion } from "../../middlewares/requiereSesion";
 import { validar } from "../../middlewares/validar";
 import {
@@ -7,21 +8,28 @@ import {
   esquemaCambioNombre,
   esquemaCambioPassword,
   esquemaLogin,
+  esquemaOlvidePassword,
+  esquemaRestablecerPassword,
   type DatosCambioEmail,
   type DatosCambioNombre,
   type DatosCambioPassword,
   type DatosLogin,
+  type DatosOlvidePassword,
+  type DatosRestablecerPassword,
 } from "./auth.schemas";
 import {
   cambiarEmail,
   cambiarNombre,
   cambiarPassword,
   cerrarSesion,
+  crearRecuperacion,
   iniciarSesion,
   limpiarIntentos,
+  MINUTOS_LINK_RECUPERACION,
   minutosDeBloqueo,
   NOMBRE_COOKIE,
   registrarIntentoFallido,
+  restablecerPassword,
 } from "./auth.service";
 
 export const authRouter = Router();
@@ -118,6 +126,70 @@ authRouter.put("/email", requiereSesion, validar(esquemaCambioEmail), async (req
     return;
   }
   res.json({ usuario: resultado.usuario });
+});
+
+// ---------- "¿Olvidaste tu contraseña?" ----------
+
+const URL_DESARROLLO = "http://localhost:5173";
+
+// Mail con el link para elegir una contraseña nueva.
+function mailRecuperacion(nombre: string, link: string) {
+  const vence = `Vence en ${MINUTOS_LINK_RECUPERACION} minutos y sirve una sola vez.`;
+  const noFuisteVos = "Si no lo pediste, ignorá este mail: tu contraseña no cambia.";
+  return {
+    asunto: "Elegí una contraseña nueva para DV Training",
+    texto: `Hola ${nombre}:\n\nPara elegir una contraseña nueva, entrá a este link:\n${link}\n\n${vence}\n${noFuisteVos}\n\nDV Training`,
+    html: `<p>Hola ${escaparHtml(nombre)}:</p>
+<p>Para elegir una contraseña nueva, tocá el botón:</p>
+<p><a href="${link}" style="display:inline-block;padding:12px 20px;background:#0f766e;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:600">Elegir contraseña nueva</a></p>
+<p>${vence}<br>${noFuisteVos}</p>
+<p>DV Training</p>`,
+  };
+}
+
+// POST /api/auth/olvide-password  { email }
+// Responde lo mismo exista o no el email, para no revelar quién tiene cuenta. Cada pedido cuenta para el
+// límite de intentos: así nadie puede usar el formulario para llenar de mails la casilla del usuario.
+authRouter.post("/olvide-password", validar(esquemaOlvidePassword), async (req, res) => {
+  if (respondioBloqueo(req, res)) return;
+  const produccion = env.NODE_ENV === "production";
+  if (produccion && (!env.RESEND_API_KEY || !env.URL_PUBLICA)) {
+    res.status(503).json({ error: "La recuperación por email todavía no está configurada. Avisale al administrador del sistema." });
+    return;
+  }
+  registrarIntentoFallido(claveIntentos(req));
+
+  const { email } = req.body as DatosOlvidePassword;
+  const recuperacion = await crearRecuperacion(email);
+  if (recuperacion) {
+    const link = `${env.URL_PUBLICA ?? URL_DESARROLLO}/restablecer-password?token=${recuperacion.token}`;
+    if (!env.RESEND_API_KEY) {
+      console.log(`[desarrollo] Link para restablecer la contraseña de ${email}: ${link}`);
+    } else {
+      const { asunto, texto, html } = mailRecuperacion(recuperacion.usuario.nombre, link);
+      try {
+        await enviarEmail({ para: email, asunto, texto, html }, { clave: env.RESEND_API_KEY, remitente: env.EMAIL_REMITENTE });
+      } catch (err) {
+        console.error("No se pudo enviar el mail de recuperación:", err);
+        res.status(502).json({ error: "No se pudo enviar el mail. Probá de nuevo en unos minutos." });
+        return;
+      }
+    }
+  }
+  res.json({ mensaje: "Si el email está registrado, te enviamos un link para elegir una contraseña nueva." });
+});
+
+// POST /api/auth/restablecer-password  { token, nueva }  → cambia la contraseña y cierra todas las sesiones
+authRouter.post("/restablecer-password", validar(esquemaRestablecerPassword), async (req, res) => {
+  if (respondioBloqueo(req, res)) return;
+  const { token, nueva } = req.body as DatosRestablecerPassword;
+  if (!(await restablecerPassword(token, nueva))) {
+    registrarIntentoFallido(claveIntentos(req));
+    res.status(400).json({ error: "El link no es válido o ya venció. Pedí uno nuevo." });
+    return;
+  }
+  limpiarIntentos(claveIntentos(req));
+  res.status(204).end();
 });
 
 // GET /api/auth/yo  → el frontend lo pide al abrir la página para saber si ya hay sesión

@@ -88,7 +88,7 @@ function FormularioAnotacion({ inicial, textoBoton, onGuardar, onCancelar }: Pro
           placeholder="Ej.: se reemplazó sentadilla con barra por sentadilla goblet"
         />
       </Campo>
-      <div className="acciones">
+      <div className="acciones acciones-formulario">
         <button type="submit" className="boton" disabled={guardando}>
           {guardando ? "Guardando…" : textoBoton}
         </button>

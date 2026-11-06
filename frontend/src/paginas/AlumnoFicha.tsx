@@ -8,6 +8,7 @@ import Cargando from "../componentes/Cargando";
 import Desplegable from "../componentes/Desplegable";
 import EvaluacionesAlumno from "../componentes/EvaluacionesAlumno";
 import PagosAlumno from "../componentes/PagosAlumno";
+import ResumenAlumno from "../componentes/ResumenAlumno";
 import RutinasFicha from "../componentes/RutinasFicha";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
@@ -70,17 +71,9 @@ export default function AlumnoFicha() {
       </Link>
 
       <div className="pagina-encabezado">
-        <div>
-          <h1>
-            {alumno.apellido}, {alumno.nombre}
-          </h1>
-          <div className="insignias">
-            <span className="insignia">{ETIQUETAS_PERFIL[alumno.perfil]}</span>
-            <span className={alumno.activo ? "insignia insignia-ok" : "insignia"}>
-              {alumno.activo ? "Activo" : "Inactivo"}
-            </span>
-          </div>
-        </div>
+        <h1>
+          {alumno.apellido}, {alumno.nombre}
+        </h1>
         <div className="acciones">
           <Link to={`/alumnos/${alumno.id}/editar`} className="boton">
             Editar
@@ -92,6 +85,8 @@ export default function AlumnoFicha() {
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
+
+      <ResumenAlumno alumno={alumno} />
 
       <Desplegable titulo="Datos personales">
         <dl className="datos">

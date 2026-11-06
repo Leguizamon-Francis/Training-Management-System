@@ -20,10 +20,13 @@ export interface DatosPrueba {
 }
 
 export const pruebasApi = {
-  listar: (incluirInactivas = false) =>
-    pedir<Prueba[]>(`/pruebas${incluirInactivas ? "?incluirInactivas=true" : ""}`),
+  // Las eliminadas solo hacen falta para mostrar evaluaciones viejas que las usaron.
+  listar: (incluirInactivas = false, incluirEliminadas = false) =>
+    pedir<Prueba[]>(`/pruebas?incluirInactivas=${incluirInactivas}&incluirEliminadas=${incluirEliminadas}`),
 
   crear: (datos: DatosPrueba) => pedir<Prueba>("/pruebas", { metodo: "POST", datos }),
 
   actualizar: (id: number, datos: DatosPrueba) => pedir<Prueba>(`/pruebas/${id}`, { metodo: "PUT", datos }),
+
+  eliminar: (id: number) => pedir<void>(`/pruebas/${id}`, { metodo: "DELETE" }),
 };

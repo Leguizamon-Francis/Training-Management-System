@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate } from "react-router";
+import MarcaLogin from "../componentes/MarcaLogin";
 import { useSesion } from "../componentes/Sesion";
-import { Logo } from "../componentes/Iconos";
 
 export default function Login() {
   const { usuario, iniciarSesion } = useSesion();
@@ -33,13 +33,7 @@ export default function Login() {
   return (
     <main className="login">
       <form className="tarjeta login-formulario" onSubmit={enviar}>
-        <div className="login-marca">
-          <Logo />
-          <div>
-            <h1>DV Training</h1>
-            <p className="texto-suave">Gestión de entrenamiento</p>
-          </div>
-        </div>
+        <MarcaLogin />
         <p className="texto-suave">Ingresá con tu email y contraseña.</p>
 
         <label className="campo">
@@ -70,6 +64,9 @@ export default function Login() {
         <button type="submit" className="boton" disabled={enviando}>
           {enviando ? "Ingresando…" : "Ingresar"}
         </button>
+        <Link to="/olvide-password" className="enlace-login">
+          ¿Olvidaste tu contraseña?
+        </Link>
       </form>
     </main>
   );

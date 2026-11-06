@@ -1,8 +1,8 @@
 import { diasEntre, hoyComoTexto, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { destacadoDelAnio, destacadoDelMes, destacadosDeHoy } from "../asistencias/asistencias.service";
-import { resumenAlumnos } from "../evaluaciones/evaluaciones.service";
-import { obtenerEstadoCuotas } from "../pagos/pagos.service";
+import { calcularProximaEvaluacion, resumenAlumnos } from "../evaluaciones/evaluaciones.service";
+import { cargarSituacion, obtenerEstadoCuotas } from "../pagos/pagos.service";
 
 // Con cuántos días de anticipación se avisa en el panel.
 const DIAS_PROXIMAS_EVALUACIONES = 7;
@@ -72,5 +72,32 @@ export async function obtenerPanel() {
     // Solo los días en que se anuncian; si nadie vino en el período, tampoco.
     destacadoMes,
     destacadoAnio,
+  };
+}
+
+// Franja de resumen de la ficha de un alumno: cómo está su membresía, cuándo vino por última vez,
+// cuándo le toca evaluarse y hasta cuándo dura su rutina. A diferencia del panel, incluye la deuda:
+// la ficha ya la muestra en la sección Membresía.
+export async function resumenAlumno(alumnoId: number) {
+  const { alumno, situacion } = await cargarSituacion(alumnoId); // 404 si no existe
+  const [ultimaAsistencia, ultimaEvaluacion, ultimaRutina] = await Promise.all([
+    prisma.asistencia.findFirst({ where: { alumnoId }, select: { fecha: true }, orderBy: { fecha: "desc" } }),
+    prisma.evaluacion.findFirst({ where: { alumnoId }, select: { fecha: true }, orderBy: { fecha: "desc" } }),
+    prisma.rutina.findFirst({ where: { alumnoId }, select: { hasta: true }, orderBy: [{ hasta: "desc" }, { id: "desc" }] }),
+  ]);
+  const hoy = hoyComoTexto();
+  const fechaAsistencia = ultimaAsistencia ? textoDesdeFecha(ultimaAsistencia.fecha) : null;
+  const hastaRutina = ultimaRutina ? textoDesdeFecha(ultimaRutina.hasta) : null;
+
+  return {
+    membresia: {
+      plan: alumno.plan?.nombre ?? null,
+      estado: situacion.estado,
+      cuotasAdeudadas: situacion.cuotasAdeudadas.length,
+      deudaTotal: situacion.deudaTotal,
+    },
+    ultimaAsistencia: fechaAsistencia ? { fecha: fechaAsistencia, diasDesde: diasEntre(fechaAsistencia, hoy) } : null,
+    proximaEvaluacion: calcularProximaEvaluacion(alumno.perfil, ultimaEvaluacion?.fecha ?? null, alumno.creadoEn),
+    rutina: hastaRutina ? { hasta: hastaRutina, diasRestantes: diasEntre(hoy, hastaRutina) } : null,
   };
 }

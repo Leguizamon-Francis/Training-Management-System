@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Lado } from "../api/evaluaciones";
 import {
   ETIQUETAS_LADO,
@@ -13,7 +14,8 @@ import { formatearFecha } from "../utils/formato";
 // - Eje X: las evaluaciones en orden (no proporcional al tiempo), rotuladas con su fecha. El n° se ve en el punto.
 // - Si la prueba se mide por lado, izquierdo y derecho van juntos para compararlos.
 // - Colores fijos por lado (no por orden): izquierdo/sin lado = azul, derecho = naranja.
-// - Solo se rotula el último valor; el resto se ve al pasar el mouse sobre cada punto.
+// - Solo se rotula el último valor; el resto se ve al pasar el mouse sobre cada punto, o al tocarlo
+//   (en el celular no hay mouse): el punto tocado se describe debajo del gráfico.
 
 const ANCHO = 560;
 const ALTO = 236;
@@ -21,7 +23,7 @@ const MARGEN = { izquierda: 56, derecha: 72, arriba: 12, abajo: 28 };
 const AREA_ANCHO = ANCHO - MARGEN.izquierda - MARGEN.derecha;
 const AREA_ALTO = ALTO - MARGEN.arriba - MARGEN.abajo;
 
-// Tamaño de los puntos y del área (invisible) donde el mouse muestra el valor.
+// Tamaño de los puntos y del área (invisible) que se toca o se señala con el mouse.
 const RADIO_PUNTO = 6;
 const RADIO_ZONA_MOUSE = 16;
 
@@ -56,8 +58,13 @@ function escalaY(minimo: number, maximo: number) {
   return { inicio, fin, marcas };
 }
 
+function describirPunto(punto: PuntoGrafico, lado: Lado | null, unidad: string) {
+  return `Evaluación n° ${punto.numero} · ${formatearFecha(punto.fecha)}${lado ? ` · ${nombreSerie(lado)}` : ""}: ${formatearNumero(punto.valor)} ${unidad}`;
+}
+
 export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
   const { nombre, unidad, series } = datos;
+  const [tocado, setTocado] = useState<{ punto: PuntoGrafico; lado: Lado | null } | null>(null);
 
   // Eje X: una posición por evaluación (las de este gráfico), en orden de fecha y n°.
   const porEvaluacion = new Map<number, PuntoGrafico>();
@@ -157,7 +164,7 @@ export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
           ) : null,
         )}
 
-        {/* Puntos: el círculo grande e invisible es el área para pasar el mouse */}
+        {/* Puntos: el círculo grande e invisible es el área que se toca o se señala con el mouse */}
         {series.map((serie) =>
           serie.puntos.map((punto) => (
             <g key={`${serie.lado ?? "unico"}-${punto.evaluacionId}`}>
@@ -168,11 +175,14 @@ export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
                 r={RADIO_PUNTO}
                 fill={colorDeLado(serie.lado)}
               />
-              <circle className="grafico-zona" cx={posX(punto)} cy={posY(punto.valor)} r={RADIO_ZONA_MOUSE}>
-                {/* <title> necesita un único texto: se arma con un template string */}
-                <title>
-                  {`Evaluación n° ${punto.numero} · ${formatearFecha(punto.fecha)}${serie.lado ? ` · ${nombreSerie(serie.lado)}` : ""}: ${formatearNumero(punto.valor)} ${unidad}`}
-                </title>
+              <circle
+                className="grafico-zona"
+                cx={posX(punto)}
+                cy={posY(punto.valor)}
+                r={RADIO_ZONA_MOUSE}
+                onClick={() => setTocado(tocado?.punto === punto ? null : { punto, lado: serie.lado })}
+              >
+                <title>{describirPunto(punto, serie.lado, unidad)}</title>
               </circle>
             </g>
           )),
@@ -185,6 +195,8 @@ export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
           </text>
         ))}
       </svg>
+
+      {tocado && <p className="grafico-detalle">{describirPunto(tocado.punto, tocado.lado, unidad)}</p>}
 
       {series.length > 1 && (
         <div className="grafico-leyenda">

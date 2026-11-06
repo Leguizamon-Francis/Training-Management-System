@@ -11,13 +11,13 @@ import {
   ETIQUETAS_MEDIO,
   linkWhatsApp,
   requiereAviso,
-  textoVencimiento,
 } from "../utils/pagos";
 import BotonVerTodos from "./BotonVerTodos";
 import Cargando from "./Cargando";
 import Desplegable from "./Desplegable";
 import FormularioCorregirPago from "./FormularioCorregirPago";
 import FormularioPago from "./FormularioPago";
+import { IconoMensaje } from "./Iconos";
 import SelectorPlan from "./SelectorPlan";
 
 interface Props {
@@ -106,7 +106,9 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
       {error && <p className="mensaje-error">{error}</p>}
 
       <div className="fila-plan">
-        <SelectorPlan alumnoId={alumno.id} planActual={plan} onCambio={planCambiado} />
+        <SelectorPlan alumnoId={alumno.id} planActual={plan} onCambio={planCambiado} conEtiqueta={!enFicha}>
+          <span className={claseEstadoCuota(situacion.estado)}>{ETIQUETAS_ESTADO_CUOTA[situacion.estado]}</span>
+        </SelectorPlan>
         {enFicha && (
           <Link to="/membresias" className="link-discreto">
             Ir a Membresías →
@@ -114,20 +116,19 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
         )}
       </div>
 
-      <div className="pago-estado">
-        <span className={claseEstadoCuota(situacion.estado)}>{ETIQUETAS_ESTADO_CUOTA[situacion.estado]}</span>
-        {situacion.vence && <span>{textoVencimiento(situacion.estado, situacion.vence, situacion.diasRestantes)}</span>}
-        {requiereAviso(situacion.estado) && (
+      {requiereAviso(situacion.estado) && (
+        <div className="pago-estado">
           <a
             className="boton-whatsapp"
             href={linkWhatsApp({ ...alumno, ...situacion, cantidadAdeudadas: adeudadas.length })}
             target="_blank"
             rel="noopener noreferrer"
           >
+            <IconoMensaje />
             Comunicarse vía WhatsApp
           </a>
-        )}
-      </div>
+        </div>
+      )}
 
       {adeudadas.length > 0 && (
         <div className="pago-saldo">
@@ -209,7 +210,7 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
                     <td className="numero sin-salto">{formatearMoneda(pago.importe)}</td>
                     <td className="sin-salto">
                       <button type="button" className="boton-link" onClick={() => setCorrigiendo(pago)}>
-                        Corregir
+                        Editar
                       </button>
                       {sePuedeEliminar(pago) && (
                         <button type="button" className="boton-link peligro" onClick={() => eliminarPago(pago)}>

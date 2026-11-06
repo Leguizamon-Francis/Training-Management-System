@@ -13,7 +13,7 @@ const MESES_REEVALUACION: Record<Perfil, number> = {
 
 // Próxima evaluación = última evaluación (o, si nunca se evaluó, la fecha de alta) + plazo del perfil.
 // Se calcula siempre, no se guarda: si se evalúa antes, el plazo se cuenta desde esa evaluación.
-function calcularProximaEvaluacion(perfil: Perfil, ultimaEvaluacion: Date | null, alta: Date) {
+export function calcularProximaEvaluacion(perfil: Perfil, ultimaEvaluacion: Date | null, alta: Date) {
   const base = ultimaEvaluacion ? textoDesdeFecha(ultimaEvaluacion) : fechaArgentina(alta);
   const fecha = sumarMeses(base, MESES_REEVALUACION[perfil]);
   return {

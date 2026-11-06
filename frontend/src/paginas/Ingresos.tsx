@@ -141,7 +141,7 @@ export default function Ingresos() {
                       <tr key={pago.id}>
                         <td className="sin-salto">{formatearFecha(pago.fecha)}</td>
                         <td>
-                          <Link to={`/membresias/alumnos/${pago.alumno.id}`} state={{ desde: "ingresos" }}>
+                          <Link to={`/membresias/alumnos/${pago.alumno.id}`} state={{ desde: "ingresos" }} className="enlace-fila">
                             {pago.alumno.apellido}, {pago.alumno.nombre}
                           </Link>
                         </td>

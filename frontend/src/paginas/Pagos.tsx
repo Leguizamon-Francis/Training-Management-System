@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { pagosApi, type EstadoCuotaAlumno } from "../api/pagos";
 import BotonVerTodos from "../componentes/BotonVerTodos";
+import { IconoMensaje } from "../componentes/Iconos";
 import UltimosIngresos from "../componentes/UltimosIngresos";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
@@ -35,26 +36,14 @@ export default function Pagos() {
 
   return (
     <section>
-      <div className="pagina-encabezado">
-        <h1>Membresías</h1>
-        <div className="acciones-pagos">
-          <Link to="/membresias/ingresos" className="boton-secundario">
-            Historial de Ingresos
-          </Link>
-          <Link to="/membresias/nuevo" className="boton">
-            Registrar un Pago
-          </Link>
-          <Link to="/membresias/configuracion" className="boton-secundario">
-            Configurar Membresías
-          </Link>
-        </div>
-      </div>
-      <p className="texto-suave">Estado de la cuota de los alumnos activos.</p>
+      <h1>Membresías</h1>
 
       {error && <p className="mensaje-error">{error}</p>}
 
+      {/* En un recuadro, igual que "Últimos ingresos", para que las dos listas se vean iguales. */}
       {filas && (
-        <>
+        <div className="tarjeta seccion">
+          <h2>Estado de las cuotas</h2>
           <div className="filtros-chips">
             {FILTROS.map((f) => (
               <button
@@ -72,7 +61,7 @@ export default function Pagos() {
             <p className="texto-suave">No hay alumnos en esta categoría.</p>
           ) : (
             <div className="tabla-contenedor">
-              <table className="tabla">
+              <table className="tabla tabla-cuotas">
                 <thead>
                   <tr>
                     <th>Alumno</th>
@@ -84,19 +73,24 @@ export default function Pagos() {
                   </tr>
                 </thead>
                 <tbody>
-                  {lista.visibles.map((fila) => (
+                  {lista.visibles.map((fila) => {
+                    const debe = fila.cantidadAdeudadas > 0;
+                    return (
                     <tr key={fila.id}>
                       <td>
-                        <Link to={`/membresias/alumnos/${fila.id}`}>
+                        <Link to={`/membresias/alumnos/${fila.id}`} className="enlace-fila">
                           {fila.apellido}, {fila.nombre}
                         </Link>
                       </td>
-                      <td>{fila.plan ?? <span className="texto-suave">Sin membresía</span>}</td>
-                      <td>
+                      <td className="celda-membresia">{fila.plan ?? <span className="texto-suave">Sin membresía</span>}</td>
+                      <td className="celda-estado">
                         <span className={claseEstadoCuota(fila.estado)}>{ETIQUETAS_ESTADO_CUOTA[fila.estado]}</span>
                       </td>
-                      <td>{textoVencimiento(fila.estado, fila.vence, fila.diasRestantes) || <span className="texto-suave">—</span>}</td>
-                      <td className="numero sin-salto">
+                      {/* En el celular se ve una sola de estas dos: la deuda si hay, y si no el vencimiento. */}
+                      <td className={debe ? "oculta-celular" : undefined}>
+                        {textoVencimiento(fila.estado, fila.vence, fila.diasRestantes) || <span className="texto-suave">—</span>}
+                      </td>
+                      <td className={`numero sin-salto${debe ? "" : " oculta-celular"}`}>
                         {Number(fila.deudaTotal) > 0 && formatearMoneda(fila.deudaTotal)}
                         {fila.cantidadAdeudadas > 0 && (
                           <span className="texto-suave">
@@ -106,22 +100,54 @@ export default function Pagos() {
                         )}
                         {Number(fila.deudaTotal) === 0 && fila.cantidadAdeudadas === 0 && <span className="texto-suave">—</span>}
                       </td>
-                      <td className="sin-salto">
+                      <td className="celda-acciones">
                         {requiereAviso(fila.estado) && (
-                          <a className="boton-whatsapp" href={linkWhatsApp(fila)} target="_blank" rel="noopener noreferrer">
-                            WhatsApp
+                          <a
+                            className="boton-whatsapp"
+                            href={linkWhatsApp(fila)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Avisar a ${fila.nombre} por WhatsApp`}
+                          >
+                            <IconoMensaje />
+                            <span className="solo-ancho">WhatsApp</span>
                           </a>
                         )}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
               <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
             </div>
           )}
-        </>
+        </div>
       )}
+
+      <div className="pie-lista">
+        {/* En el celular solo queda a la vista "Registrar pago"; los otros dos, en el menú "⋯". */}
+        <div className="acciones-pagos">
+          <Link to="/membresias/ingresos" className="boton-secundario solo-ancho">
+            Historial de ingresos
+          </Link>
+          <Link to="/membresias/nuevo" className="boton">
+            Registrar pago
+          </Link>
+          <Link to="/membresias/configuracion" className="boton-secundario solo-ancho">
+            Configurar membresías
+          </Link>
+          <details className="menu-mas">
+            <summary className="boton-secundario" aria-label="Más opciones">
+              ⋯
+            </summary>
+            <div className="menu-mas-opciones tarjeta">
+              <Link to="/membresias/ingresos">Historial de ingresos</Link>
+              <Link to="/membresias/configuracion">Configurar membresías</Link>
+            </div>
+          </details>
+        </div>
+      </div>
 
       <UltimosIngresos />
     </section>

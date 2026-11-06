@@ -2,9 +2,13 @@ import { ErrorHttp } from "../../lib/errores";
 import { prisma } from "../../lib/prisma";
 import type { DatosPrueba } from "./pruebas.schemas";
 
-export function listarPruebas(incluirInactivas: boolean) {
+// Las eliminadas solo se piden para mostrar evaluaciones viejas que las usaron.
+export function listarPruebas(incluirInactivas: boolean, incluirEliminadas: boolean) {
   return prisma.prueba.findMany({
-    where: incluirInactivas ? undefined : { activa: true },
+    where: {
+      ...(incluirInactivas ? {} : { activa: true }),
+      ...(incluirEliminadas ? {} : { eliminada: false }),
+    },
     orderBy: [{ categoria: "asc" }, { nombre: "asc" }],
   });
 }
@@ -22,7 +26,12 @@ async function obtenerPrueba(id: number) {
 async function verificarNombreLibre(nombre: string, idActual?: number) {
   const otra = await prisma.prueba.findFirst({ where: { nombre: { equals: nombre, mode: "insensitive" } } });
   if (otra && otra.id !== idActual) {
-    throw new ErrorHttp(409, `Ya existe una prueba llamada "${otra.nombre}"`);
+    throw new ErrorHttp(
+      409,
+      otra.eliminada
+        ? `Ya hubo una prueba llamada "${otra.nombre}" (eliminada, con resultados guardados): usá otro nombre`
+        : `Ya existe una prueba llamada "${otra.nombre}"`,
+    );
   }
 }
 
@@ -35,6 +44,9 @@ export async function crearPrueba(datos: DatosPrueba) {
 // guarda la unidad con la que se midió.
 export async function actualizarPrueba(id: number, datos: DatosPrueba) {
   const actual = await obtenerPrueba(id);
+  if (actual.eliminada) {
+    throw new ErrorHttp(409, `"${actual.nombre}" fue eliminada: no se puede modificar`);
+  }
   await verificarNombreLibre(datos.nombre, id);
   // No se puede dejar de medir por lado si ya hay resultados cargados por lado: quedarían inconsistentes.
   if (actual.porLado && !datos.porLado) {
@@ -44,4 +56,18 @@ export async function actualizarPrueba(id: number, datos: DatosPrueba) {
     }
   }
   return prisma.prueba.update({ where: { id }, data: datos });
+}
+
+// Eliminar es permanente. Sin resultados, la prueba se borra. Con resultados no se puede borrar (cada
+// resultado guarda a qué prueba corresponde): se marca como eliminada, desaparece del catálogo y no se
+// puede restaurar, pero los resultados anteriores se siguen viendo en las evaluaciones y los gráficos.
+export async function eliminarPrueba(id: number) {
+  const prueba = await obtenerPrueba(id);
+  if (prueba.eliminada) return;
+  const resultados = await prisma.resultadoEvaluacion.count({ where: { pruebaId: id } });
+  if (resultados === 0) {
+    await prisma.prueba.delete({ where: { id } });
+  } else {
+    await prisma.prueba.update({ where: { id }, data: { activa: false, eliminada: true } });
+  }
 }

@@ -87,29 +87,24 @@ export async function quitarAsistencia(alumnoId: number, fecha: string) {
   await prisma.asistencia.deleteMany({ where: { alumnoId, fecha: fechaDesdeTexto(fecha) } });
 }
 
-// Reporte de un mes: totales, asistencias de cada alumno y quiénes hace mucho que no vienen.
+// Reporte de un mes: asistencias de cada alumno y quiénes hace mucho que no vienen.
 export async function resumenMes(mes: string) {
   const hoy = hoyComoTexto();
   const inicio = `${mes}-01`;
   const delMes = { fecha: { gte: fechaDesdeTexto(inicio), lt: fechaDesdeTexto(sumarMeses(inicio, 1)) } };
 
-  const [total, destacadoMes, destacadoAnio, alumnos] = await Promise.all([
-    prisma.asistencia.count({ where: delMes }),
-    destacadoDelMes(mes),
-    destacadoDelAnio(mes.slice(0, 4)),
-    prisma.alumno.findMany({
-      // Los dados de baja solo figuran en los meses en que vinieron.
-      where: { OR: [{ activo: true }, { asistencias: { some: delMes } }] },
-      select: {
-        id: true,
-        nombre: true,
-        apellido: true,
-        activo: true,
-        asistencias: { select: { fecha: true }, orderBy: { fecha: "desc" }, take: 1 },
-        _count: { select: { asistencias: { where: delMes } } },
-      },
-    }),
-  ]);
+  const alumnos = await prisma.alumno.findMany({
+    // Los dados de baja solo figuran en los meses en que vinieron.
+    where: { OR: [{ activo: true }, { asistencias: { some: delMes } }] },
+    select: {
+      id: true,
+      nombre: true,
+      apellido: true,
+      activo: true,
+      asistencias: { select: { fecha: true }, orderBy: { fecha: "desc" }, take: 1 },
+      _count: { select: { asistencias: { where: delMes } } },
+    },
+  });
 
   const filas = alumnos.map((alumno) => {
     const ultima = alumno.asistencias[0] ? textoDesdeFecha(alumno.asistencias[0].fecha) : null;
@@ -127,10 +122,6 @@ export async function resumenMes(mes: string) {
 
   return {
     mes,
-    total,
-    alumnosQueVinieron: filas.filter((fila) => fila.cantidad > 0).length,
-    destacadoMes,
-    destacadoAnio,
     alumnos: filas.sort((a, b) => b.cantidad - a.cantidad || a.apellido.localeCompare(b.apellido)),
     // Quien nunca vino no cuenta: al empezar a usar el sistema aparecerían todos.
     sinVenir: filas

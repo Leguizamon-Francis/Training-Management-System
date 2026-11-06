@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { alumnosApi } from "../api/alumnos";
 import { planesApi, type Plan } from "../api/planes";
 import { useCarga } from "../hooks/useCarga";
@@ -8,10 +8,12 @@ interface Props {
   alumnoId: number;
   planActual: Plan | null;
   onCambio: () => void;
+  conEtiqueta?: boolean; // en la ficha no: la sección ya se llama "Membresía"
+  children?: ReactNode; // lo que va al lado de la lista (ej.: el estado de la cuota)
 }
 
 // Lista desplegable para asignar o cambiar la membresía de un alumno (se guarda al elegir).
-export default function SelectorPlan({ alumnoId, planActual, onCambio }: Props) {
+export default function SelectorPlan({ alumnoId, planActual, onCambio, conEtiqueta = true, children }: Props) {
   const { datos: planes, error, setError } = useCarga(() => planesApi.listar(), []);
   const [guardando, setGuardando] = useState(false);
 
@@ -38,9 +40,10 @@ export default function SelectorPlan({ alumnoId, planActual, onCambio }: Props) 
 
   return (
     <div className="pago-plan">
-      <label htmlFor={`plan-alumno-${alumnoId}`}>Membresía:</label>
+      {conEtiqueta && <label htmlFor={`plan-alumno-${alumnoId}`}>Membresía:</label>}
       <select
         id={`plan-alumno-${alumnoId}`}
+        aria-label="Membresía"
         value={planActual?.id ?? ""}
         onChange={(e) => cambiar(e.target.value)}
         disabled={guardando}
@@ -52,6 +55,7 @@ export default function SelectorPlan({ alumnoId, planActual, onCambio }: Props) 
           </option>
         ))}
       </select>
+      {children}
       {error && <span className="error-campo">{error}</span>}
     </div>
   );

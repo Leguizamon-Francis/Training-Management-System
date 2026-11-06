@@ -19,11 +19,13 @@ import GestionPlanes from "./paginas/GestionPlanes";
 import Ingresos from "./paginas/Ingresos";
 import Inicio from "./paginas/Inicio";
 import Login from "./paginas/Login";
+import OlvidePassword from "./paginas/OlvidePassword";
 import PagoNuevo from "./paginas/PagoNuevo";
 import PagosDeAlumno from "./paginas/PagosDeAlumno";
 import Pagos from "./paginas/Pagos";
 import Pruebas from "./paginas/Pruebas";
 import RegistrarAsistencia from "./paginas/RegistrarAsistencia";
+import RestablecerPassword from "./paginas/RestablecerPassword";
 import Rutinas from "./paginas/Rutinas";
 import RutinasAlumno from "./paginas/RutinasAlumno";
 
@@ -56,6 +58,8 @@ export default function App() {
       <ProveedorSesion>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/olvide-password" element={<OlvidePassword />} />
+          <Route path="/restablecer-password" element={<RestablecerPassword />} />
 
           <Route element={<RutaProtegida />}>
             <Route element={<Layout />}>

@@ -10,10 +10,12 @@ export const esquemaLogin = z.object({
 
 export type DatosLogin = z.infer<typeof esquemaLogin>;
 
+// bcrypt solo usa los primeros 72 bytes: más larga no agrega seguridad.
+const passwordNueva = z.string().min(8, "La contraseña nueva debe tener al menos 8 caracteres").max(72, "Máximo 72 caracteres");
+
 export const esquemaCambioPassword = z.object({
   actual: z.string().min(1, "Ingresá la contraseña actual"),
-  // bcrypt solo usa los primeros 72 bytes: más larga no agrega seguridad.
-  nueva: z.string().min(8, "La contraseña nueva debe tener al menos 8 caracteres").max(72, "Máximo 72 caracteres"),
+  nueva: passwordNueva,
 });
 
 export type DatosCambioPassword = z.infer<typeof esquemaCambioPassword>;
@@ -30,3 +32,14 @@ export const esquemaCambioEmail = z.object({
 });
 
 export type DatosCambioEmail = z.infer<typeof esquemaCambioEmail>;
+
+export const esquemaOlvidePassword = z.object({ email });
+
+export type DatosOlvidePassword = z.infer<typeof esquemaOlvidePassword>;
+
+export const esquemaRestablecerPassword = z.object({
+  token: z.string().min(1, "Falta el código del link"),
+  nueva: passwordNueva,
+});
+
+export type DatosRestablecerPassword = z.infer<typeof esquemaRestablecerPassword>;

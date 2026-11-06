@@ -3,6 +3,7 @@ import { alumnosApi } from "../api/alumnos";
 import { asistenciasApi } from "../api/asistencias";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
+import VolverAlumno from "../componentes/VolverAlumno";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
 import { formatearFecha } from "../utils/formato";
@@ -25,9 +26,7 @@ export default function AsistenciasAlumno() {
 
   return (
     <section>
-      <Link to="/asistencias" className="volver">
-        ← Asistencias
-      </Link>
+      <VolverAlumno alumno={alumno} a="/asistencias" texto="Asistencias" />
 
       <div className="pagina-encabezado">
         <div>

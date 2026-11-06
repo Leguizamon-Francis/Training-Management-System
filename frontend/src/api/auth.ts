@@ -22,4 +22,10 @@ export const authApi = {
 
   cambiarEmail: (email: string, actual: string) =>
     pedir<{ usuario: Usuario }>("/auth/email", { metodo: "PUT", datos: { email, actual } }),
+
+  // "¿Olvidaste tu contraseña?": manda el link por mail.
+  olvidePassword: (email: string) => pedir<{ mensaje: string }>("/auth/olvide-password", { metodo: "POST", datos: { email } }),
+
+  restablecerPassword: (token: string, nueva: string) =>
+    pedir<void>("/auth/restablecer-password", { metodo: "POST", datos: { token, nueva } }),
 };

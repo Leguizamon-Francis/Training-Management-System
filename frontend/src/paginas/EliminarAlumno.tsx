@@ -6,7 +6,7 @@ import BotonVerTodos from "../componentes/BotonVerTodos";
 import Campo from "../componentes/Campo";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
-import { useListaCorta } from "../hooks/useListaCorta";
+import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda } from "../utils/formato";
 
 interface PropsConfirmacion {
@@ -52,7 +52,7 @@ function Confirmacion({ alumno, onEliminado, onCancelar }: PropsConfirmacion) {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" autoFocus />
         </Campo>
       </div>
-      <div className="acciones">
+      <div className="acciones acciones-formulario">
         <button type="submit" className="boton-eliminar" disabled={guardando}>
           {guardando ? "Eliminando…" : "Eliminar definitivamente"}
         </button>
@@ -72,7 +72,7 @@ export default function EliminarAlumno() {
   const [mensaje, setMensaje] = useState("");
 
   const visibles = alumnos?.filter((a) => coincideBusqueda(`${a.nombre} ${a.apellido} ${a.dni}`, buscar)) ?? [];
-  const lista = useListaCorta(visibles, 10);
+  const lista = useListaCorta(visibles, ALUMNOS_POR_LISTA);
 
   async function eliminado() {
     if (!seleccionado) return;

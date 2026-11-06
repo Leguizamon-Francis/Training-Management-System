@@ -26,10 +26,6 @@ export interface Destacado {
 
 export interface ResumenAsistencias {
   mes: string; // "aaaa-mm"
-  total: number;
-  alumnosQueVinieron: number;
-  destacadoMes: Destacado | null;
-  destacadoAnio: Destacado | null;
   alumnos: FilaResumen[]; // de más a menos asistencias
   sinVenir: FilaResumen[]; // activos que hace varios días que no vienen
   diasAvisoSinVenir: number;

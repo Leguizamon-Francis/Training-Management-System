@@ -3,13 +3,13 @@ import { Link, useSearchParams } from "react-router";
 import { evaluacionesApi } from "../api/evaluaciones";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import { useCarga } from "../hooks/useCarga";
-import { useListaCorta } from "../hooks/useListaCorta";
+import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { ETIQUETAS_PERFIL } from "../utils/alumnos";
 import { claseProximaEvaluacion, textoDiasRestantes } from "../utils/evaluaciones";
 import { coincideBusqueda, formatearFecha } from "../utils/formato";
 
 // Lista de alumnos activos con el estado de sus evaluaciones.
-// Con ?nueva=1 (botón "Nueva Evaluación"), al elegir el alumno se abre el formulario.
+// Con ?nueva=1 (botón "Nueva evaluación"), al elegir el alumno se abre el formulario.
 export default function Evaluaciones() {
   const { datos: alumnos, error } = useCarga(() => evaluacionesApi.resumenAlumnos(), []);
   const [buscar, setBuscar] = useState("");
@@ -17,25 +17,13 @@ export default function Evaluaciones() {
 
   const visibles = alumnos?.filter((a) => coincideBusqueda(`${a.nombre} ${a.apellido}`, buscar)) ?? [];
 
-  const lista = useListaCorta(visibles, 10);
+  const lista = useListaCorta(visibles, ALUMNOS_POR_LISTA);
 
   return (
     <section>
-      <div className="pagina-encabezado">
-        <h1>{nueva ? "Nueva evaluación" : "Evaluaciones"}</h1>
-        {!nueva && (
-          <div className="acciones">
-            <Link to="/evaluaciones/configuracion" className="boton-secundario">
-              Configurar evaluaciones
-            </Link>
-            <Link to="/evaluaciones?nueva=1" className="boton">
-              Nueva Evaluación
-            </Link>
-          </div>
-        )}
-      </div>
+      <h1>{nueva ? "Nueva evaluación" : "Evaluaciones"}</h1>
       <p className="texto-suave">
-        {nueva ? "Seleccioná el alumno al que vas a evaluar." : "Entrá a un alumno para ver la evolución de sus evaluaciones."}
+        {nueva ? "Seleccioná el alumno al que vas a evaluar." : "Seleccioná un alumno para ver la evolución de sus evaluaciones."}
       </p>
 
       <div className="filtros filtros-simple">
@@ -69,7 +57,7 @@ export default function Evaluaciones() {
                 {lista.visibles.map((alumno) => (
                   <tr key={alumno.id}>
                     <td>
-                      <Link to={`/evaluaciones/alumnos/${alumno.id}${nueva ? "/nueva" : ""}`}>
+                      <Link to={`/evaluaciones/alumnos/${alumno.id}${nueva ? "/nueva" : ""}`} className="enlace-fila">
                         {alumno.apellido}, {alumno.nombre}
                       </Link>
                     </td>
@@ -91,6 +79,24 @@ export default function Evaluaciones() {
             <BotonVerTodos lista={lista} textoCerrar="Ver menos" />
           </div>
         ))}
+
+      <div className="pie-lista acciones">
+        {nueva ? (
+          // Sin confirmación: todavía no se cargó nada.
+          <Link to="/evaluaciones" className="boton-secundario">
+            Cancelar
+          </Link>
+        ) : (
+          <>
+            <Link to="/evaluaciones/configuracion" className="boton-secundario">
+              Configurar evaluaciones
+            </Link>
+            <Link to="/evaluaciones?nueva=1" className="boton">
+              Nueva evaluación
+            </Link>
+          </>
+        )}
+      </div>
     </section>
   );
 }

@@ -22,4 +22,5 @@ export type DatosPrueba = z.infer<typeof esquemaPrueba>;
 // GET /api/pruebas?incluirInactivas=true
 export const esquemaFiltrosPruebas = z.object({
   incluirInactivas: z.stringbool().default(false),
+  incluirEliminadas: z.stringbool().default(false),
 });

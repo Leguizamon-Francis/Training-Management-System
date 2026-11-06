@@ -53,7 +53,7 @@ const CAMPOS_TEXTO_LARGO = [
 export default function AlumnoFormulario() {
   const { id } = useParams();
   const esEdicion = id !== undefined;
-  const desdeInicio = useLocation().state?.desde === "inicio"; // "Nuevo Alumno" de Inicio
+  const desdeInicio = useLocation().state?.desde === "inicio"; // "Nuevo alumno" de Inicio
   const navigate = useNavigate();
 
   const [datos, setDatos] = useState<DatosAlumno>(VACIO);
@@ -177,7 +177,7 @@ export default function AlumnoFormulario() {
           ))}
         </div>
 
-        <div className="acciones">
+        <div className="acciones acciones-formulario">
           <button type="submit" className="boton" disabled={guardando}>
             {guardando ? "Guardando…" : esEdicion ? "Guardar cambios" : "Crear alumno"}
           </button>
