@@ -15,44 +15,20 @@
 // hay que guardarla fuera del servidor. Con B2_KEY_ID y B2_APPLICATION_KEY cada copia se sube además a B2
 // (en producción es obligatorio: el disco del servidor se borra en cada ejecución).
 // No usa Prisma: la lista de gimnasios se lee con psql, que viene junto con pg_dump.
-import { execFile } from "node:child_process";
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { promisify } from "node:util";
 import { subirABackblaze } from "../lib/backblaze";
 import { cifrar, claveDeBase, descifrar } from "../lib/cifrado";
 import { validarNombreBase } from "../lib/nombre-base";
-
-const ejecutar = promisify(execFile);
+import { conexion, consultar, ejecutarPostgres } from "./herramientas-postgres";
 
 // Carpeta de las copias (relativa a la carpeta backend). Conviene que esté sincronizada con la nube
 // (ej.: Google Drive para escritorio): si la compu se rompe, la copia en el mismo disco no sirve.
 const CARPETA = path.resolve(process.env.RESPALDOS_DIR ?? "../respaldos");
-// Carpeta de los programas de PostgreSQL (pg_dump, pg_restore...). En Windows, los del 18: Render hace las copias
-// con pg_dump 18 y pg_restore no lee copias de una versión más nueva que la suya.
-const BIN_POSTGRES = process.env.PG_BIN ?? (process.platform === "win32" ? "C:/Program Files/PostgreSQL/18/bin" : "");
 const COPIAS_A_CONSERVAR = 30;
 const EXTENSION_CIFRADA = ".dump.cifrado";
 const BASE_RESTAURACION = "respaldo_prueba_restauracion";
-
-// Datos de conexión sacados de DATABASE_URL (la base de control; los gimnasios están en el mismo servidor).
-// La contraseña va por variable de entorno (PGPASSWORD) y no en la línea de comandos; los parámetros de Prisma
-// (?schema=public) pg_dump no los entiende.
-function conexion() {
-  if (!process.env.DATABASE_URL) throw new Error("Falta DATABASE_URL en backend/.env");
-  let url: URL;
-  try {
-    url = new URL(process.env.DATABASE_URL);
-  } catch {
-    throw new Error("DATABASE_URL no es una dirección válida: tiene que empezar con postgresql:// (sin comillas ni espacios).");
-  }
-  return {
-    baseControl: decodeURIComponent(url.pathname.slice(1)),
-    args: ["-h", url.hostname, "-p", url.port || "5432", "-U", decodeURIComponent(url.username)],
-    env: { ...process.env, PGPASSWORD: decodeURIComponent(url.password) },
-  };
-}
 
 function claveMaestra() {
   const clave = process.env.RESPALDO_CLAVE;
@@ -89,16 +65,6 @@ function selloArgentina(momento: Date) {
   return `${parte("year")}-${parte("month")}-${parte("day")}_${parte("hour")}-${parte("minute")}`;
 }
 
-function programa(nombre: string) {
-  return path.join(BIN_POSTGRES, nombre);
-}
-
-async function consultar(base: string, sql: string) {
-  const { args, env } = conexion();
-  const { stdout } = await ejecutar(programa("psql"), [...args, "-d", base, "-tAc", sql], { env });
-  return stdout.trim();
-}
-
 // La base de control y la de cada gimnasio registrado en ella.
 async function listarBases() {
   const { baseControl } = conexion();
@@ -116,12 +82,11 @@ async function listarCopias(base: string) {
 }
 
 async function respaldarBase(base: string, clave: string | undefined, backblaze: ReturnType<typeof credencialesBackblaze>) {
-  const { args, env } = conexion();
   await mkdir(carpetaDe(base), { recursive: true });
   const archivo = path.join(carpetaDe(base), `${base}-${selloArgentina(new Date())}.dump`);
 
   // -Fc: formato propio de PostgreSQL, comprimido; se restaura con pg_restore.
-  await ejecutar(programa("pg_dump"), [...args, "-Fc", "-f", archivo, base], { env });
+  await ejecutarPostgres("pg_dump", ["-Fc", "-f", archivo, base]);
   let guardado = archivo;
   if (clave) {
     guardado = archivo.replace(/\.dump$/, EXTENSION_CIFRADA);
@@ -162,7 +127,6 @@ async function respaldar() {
 }
 
 async function probarBase(base: string, esControl: boolean) {
-  const { args, env } = conexion();
   const ultima = (await listarCopias(base)).at(-1);
   if (!ultima) throw new Error(`No hay copias de ${base} en ${carpetaDe(base)}`);
 
@@ -176,17 +140,17 @@ async function probarBase(base: string, esControl: boolean) {
     await writeFile(dump, descifrar(await readFile(path.join(carpetaDe(base), ultima)), claveDeBase(clave, base)));
   }
 
-  await ejecutar(programa("dropdb"), [...args, "--if-exists", BASE_RESTAURACION], { env });
-  await ejecutar(programa("createdb"), [...args, BASE_RESTAURACION], { env });
+  await ejecutarPostgres("dropdb", ["--if-exists", BASE_RESTAURACION]);
+  await ejecutarPostgres("createdb", [BASE_RESTAURACION]);
   try {
     // Sin dueños ni permisos: los usuarios de la base de origen (ej.: el de Render) no existen acá.
-    await ejecutar(programa("pg_restore"), [...args, "--no-owner", "--no-privileges", "-d", BASE_RESTAURACION, dump], { env });
+    await ejecutarPostgres("pg_restore", ["--no-owner", "--no-privileges", "-d", BASE_RESTAURACION, dump]);
     const conteo = esControl
       ? `SELECT (SELECT count(*) FROM "Centro") || ' gimnasios, ' || (SELECT count(*) FROM "Usuario") || ' usuarios'`
       : `SELECT (SELECT count(*) FROM "Alumno") || ' alumnos, ' || (SELECT count(*) FROM "Pago") || ' pagos'`;
     console.log(`Restauración correcta de ${base}/${ultima}: ${await consultar(BASE_RESTAURACION, conteo)}.`);
   } finally {
-    await ejecutar(programa("dropdb"), [...args, BASE_RESTAURACION], { env });
+    await ejecutarPostgres("dropdb", [BASE_RESTAURACION]);
     await rm(temporal, { recursive: true });
   }
 }

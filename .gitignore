@@ -28,6 +28,9 @@ Thumbs.db
 # Copias de seguridad de la base (contienen datos personales)
 /respaldos/
 
+# Datos exportados de un gimnasio para entregárselos (npm run centros -- exportar)
+/exportaciones/
+
 # Notas internas del proyecto (contexto para el asistente de código)
 /CLAUDE.md
 
