@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useEtiquetasTablas } from "../hooks/useEtiquetasTablas";
-import { Logo } from "./Iconos";
+import { linkChatWhatsApp } from "../utils/whatsapp";
+import { IconoMensaje, Logo } from "./Iconos";
 import { useEsDemo, useSesion } from "./Sesion";
 
 // El editor de rutinas va sin marca de agua: ahí importa solo la planilla.
@@ -15,6 +16,9 @@ function abrirFila(evento: MouseEvent) {
   if (window.getSelection()?.toString()) return; // estaba seleccionando texto para copiarlo
   objetivo.closest(".tabla tr")?.querySelector<HTMLAnchorElement>("a.enlace-fila")?.click();
 }
+
+// Contacto para quien mira la demo y quiere el sistema.
+const LINK_INFO_DEMO = linkChatWhatsApp("3424364254", "Hola Francis, quiero más información sobre DV Training");
 
 // Estructura común de las pantallas internas: encabezado con menú + contenido.
 export default function Layout() {
@@ -90,9 +94,15 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main className="contenedor" ref={contenido} onClick={abrirFila}>
+      <main className={`contenedor${esDemo ? " con-boton-info" : ""}`} ref={contenido} onClick={abrirFila}>
         <Outlet />
       </main>
+      {esDemo && (
+        <a className="boton-info-demo" href={LINK_INFO_DEMO} target="_blank" rel="noopener noreferrer">
+          <IconoMensaje />
+          Quiero más información sobre este Software
+        </a>
+      )}
       {avisoDemo && (
         <div className="aviso-demo" role="status">
           Es una demo: esta función no está disponible.
