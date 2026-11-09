@@ -7,7 +7,7 @@ export default function MarcaLogin() {
       <Logo />
       <div>
         <h1>DV Training</h1>
-        <p className="texto-suave">Gestión de entrenamiento</p>
+        <p className="texto-suave">Gestor para entrenadores</p>
       </div>
     </div>
   );
