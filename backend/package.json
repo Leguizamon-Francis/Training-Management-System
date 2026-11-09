@@ -21,7 +21,7 @@
     "prueba:preparar": "tsx --env-file=.env.prueba src/scripts/migrar.ts",
     "centros:prueba": "tsx --env-file=.env.prueba src/scripts/centros.ts",
     "datos-ejemplo": "tsx --env-file=.env.prueba src/scripts/datos-ejemplo.ts",
-    "test": "tsx --test \"src/**/*.test.ts\""
+    "test": "tsx --env-file-if-exists=.env.prueba --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@prisma/client": "^6.16.0",
