@@ -22,25 +22,36 @@ const MESES_POR_BLOQUE: Record<TipoBloque, number> = {
   MODELO_RUTINA_2: 2,
 };
 
-// Planilla de cada tipo, relativa a la carpeta backend. Los tipos viejos solo abren las rutinas ya guardadas.
-const PLANTILLAS: Record<TipoBloque, string> = {
+// Los tipos viejos usan una planilla en un archivo (PLANTILLA_RUTINA) y solo sirven para abrir las rutinas ya
+// guardadas. Esa planilla no se guarda en ninguna base: tiene datos de una persona real y terminaría copiada en otros
+// gimnasios (por ejemplo, en la demo).
+const PLANTILLAS_VIEJAS: Partial<Record<TipoBloque, string>> = {
   MICROCICLOS_2_SEMANAS: env.PLANTILLA_RUTINA,
   MICROCICLOS_1_SEMANA: env.PLANTILLA_RUTINA,
+};
+
+// Modelos actuales: los PDF que genera `npm run plantillas` (carpeta backend/plantillas). De ahí se cargan a la base
+// de cada gimnasio con `npm run centros -- plantillas <base>`; el sistema usa siempre la copia del gimnasio.
+export const ARCHIVOS_MODELOS: Partial<Record<TipoBloque, string>> = {
   MODELO_RUTINA: "plantillas/Modelo Rutina.pdf",
   MODELO_RUTINA_2: "plantillas/Modelo Rutina 2.pdf",
 };
 
 type Valores = Record<string, string>;
 
-// La plantilla se lee del disco cada vez: si se reemplaza el archivo, se usa la nueva sin reiniciar nada.
-// Nunca se escribe sobre ella.
+// Planilla del tipo de rutina, del gimnasio del pedido. Nunca se escribe sobre ella.
 async function leerPlantilla(tipo: TipoBloque) {
-  const ruta = path.resolve(process.cwd(), PLANTILLAS[tipo]);
-  try {
-    return await readFile(ruta);
-  } catch {
-    throw new ErrorHttp(500, `No se encontró la plantilla de rutinas (${PLANTILLAS[tipo]})`);
+  const vieja = PLANTILLAS_VIEJAS[tipo];
+  if (vieja) {
+    try {
+      return await readFile(path.resolve(process.cwd(), vieja));
+    } catch {
+      throw new ErrorHttp(500, `No se encontró la plantilla de rutinas (${vieja})`);
+    }
   }
+  const plantilla = await prisma.plantillaRutina.findUnique({ where: { tipo } });
+  if (!plantilla) throw new ErrorHttp(404, "Este gimnasio todavía no tiene cargada la planilla de ese modelo de rutina.");
+  return plantilla.pdf;
 }
 
 // Lee lo escrito en cada campo del PDF completado.

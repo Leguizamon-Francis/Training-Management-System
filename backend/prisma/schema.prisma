@@ -286,3 +286,13 @@ model Rutina {
 
   @@index([alumnoId, creadoEn])
 }
+
+// Planilla PDF de cada modelo de rutina, propia de cada gimnasio (cada uno puede tener las suyas).
+// Las rutinas guardan solo los valores de los campos; el PDF se arma con esta planilla al verlas.
+// Los tipos viejos (MICROCICLOS_*) no están acá: usan el archivo de PLANTILLA_RUTINA.
+model PlantillaRutina {
+  tipo          TipoBloque @id
+  pdf           Bytes
+  creadoEn      DateTime   @default(now())
+  actualizadoEn DateTime   @updatedAt
+}

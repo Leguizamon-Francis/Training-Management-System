@@ -6,6 +6,8 @@
 import assert from "node:assert/strict";
 import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { after, before, describe, test } from "node:test";
 
 const BASE_CONTROL = "prueba_aislamiento_control";
@@ -70,6 +72,10 @@ describe("aislamiento entre gimnasios", { skip: !servidorDePrueba && "hace falta
       const centro = await control.centro.create({ data: { nombre: `Gimnasio ${gimnasio}`, baseDatos: BASES[gimnasio] } });
       await control.usuario.create({ data: { email: `${gimnasio.toLowerCase()}@aislamiento.test`, nombre: gimnasio, passwordHash, centroId: centro.id } });
     }
+
+    // Solo A tiene cargada la planilla del modelo de rutina (la que genera npm run plantillas).
+    const planilla = await readFile(path.resolve(__dirname, "../plantillas/Modelo Rutina.pdf"));
+    await centros.clienteDeCentro(BASES.A).plantillaRutina.create({ data: { tipo: "MODELO_RUTINA", pdf: planilla } });
 
     // Gimnasio de la demo: solo lectura, con su usuario DEMO (sin contraseña conocida).
     await herramientas.asegurarBase(BASE_DEMO);
@@ -175,6 +181,23 @@ describe("aislamiento entre gimnasios", { skip: !servidorDePrueba && "hace falta
     } finally {
       await control.centro.update({ where: { baseDatos: BASES.B }, data: { activo: true } });
     }
+  });
+
+  test("cada gimnasio usa sus propias planillas de rutina, y las rutinas de uno no se abren desde otro", async () => {
+    const borradorA = await fetch(`${direccion}/api/rutinas/borrador?tipo=MODELO_RUTINA`, { headers: { cookie: cookies.A } });
+    assert.equal(borradorA.status, 200);
+    assert.equal(borradorA.headers.get("content-type"), "application/pdf");
+    assert.equal((await pedir("B", "GET", "/rutinas/borrador?tipo=MODELO_RUTINA")).estado, 404);
+
+    const guardada = await fetch(`${direccion}/api/rutinas?tipo=MODELO_RUTINA`, {
+      method: "POST",
+      headers: { "content-type": "application/pdf", cookie: cookies.A },
+      body: new Uint8Array(await borradorA.arrayBuffer()),
+    });
+    assert.equal(guardada.status, 201);
+    const { id } = await guardada.json();
+    assert.equal((await fetch(`${direccion}/api/rutinas/${id}/pdf`, { headers: { cookie: cookies.A } })).status, 200);
+    assert.equal((await pedir("B", "GET", `/rutinas/${id}/pdf`)).estado, 404);
   });
 
   test("consultar sin un gimnasio identificado da error en vez de elegir una base", async () => {

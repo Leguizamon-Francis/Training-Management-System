@@ -5,6 +5,10 @@
 //   npm run centros -- adoptar <base> "<nombre>"     → registra una base que ya existe (la de antes de que hubiera
 //                                                       varios gimnasios): pasa sus usuarios y sesiones a la base de
 //                                                       control y después le aplica las migraciones pendientes
+//   npm run centros -- plantillas <base> [--reemplazar]
+//                                                     → carga en la base del gimnasio las planillas de los modelos de
+//                                                       rutina que genera npm run plantillas (solo las que le falten,
+//                                                       o todas con --reemplazar). "adoptar" lo hace solo.
 //   npm run centros -- copiar  <origen> <base> "<nombre>" [--demo]
 //                                                     → crea un gimnasio nuevo con una copia de los datos de otro, tomada
 //                                                       una sola vez (lo que se cargue después en el origen no pasa).
@@ -18,7 +22,7 @@
 //                                            pide escribir el nombre de la base y solo funciona si está desactivado.
 // Para crear el usuario de un gimnasio: npm run crear-admin.
 import crypto from "node:crypto";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
@@ -26,6 +30,7 @@ import { PrismaClient } from "@prisma/client";
 import { urlDeBase, validarNombreBase } from "../lib/centros";
 import { control } from "../lib/control";
 import { hashearPassword } from "../modulos/auth/auth.service";
+import { ARCHIVOS_MODELOS } from "../modulos/rutinas/rutinas.service";
 import { asegurarBase, datosInicialesCentro, migrarCentro } from "./herramientas-centros";
 import { ejecutarPostgres } from "./herramientas-postgres";
 
@@ -137,6 +142,29 @@ async function adoptar(baseDatos: string, nombre: string) {
     console.log(`Gimnasio "${nombre}" registrado con ${viejos?.usuarios.length ?? 0} usuario(s) (base ${baseDatos}).`);
   }
   migrarCentro(baseDatos);
+  await cargarPlantillas(baseDatos, false);
+}
+
+// Las planillas de los modelos de rutina pasan del disco a la base del gimnasio (cada gimnasio tiene las suyas).
+async function cargarPlantillas(baseDatos: string, reemplazar: boolean) {
+  await buscarCentro(baseDatos);
+  const cliente = new PrismaClient({ datasourceUrl: urlDeBase(baseDatos) });
+  try {
+    for (const [tipo, archivo] of Object.entries(ARCHIVOS_MODELOS) as [keyof typeof ARCHIVOS_MODELOS, string][]) {
+      const existente = await cliente.plantillaRutina.findUnique({ where: { tipo }, select: { tipo: true } });
+      if (existente && !reemplazar) {
+        console.log(`Planilla "${path.basename(archivo, ".pdf")}": ya estaba, no se cambió.`);
+        continue;
+      }
+      const pdf = await readFile(path.resolve(__dirname, "../..", archivo)).catch(() => {
+        throw new Error(`Falta ${archivo}: generar las planillas con npm run plantillas.`);
+      });
+      await cliente.plantillaRutina.upsert({ where: { tipo }, create: { tipo, pdf }, update: { pdf } });
+      console.log(`Planilla "${path.basename(archivo, ".pdf")}": ${existente ? "reemplazada" : "cargada"}.`);
+    }
+  } finally {
+    await cliente.$disconnect();
+  }
 }
 
 async function cambiarActivo(baseDatos: string, activo: boolean) {
@@ -235,11 +263,13 @@ async function main() {
   if (comando === "crear" && a && b) return crear(a, b);
   if (comando === "adoptar" && a && b) return adoptar(a, b);
   if (comando === "copiar" && a && b && c) return copiar(a, b, c, conBandera);
+  if (comando === "plantillas" && a) return cargarPlantillas(a, process.argv.includes("--reemplazar"));
   if (comando === "desactivar" && a) return cambiarActivo(a, false);
   if (comando === "activar" && a) return cambiarActivo(a, true);
   if (comando === "exportar" && a) return exportar(a);
   if (comando === "eliminar" && a) return eliminar(a);
   console.error("Comandos: listar | crear <base> \"<nombre>\" | adoptar <base> \"<nombre>\" | copiar <origen> <base> \"<nombre>\" [--demo]");
+  console.error("          plantillas <base> [--reemplazar]");
   console.error("          desactivar <base> | activar <base> | exportar <base> | eliminar <base>");
   process.exitCode = 1;
 }
