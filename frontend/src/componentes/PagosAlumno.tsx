@@ -19,7 +19,6 @@ import FormularioCorregirPago from "./FormularioCorregirPago";
 import FormularioPago from "./FormularioPago";
 import { IconoMensaje } from "./Iconos";
 import SelectorPlan from "./SelectorPlan";
-import { useEsDemo } from "./Sesion";
 
 interface Props {
   alumno: { id: number; nombre: string; apellido: string; telefono: string; activo: boolean };
@@ -33,7 +32,6 @@ function Contenedor({ enFicha, children }: { enFicha: boolean; children: ReactNo
 
 // Membresía, estado de la cuota, deuda y pagos de un alumno.
 export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props) {
-  const esDemo = useEsDemo();
   const { datos, error, setError, recargar } = useCarga(() => pagosApi.obtener(alumno.id), [alumno.id]);
   const [registrando, setRegistrando] = useState(false);
   const [corrigiendo, setCorrigiendo] = useState<Pago | null>(null);
@@ -118,9 +116,10 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
         )}
       </div>
 
-      {requiereAviso(situacion.estado) && !esDemo && (
+      {requiereAviso(situacion.estado) && (
         <div className="pago-estado">
           <a
+            data-no-en-demo
             className="boton-whatsapp"
             href={linkWhatsApp({ ...alumno, ...situacion, cantidadAdeudadas: adeudadas.length })}
             target="_blank"

@@ -445,6 +445,25 @@ input[type="date"]::-webkit-date-and-time-value {
   font-size: 0.95rem;
 }
 
+/* Aviso al tocar en la demo algo que no se puede usar (WhatsApp, descargas, Configuración). */
+.aviso-demo {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.75rem 1rem;
+  background: var(--color-aviso-fondo);
+  border: 2px solid var(--color-aviso-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra-alta);
+  color: var(--color-texto);
+  text-align: center;
+  animation: aparecer 0.2s ease-out;
+}
+
 /* "¿Olvidaste tu contraseña?" y "Volver a ingresar", debajo del botón. */
 .enlace-login {
   display: block;

@@ -2,7 +2,6 @@ import { Link, useLocation } from "react-router";
 import { rutinasApi, type Rutina, type RutinaSuelta } from "../api/rutinas";
 import { formatearFecha } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, linkRutinaWhatsApp, MODELOS_RUTINA } from "../utils/rutinas";
-import { useEsDemo } from "./Sesion";
 
 type Props =
   | { rutinas: Rutina[]; alumno: { nombre: string; telefono: string }; onEliminar?: (rutina: Rutina) => void }
@@ -18,7 +17,6 @@ function descargar(url: string) {
 // Tabla de rutinas de un alumno (pantalla de Rutinas y ficha del alumno) o de las rutinas sin alumno.
 // Si no se pasa onEliminar, no se muestra "Eliminar".
 export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
-  const esDemo = useEsDemo();
   const origen = useLocation().state; // el editor lo devuelve al volver (ej.: hasta Inicio)
 
   return (
@@ -47,13 +45,12 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
                   Abrir
                 </Link>
                 {/* La demo ve las planillas, pero no las descarga ni las manda (el servidor tampoco lo permite). */}
-                {!esDemo && (
-                  <a href={rutinasApi.urlDescarga(rutina.id)} className="boton-link">
-                    Descargar
-                  </a>
-                )}
-                {alumno && !esDemo && (
+                <a data-no-en-demo href={rutinasApi.urlDescarga(rutina.id)} className="boton-link">
+                  Descargar
+                </a>
+                {alumno && (
                   <a
+                    data-no-en-demo
                     href={linkRutinaWhatsApp(alumno)}
                     target="_blank"
                     rel="noopener noreferrer"

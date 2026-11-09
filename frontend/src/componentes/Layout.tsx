@@ -27,6 +27,27 @@ export default function Layout() {
 
   useEffect(() => setMenuAbierto(false), [pathname]);
 
+  // En la demo los botones se ven todos (para mostrar el sistema completo), pero los marcados con
+  // data-no-en-demo (WhatsApp, descargas, Configuración) no hacen nada: muestran un aviso.
+  const [avisoDemo, setAvisoDemo] = useState(false);
+  useEffect(() => {
+    if (!esDemo) return;
+    let temporizador: number | undefined;
+    function frenar(evento: Event) {
+      if (!(evento.target instanceof Element) || !evento.target.closest("[data-no-en-demo]")) return;
+      evento.preventDefault();
+      evento.stopPropagation();
+      setAvisoDemo(true);
+      window.clearTimeout(temporizador);
+      temporizador = window.setTimeout(() => setAvisoDemo(false), 3000);
+    }
+    document.addEventListener("click", frenar, true); // en captura: antes que el onClick del botón
+    return () => {
+      document.removeEventListener("click", frenar, true);
+      window.clearTimeout(temporizador);
+    };
+  }, [esDemo]);
+
   return (
     <>
       {!ES_EDITOR_RUTINA.test(pathname) && (
@@ -58,11 +79,11 @@ export default function Layout() {
             <NavLink to="/asistencias">Asistencias</NavLink>
           </nav>
           <div className="encabezado-usuario">
-            {!esDemo && (
-              <nav className="menu">
-                <NavLink to="/configuracion">Configuración</NavLink>
-              </nav>
-            )}
+            <nav className="menu">
+              <NavLink to="/configuracion" data-no-en-demo>
+                Configuración
+              </NavLink>
+            </nav>
             <button type="button" className="boton-secundario" onClick={() => cerrarSesion()}>
               {esDemo ? "Salir de la demo" : "Cerrar sesión"}
             </button>
@@ -72,6 +93,11 @@ export default function Layout() {
       <main className="contenedor" ref={contenido} onClick={abrirFila}>
         <Outlet />
       </main>
+      {avisoDemo && (
+        <div className="aviso-demo" role="status">
+          Es una demo: esta función no está disponible.
+        </div>
+      )}
     </>
   );
 }

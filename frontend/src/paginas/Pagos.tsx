@@ -14,7 +14,6 @@ import {
   requiereAviso,
   textoVencimiento,
 } from "../utils/pagos";
-import { useEsDemo } from "../componentes/Sesion";
 
 type Filtro = "TODOS" | "VENCIDA" | "POR_VENCER" | "SIN_PAGOS" | "AL_DIA";
 
@@ -28,7 +27,6 @@ const FILTROS: { valor: Filtro; etiqueta: string; cumple: (fila: EstadoCuotaAlum
 
 // Estado de las cuotas de todos los alumnos activos. El backend ya los ordena: lo urgente primero.
 export default function Pagos() {
-  const esDemo = useEsDemo();
   const { datos: filas, error } = useCarga(() => pagosApi.estadoCuotas(), []);
   const [filtro, setFiltro] = useState<Filtro>("TODOS");
 
@@ -116,8 +114,9 @@ export default function Pagos() {
                         {Number(fila.deudaTotal) === 0 && fila.cantidadAdeudadas === 0 && <span className="texto-suave">—</span>}
                       </td>
                       <td className="celda-acciones">
-                        {requiereAviso(fila.estado) && !esDemo && (
+                        {requiereAviso(fila.estado) && (
                           <a
+                            data-no-en-demo
                             className="boton-whatsapp"
                             href={linkWhatsApp(fila)}
                             target="_blank"
