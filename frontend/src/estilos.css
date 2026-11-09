@@ -430,8 +430,45 @@ input[type="date"]::-webkit-date-and-time-value {
   margin: 0 0 0.5rem;
 }
 
-.login-demo .boton-secundario {
+/* Para quien entra por primera vez: se distingue de "Ingresar" (relleno) con el borde y el fondo suave del color
+   de marca, sin competir con él. */
+.boton-demo {
   width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--color-primario);
+  border-radius: var(--radio);
+  background: var(--color-primario-suave);
+  color: var(--color-primario);
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background-color 0.15s, transform 0.1s;
+}
+
+.boton-demo:hover:not(:disabled) {
+  background: var(--color-superficie);
+}
+
+.boton-demo:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.boton-demo span {
+  display: inline-block;
+  margin-left: 0.25rem;
+  transition: transform 0.15s;
+}
+
+.boton-demo:hover:not(:disabled) span {
+  transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton-demo,
+  .boton-demo span {
+    transition: none;
+  }
 }
 
 /* Franja de la demo: arriba de todo, fija, en los colores de aviso. */

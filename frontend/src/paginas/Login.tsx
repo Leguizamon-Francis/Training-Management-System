@@ -13,7 +13,7 @@ export default function Login() {
   const [enviando, setEnviando] = useState(false);
   const [demoHabilitada, setDemoHabilitada] = useState(false);
 
-  // El botón "Ver demo" aparece solo si la demo está prendida (DEMO_HABILITADA en el servidor).
+  // El botón "VER DEMO GRATUITA" aparece solo si la demo está prendida (DEMO_HABILITADA en el servidor).
   useEffect(() => {
     authApi
       .demoHabilitada()
@@ -94,8 +94,8 @@ export default function Login() {
         {demoHabilitada && (
           <div className="login-demo">
             <p className="texto-suave">¿Querés conocer el sistema?</p>
-            <button type="button" className="boton-secundario" onClick={verDemo} disabled={enviando}>
-              Ver demo
+            <button type="button" className="boton-demo" onClick={verDemo} disabled={enviando}>
+              VER DEMO GRATUITA <span aria-hidden="true">→</span>
             </button>
           </div>
         )}
