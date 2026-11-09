@@ -416,6 +416,35 @@ input[type="date"]::-webkit-date-and-time-value {
   width: 100%;
 }
 
+/* "Ver demo", separado del ingreso con una línea. */
+.login-demo {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 2px solid var(--color-borde);
+  text-align: center;
+}
+
+.login-demo p {
+  margin: 0 0 0.5rem;
+}
+
+.login-demo .boton-secundario {
+  width: 100%;
+}
+
+/* Franja de la demo: arriba de todo, fija, en los colores de aviso. */
+.franja-demo {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 0.5rem 1rem;
+  background: var(--color-aviso-fondo);
+  border-bottom: 2px solid var(--color-aviso-borde);
+  color: var(--color-texto);
+  text-align: center;
+  font-size: 0.95rem;
+}
+
 /* "¿Olvidaste tu contraseña?" y "Volver a ingresar", debajo del botón. */
 .enlace-login {
   display: block;

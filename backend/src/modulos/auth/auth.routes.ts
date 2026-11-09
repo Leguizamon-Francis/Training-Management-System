@@ -2,6 +2,7 @@ import { Router, type Request, type RequestHandler, type Response } from "expres
 import { env } from "../../config/env";
 import { enviarEmail, escaparHtml } from "../../lib/email";
 import { requiereSesion } from "../../middlewares/requiereSesion";
+import { bloquearDemo } from "../../middlewares/soloLectura";
 import { validar } from "../../middlewares/validar";
 import {
   esquemaCambioEmail,
@@ -24,11 +25,13 @@ import {
   cerrarSesion,
   crearRecuperacion,
   iniciarSesion,
+  iniciarSesionDemo,
   limpiarIntentos,
   MINUTOS_LINK_RECUPERACION,
   minutosDeBloqueo,
   NOMBRE_COOKIE,
   passwordCorrecta,
+  permitirVisitaDemo,
   registrarIntentoFallido,
   restablecerPassword,
 } from "./auth.service";
@@ -94,15 +97,40 @@ authRouter.post("/login", validar(esquemaLogin), async (req, res) => {
     return;
   }
   aceptarPassword(req);
+  ponerCookie(res, resultado);
+  res.json({ usuario: resultado.usuario });
+});
 
-  res.cookie(NOMBRE_COOKIE, resultado.token, {
+function ponerCookie(res: Response, sesion: { token: string; expiraEn: Date }) {
+  res.cookie(NOMBRE_COOKIE, sesion.token, {
     httpOnly: true,
     sameSite: "lax",
     secure: env.NODE_ENV === "production",
-    expires: resultado.expiraEn,
+    expires: sesion.expiraEn,
     path: "/",
   });
-  res.json({ usuario: resultado.usuario });
+}
+
+// ---------- Demo ----------
+
+// GET /api/auth/demo  → el login lo pregunta para mostrar o no el botón "Ver demo"
+authRouter.get("/demo", (_req, res) => {
+  res.json({ habilitada: env.DEMO_HABILITADA });
+});
+
+// POST /api/auth/demo  → entra a la demo (solo lectura) sin contraseña
+authRouter.post("/demo", async (req, res) => {
+  if (!permitirVisitaDemo(claveIntentos(req))) {
+    res.status(429).json({ error: "Demasiadas visitas a la demo desde esta conexión. Probá de nuevo en un rato." });
+    return;
+  }
+  const sesion = await iniciarSesionDemo();
+  if (!sesion) {
+    res.status(503).json({ error: "La demo no está disponible en este momento." });
+    return;
+  }
+  ponerCookie(res, sesion);
+  res.json({ usuario: sesion.usuario });
 });
 
 authRouter.post("/logout", async (req, res) => {
@@ -115,7 +143,7 @@ authRouter.post("/logout", async (req, res) => {
 });
 
 // POST /api/auth/password  { actual, nueva }  → cambia la contraseña y cierra las otras sesiones
-authRouter.post("/password", requiereSesion, validar(esquemaCambioPassword), async (req, res) => {
+authRouter.post("/password", requiereSesion, bloquearDemo, validar(esquemaCambioPassword), async (req, res) => {
   if (respondioBloqueo(req, res)) return;
   const { actual, nueva } = req.body as DatosCambioPassword;
   if (!(await cambiarPassword(req.usuario!.id, actual, nueva, req.cookies[NOMBRE_COOKIE]))) {
@@ -127,13 +155,13 @@ authRouter.post("/password", requiereSesion, validar(esquemaCambioPassword), asy
 });
 
 // PUT /api/auth/nombre  { nombre, actual }
-authRouter.put("/nombre", requiereSesion, exigirPassword("actual"), validar(esquemaCambioNombre), async (req, res) => {
+authRouter.put("/nombre", requiereSesion, bloquearDemo, exigirPassword("actual"), validar(esquemaCambioNombre), async (req, res) => {
   const { nombre } = req.body as DatosCambioNombre;
   res.json({ usuario: await cambiarNombre(req.usuario!.id, nombre) });
 });
 
 // PUT /api/auth/email  { email, actual }
-authRouter.put("/email", requiereSesion, validar(esquemaCambioEmail), async (req, res) => {
+authRouter.put("/email", requiereSesion, bloquearDemo, validar(esquemaCambioEmail), async (req, res) => {
   if (respondioBloqueo(req, res)) return;
   const { email, actual } = req.body as DatosCambioEmail;
   const resultado = await cambiarEmail(req.usuario!.id, email, actual);

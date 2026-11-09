@@ -6,6 +6,7 @@ import { env } from "./config/env";
 import { control } from "./lib/control";
 import { manejarErrores, rutaNoEncontrada } from "./middlewares/errores";
 import { requiereSesion } from "./middlewares/requiereSesion";
+import { soloLectura } from "./middlewares/soloLectura";
 import { z } from "zod";
 import { alumnosRouter } from "./modulos/alumnos/alumnos.routes";
 import { anotacionesRouter } from "./modulos/anotaciones/anotaciones.routes";
@@ -64,6 +65,8 @@ app.use("/api/auth", authRouter);
 
 // ---------- Rutas protegidas: de acá para abajo hace falta sesión ----------
 app.use("/api", requiereSesion);
+// La demo solo consulta: de acá para abajo, cualquier cambio del usuario DEMO se rechaza.
+app.use("/api", soloLectura);
 
 app.use("/api/alumnos", alumnosRouter);
 app.use("/api", anotacionesRouter);

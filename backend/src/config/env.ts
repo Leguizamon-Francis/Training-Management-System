@@ -20,6 +20,9 @@ const esquemaEnv = z.object({
   // Dirección pública del sistema, para armar el link del mail. No se toma del pedido: alguien podría
   // falsificarla para que el link apunte a otro sitio y robar el token.
   URL_PUBLICA: z.url("URL_PUBLICA tiene que ser una dirección completa (ej.: https://dvtraining.com.ar)").optional(),
+  // Botón "Ver demo" del login. Prendido salvo que se ponga "false" (freno de emergencia, ej.: si alguien abusa):
+  // apagada, el botón no aparece y las sesiones de la demo dejan de servir.
+  DEMO_HABILITADA: z.enum(["true", "false"], { error: 'DEMO_HABILITADA tiene que ser "true" o "false"' }).default("true").transform((v) => v === "true"),
 });
 
 const resultado = esquemaEnv.safeParse(process.env);

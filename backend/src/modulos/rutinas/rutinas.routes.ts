@@ -1,5 +1,6 @@
 import express, { Router, type Request, type Response } from "express";
 import { ErrorHttp, leerId } from "../../lib/errores";
+import { esDemo, MENSAJE_DEMO } from "../../middlewares/soloLectura";
 import { esquemaBorrador, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
 import {
   actualizarRutina,
@@ -82,6 +83,11 @@ rutinasRouter.get("/rutinas/:id", async (req, res) => {
 // GET /api/rutinas/:id/pdf?descargar=true  → el PDF de la rutina (para ver, editar o descargar)
 rutinasRouter.get("/rutinas/:id/pdf", async (req, res) => {
   const { descargar } = esquemaDescarga.parse(req.query);
+  // La demo ve las planillas en pantalla, pero no se las puede llevar.
+  if (descargar && esDemo(req)) {
+    res.status(403).json({ error: MENSAJE_DEMO });
+    return;
+  }
   const { bytes, nombreArchivo } = await pdfDeRutina(leerId(req.params.id));
   enviarPdf(res, bytes, descargar ? nombreArchivo : undefined);
 });

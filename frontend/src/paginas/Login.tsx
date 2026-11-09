@@ -1,15 +1,25 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router";
+import { authApi } from "../api/auth";
 import MarcaLogin from "../componentes/MarcaLogin";
 import { useSesion } from "../componentes/Sesion";
 
 export default function Login() {
-  const { usuario, iniciarSesion } = useSesion();
+  const { usuario, iniciarSesion, entrarDemo } = useSesion();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [demoHabilitada, setDemoHabilitada] = useState(false);
+
+  // El botón "Ver demo" aparece solo si la demo está prendida (DEMO_HABILITADA en el servidor).
+  useEffect(() => {
+    authApi
+      .demoHabilitada()
+      .then((respuesta) => setDemoHabilitada(respuesta.habilitada))
+      .catch(() => setDemoHabilitada(false));
+  }, []);
 
   // Si ya hay sesión, no tiene sentido mostrar el login.
   if (usuario) {
@@ -25,6 +35,19 @@ export default function Login() {
       navigate("/", { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo iniciar sesión");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function verDemo() {
+    setError("");
+    setEnviando(true);
+    try {
+      await entrarDemo();
+      navigate("/", { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo abrir la demo");
     } finally {
       setEnviando(false);
     }
@@ -67,6 +90,15 @@ export default function Login() {
         <Link to="/olvide-password" className="enlace-login">
           ¿Olvidaste tu contraseña?
         </Link>
+
+        {demoHabilitada && (
+          <div className="login-demo">
+            <p className="texto-suave">¿Querés conocer el sistema?</p>
+            <button type="button" className="boton-secundario" onClick={verDemo} disabled={enviando}>
+              Ver demo
+            </button>
+          </div>
+        )}
       </form>
     </main>
   );

@@ -6,6 +6,7 @@ interface ValorSesion {
   usuario: Usuario | null;
   cargando: boolean;
   iniciarSesion: (email: string, password: string) => Promise<void>;
+  entrarDemo: () => Promise<void>;
   cerrarSesion: () => Promise<void>;
   actualizarUsuario: (usuario: Usuario) => void; // después de cambiar sus datos
 }
@@ -30,16 +31,27 @@ export function ProveedorSesion({ children }: { children: ReactNode }) {
     setUsuario(respuesta.usuario);
   }
 
+  async function entrarDemo() {
+    const respuesta = await authApi.entrarDemo();
+    setUsuario(respuesta.usuario);
+  }
+
   async function cerrarSesion() {
     await authApi.logout();
     setUsuario(null);
   }
 
   return (
-    <ContextoSesion.Provider value={{ usuario, cargando, iniciarSesion, cerrarSesion, actualizarUsuario: setUsuario }}>
+    <ContextoSesion.Provider value={{ usuario, cargando, iniciarSesion, entrarDemo, cerrarSesion, actualizarUsuario: setUsuario }}>
       {children}
     </ContextoSesion.Provider>
   );
+}
+
+// true si se está viendo la demo (solo lectura): sirve para ocultar lo que no tiene sentido ahí
+// (WhatsApp, descargas, Configuración). Igual, el que impide los cambios es el servidor.
+export function useEsDemo() {
+  return useSesion().usuario?.rol === "DEMO";
 }
 
 export function useSesion() {

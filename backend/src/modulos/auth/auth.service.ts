@@ -1,6 +1,7 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import type { Centro, Usuario } from ".prisma/client-control";
+import { env } from "../../config/env";
 import { control } from "../../lib/control";
 
 export const NOMBRE_COOKIE = "sesion";
@@ -70,25 +71,63 @@ function datosPublicos(usuario: UsuarioConCentro) {
 export type UsuarioSesion = ReturnType<typeof datosPublicos>;
 
 // Solo entra quien pertenece a un gimnasio activo (el panel de superadministrador todavía no existe).
+// El usuario de la demo, además, solo mientras la demo esté prendida y siempre dentro del gimnasio de la demo.
 function puedeEntrar(usuario: UsuarioConCentro) {
-  return !!usuario.centro?.activo;
+  if (!usuario.centro?.activo) return false;
+  if (usuario.rol === "DEMO") return env.DEMO_HABILITADA && usuario.centro.esDemo;
+  return true;
 }
 
-export async function iniciarSesion(email: string, password: string) {
-  const usuario = await control.usuario.findUnique({ where: { email }, ...conCentro });
-  if (!usuario || !(await bcrypt.compare(password, usuario.passwordHash)) || !puedeEntrar(usuario)) {
-    return null;
-  }
-
+async function crearSesion(usuario: UsuarioConCentro, duracionMs: number) {
   await control.sesion.deleteMany({ where: { usuarioId: usuario.id, expiraEn: { lt: new Date() } } });
 
   const token = crypto.randomBytes(32).toString("base64url");
-  const expiraEn = new Date(Date.now() + DURACION_SESION_MS);
+  const expiraEn = new Date(Date.now() + duracionMs);
   await control.sesion.create({
     data: { usuarioId: usuario.id, tokenHash: hashearToken(token), expiraEn },
   });
 
   return { token, expiraEn, usuario: datosPublicos(usuario) };
+}
+
+// Con email y contraseña. El usuario de la demo no entra por acá: solo con el botón "Ver demo".
+export async function iniciarSesion(email: string, password: string) {
+  const usuario = await control.usuario.findUnique({ where: { email }, ...conCentro });
+  if (!usuario || usuario.rol === "DEMO" || !(await bcrypt.compare(password, usuario.passwordHash)) || !puedeEntrar(usuario)) {
+    return null;
+  }
+  return crearSesion(usuario, DURACION_SESION_MS);
+}
+
+// ---------- Demo ----------
+
+// Una visita a la demo dura 2 horas: después hay que volver a tocar "Ver demo".
+const DURACION_SESION_DEMO_MS = 2 * 60 * 60 * 1000;
+
+// Entra como el visitante del gimnasio de la demo. null si la demo está apagada o no existe.
+export async function iniciarSesionDemo() {
+  if (!env.DEMO_HABILITADA) return null;
+  const usuario = await control.usuario.findFirst({
+    where: { rol: "DEMO", centro: { esDemo: true, activo: true } },
+    orderBy: { id: "asc" },
+    ...conCentro,
+  });
+  return usuario ? crearSesion(usuario, DURACION_SESION_DEMO_MS) : null;
+}
+
+// Límite de visitas a la demo por conexión, para que nadie llene la base de sesiones.
+const MAXIMO_VISITAS_DEMO_POR_HORA = 20;
+const visitasDemo = new Map<string, { cantidad: number; primera: number }>();
+
+export function permitirVisitaDemo(clave: string) {
+  const ahora = Date.now();
+  const visitas = visitasDemo.get(clave);
+  if (!visitas || visitas.primera < ahora - 60 * 60_000) {
+    visitasDemo.set(clave, { cantidad: 1, primera: ahora });
+    return true;
+  }
+  visitas.cantidad++;
+  return visitas.cantidad <= MAXIMO_VISITAS_DEMO_POR_HORA;
 }
 
 // Usuario de la sesión y nombre de la base de su gimnasio (null si la sesión no sirve).
@@ -144,8 +183,8 @@ export async function cerrarSesion(token: string) {
 // Crea el link de recuperación (null si el email no es de ningún usuario). Pedir uno nuevo anula los anteriores.
 export async function crearRecuperacion(email: string) {
   const usuario = await control.usuario.findUnique({ where: { email }, ...conCentro });
-  // Sin gimnasio activo no entra: tampoco se le manda el link.
-  if (!usuario || !puedeEntrar(usuario)) return null;
+  // Sin gimnasio activo no entra: tampoco se le manda el link. La demo no tiene contraseña.
+  if (!usuario || usuario.rol === "DEMO" || !puedeEntrar(usuario)) return null;
   const token = crypto.randomBytes(32).toString("base64url");
   await control.$transaction([
     control.recuperacionPassword.deleteMany({ where: { usuarioId: usuario.id } }),

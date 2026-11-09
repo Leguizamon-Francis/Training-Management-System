@@ -10,6 +10,7 @@ import { after, before, describe, test } from "node:test";
 
 const BASE_CONTROL = "prueba_aislamiento_control";
 const BASES = { A: "prueba_aislamiento_a", B: "prueba_aislamiento_b" } as const;
+const BASE_DEMO = "prueba_aislamiento_demo";
 type Gimnasio = keyof typeof BASES;
 
 // Cada gimnasio carga datos con una marca propia: si la marca del otro aparece en una respuesta, hay una fuga.
@@ -41,7 +42,7 @@ describe("aislamiento entre gimnasios", { skip: !servidorDePrueba && "hace falta
   async function borrarBases() {
     const { PrismaClient } = await import("@prisma/client");
     const mantenimiento = new PrismaClient({ datasourceUrl: centros.urlDeBase("postgres") });
-    for (const base of [BASE_CONTROL, BASES.A, BASES.B]) {
+    for (const base of [BASE_CONTROL, BASES.A, BASES.B, BASE_DEMO]) {
       await mantenimiento.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${base}" WITH (FORCE)`);
     }
     await mantenimiento.$disconnect();
@@ -69,6 +70,12 @@ describe("aislamiento entre gimnasios", { skip: !servidorDePrueba && "hace falta
       const centro = await control.centro.create({ data: { nombre: `Gimnasio ${gimnasio}`, baseDatos: BASES[gimnasio] } });
       await control.usuario.create({ data: { email: `${gimnasio.toLowerCase()}@aislamiento.test`, nombre: gimnasio, passwordHash, centroId: centro.id } });
     }
+
+    // Gimnasio de la demo: solo lectura, con su usuario DEMO (sin contraseña conocida).
+    await herramientas.asegurarBase(BASE_DEMO);
+    herramientas.migrarCentro(BASE_DEMO);
+    const demo = await control.centro.create({ data: { nombre: "Demo", baseDatos: BASE_DEMO, esDemo: true } });
+    await control.usuario.create({ data: { email: "demo@aislamiento.test", nombre: "Visitante", rol: "DEMO", passwordHash, centroId: demo.id } });
 
     const { app } = await import("./app");
     servidor = app.listen(0, "127.0.0.1");
@@ -179,5 +186,70 @@ describe("aislamiento entre gimnasios", { skip: !servidorDePrueba && "hace falta
     for (const nombre of ['x"; DROP DATABASE y; --', "../otra", "Mayusculas", "con espacio", "", "1empieza_con_numero"]) {
       assert.throws(() => centros.urlDeBase(nombre), /inválido/, nombre);
     }
+  });
+
+  describe("demo", () => {
+    let cookieDemo = "";
+
+    before(async () => {
+      const respuesta = await fetch(`${direccion}/api/auth/demo`, { method: "POST" });
+      assert.equal(respuesta.status, 200);
+      cookieDemo = respuesta.headers.get("set-cookie")!.split(";")[0];
+    });
+
+    async function pedirDemo(metodo: string, ruta: string, datos?: unknown) {
+      const respuesta = await fetch(`${direccion}/api${ruta}`, {
+        method: metodo,
+        headers: { "content-type": "application/json", cookie: cookieDemo },
+        body: datos === undefined ? undefined : JSON.stringify(datos),
+      });
+      const texto = await respuesta.text();
+      return { estado: respuesta.status, texto };
+    }
+
+    test("entra con el botón, consulta su propio gimnasio y no ve nada de los otros", async () => {
+      assert.equal((await pedir(null, "GET", "/auth/demo")).json.habilitada, true);
+      const yo = JSON.parse((await pedirDemo("GET", "/auth/yo")).texto);
+      assert.equal(yo.usuario.rol, "DEMO");
+      assert.equal(yo.usuario.centro.esDemo, true);
+      for (const ruta of ["/alumnos?estado=todos", "/perfiles", "/pruebas", "/panel", "/pagos/estado-cuotas"]) {
+        const respuesta = await pedirDemo("GET", ruta);
+        assert.equal(respuesta.estado, 200, ruta);
+        assert.ok(!respuesta.texto.includes(MARCA.A) && !respuesta.texto.includes(MARCA.B), `la demo vio otro gimnasio en ${ruta}`);
+      }
+    });
+
+    test("no puede crear, modificar ni borrar nada", async () => {
+      const intentos: [string, string, unknown][] = [
+        ["POST", "/alumnos", { nombre: "X", apellido: "X", dni: "99300001", fechaNacimiento: "1990-01-01", telefono: "3411234567", perfilId: 1 }],
+        ["PUT", "/alumnos/1", {}],
+        ["PATCH", "/alumnos/1/estado", { activo: false }],
+        ["POST", "/alumnos/1/eliminar", { password: "x" }],
+        ["POST", "/alumnos/1/anotaciones", {}],
+        ["DELETE", "/anotaciones/1", undefined],
+        ["POST", "/alumnos/1/pagos", {}],
+        ["PUT", "/planes/1", { precioMensual: "1" }],
+        ["POST", "/perfiles", { nombre: "X", mesesReevaluacion: 2, password: "x" }],
+        ["PUT", "/alumnos/1/asistencias/2026-01-10", undefined],
+        ["POST", "/rutinas?tipo=MODELO_RUTINA", undefined],
+        ["POST", "/auth/password", { actual: "x", nueva: "otra-clave-larga" }],
+        ["PUT", "/auth/nombre", { nombre: "X", actual: "x" }],
+        ["PUT", "/auth/email", { email: "x@x.test", actual: "x" }],
+      ];
+      for (const [metodo, ruta, datos] of intentos) {
+        const respuesta = await pedirDemo(metodo, ruta, datos);
+        assert.equal(respuesta.estado, 403, `${metodo} ${ruta}`);
+        assert.match(respuesta.texto, /Es una demo/);
+      }
+    });
+
+    test("no puede descargar planillas", async () => {
+      assert.equal((await pedirDemo("GET", "/rutinas/1/pdf?descargar=true")).estado, 403);
+    });
+
+    test("el usuario de la demo no entra con contraseña", async () => {
+      const login = await pedir(null, "POST", "/auth/login", { email: "demo@aislamiento.test", password: PASSWORD });
+      assert.equal(login.estado, 401);
+    });
   });
 });

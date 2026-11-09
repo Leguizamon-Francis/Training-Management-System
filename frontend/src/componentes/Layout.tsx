@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type MouseEvent } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useEtiquetasTablas } from "../hooks/useEtiquetasTablas";
 import { Logo } from "./Iconos";
-import { useSesion } from "./Sesion";
+import { useEsDemo, useSesion } from "./Sesion";
 
 // El editor de rutinas va sin marca de agua: ahí importa solo la planilla.
 const ES_EDITOR_RUTINA = /^\/rutinas\/(editar\/\d+|(\d+|sin-alumno)\/nueva)/;
@@ -19,6 +19,7 @@ function abrirFila(evento: MouseEvent) {
 // Estructura común de las pantallas internas: encabezado con menú + contenido.
 export default function Layout() {
   const { cerrarSesion } = useSesion();
+  const esDemo = useEsDemo();
   const { pathname } = useLocation();
   const contenido = useRef<HTMLElement>(null);
   const [menuAbierto, setMenuAbierto] = useState(false); // solo en pantallas angostas
@@ -32,6 +33,12 @@ export default function Layout() {
         <div className="marca-agua" aria-hidden="true">
           <Logo />
           <span>DV Training</span>
+        </div>
+      )}
+      {/* En la demo, siempre a la vista: que nadie crea que está en un sistema real. */}
+      {esDemo && (
+        <div className="franja-demo" role="status">
+          <strong>Modo demo</strong> · Gimnasio de ejemplo, solo lectura: los cambios no se guardan.
         </div>
       )}
       <header className="encabezado">
@@ -51,11 +58,13 @@ export default function Layout() {
             <NavLink to="/asistencias">Asistencias</NavLink>
           </nav>
           <div className="encabezado-usuario">
-            <nav className="menu">
-              <NavLink to="/configuracion">Configuración</NavLink>
-            </nav>
+            {!esDemo && (
+              <nav className="menu">
+                <NavLink to="/configuracion">Configuración</NavLink>
+              </nav>
+            )}
             <button type="button" className="boton-secundario" onClick={() => cerrarSesion()}>
-              Cerrar sesión
+              {esDemo ? "Salir de la demo" : "Cerrar sesión"}
             </button>
           </div>
         </div>

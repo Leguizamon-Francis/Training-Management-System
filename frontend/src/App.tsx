@@ -1,9 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import Cargando from "./componentes/Cargando";
 import Layout from "./componentes/Layout";
 import RutaProtegida from "./componentes/RutaProtegida";
-import { ProveedorSesion } from "./componentes/Sesion";
+import { ProveedorSesion, useEsDemo } from "./componentes/Sesion";
 import AlumnoEvaluaciones from "./paginas/AlumnoEvaluaciones";
 import AlumnoFicha from "./paginas/AlumnoFicha";
 import AlumnoFormulario from "./paginas/AlumnoFormulario";
@@ -33,6 +33,11 @@ import RutinasAlumno from "./paginas/RutinasAlumno";
 // El editor de rutinas usa pdf.js (más de 1 MB con su hoja de estilos): se descarga recién al abrirlo,
 // así las demás pantallas cargan más rápido.
 const EditorRutina = lazy(() => import("./paginas/EditorRutina"));
+
+// Configuración (datos de la cuenta, perfiles, eliminar alumnos) no se muestra en la demo: vuelve a Inicio.
+function NoEnDemo({ children }: { children: ReactNode }) {
+  return useEsDemo() ? <Navigate to="/" replace /> : children;
+}
 const editorRutina = (
   <Suspense fallback={<Cargando />}>
     <EditorRutina />
@@ -91,9 +96,9 @@ export default function App() {
               <Route path="asistencias" element={<Asistencias />} />
               <Route path="asistencias/registrar" element={<RegistrarAsistencia />} />
               <Route path="asistencias/:alumnoId" element={<AsistenciasAlumno />} />
-              <Route path="configuracion" element={<Configuracion />} />
-              <Route path="configuracion/eliminar-alumno" element={<EliminarAlumno />} />
-              <Route path="configuracion/perfiles" element={<Perfiles />} />
+              <Route path="configuracion" element={<NoEnDemo><Configuracion /></NoEnDemo>} />
+              <Route path="configuracion/eliminar-alumno" element={<NoEnDemo><EliminarAlumno /></NoEnDemo>} />
+              <Route path="configuracion/perfiles" element={<NoEnDemo><Perfiles /></NoEnDemo>} />
             </Route>
           </Route>
 
