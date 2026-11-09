@@ -11,20 +11,40 @@ const TSX_CLI = path.join(CARPETA_BACKEND, "node_modules/tsx/dist/cli.mjs");
 export const ESQUEMA_CONTROL = path.join(CARPETA_BACKEND, "prisma/control/schema.prisma");
 export const ESQUEMA_CENTRO = path.join(CARPETA_BACKEND, "prisma/schema.prisma");
 
-// Crea la base si no existe. Devuelve true si la creó. Se conecta a "postgres", la base de mantenimiento
-// que trae todo servidor de PostgreSQL (CREATE DATABASE no se puede ejecutar dentro de una transacción de Prisma,
-// por eso va con $executeRawUnsafe; el nombre ya está validado).
+// Conexión para crear o borrar bases (CREATE/DROP DATABASE no se pueden ejecutar dentro de la base afectada).
+// Primero prueba con "postgres", la base de mantenimiento que trae todo servidor; si el hosting no deja entrar
+// ahí, usa la base de control (DATABASE_URL), que ya es nuestra.
+export async function conMantenimiento<T>(accion: (cliente: PrismaClient) => Promise<T>): Promise<T> {
+  const baseControl = new URL(process.env.DATABASE_URL ?? "").pathname.slice(1);
+  let ultimoError: unknown;
+  for (const base of ["postgres", baseControl]) {
+    const cliente = new PrismaClient({ datasourceUrl: urlDeBase(base) });
+    try {
+      await cliente.$connect();
+    } catch (error) {
+      ultimoError = error;
+      await cliente.$disconnect();
+      continue;
+    }
+    try {
+      return await accion(cliente);
+    } finally {
+      await cliente.$disconnect();
+    }
+  }
+  throw ultimoError;
+}
+
+// Crea la base si no existe. Devuelve true si la creó. (Va con $executeRawUnsafe porque CREATE DATABASE no admite
+// parámetros; el nombre ya está validado.)
 export async function asegurarBase(baseDatos: string) {
   validarNombreBase(baseDatos);
-  const mantenimiento = new PrismaClient({ datasourceUrl: urlDeBase("postgres") });
-  try {
+  return conMantenimiento(async (mantenimiento) => {
     const existe = await mantenimiento.$queryRaw<unknown[]>`SELECT 1 FROM pg_database WHERE datname = ${baseDatos}`;
     if (existe.length > 0) return false;
     await mantenimiento.$executeRawUnsafe(`CREATE DATABASE "${baseDatos}"`);
     return true;
-  } finally {
-    await mantenimiento.$disconnect();
-  }
+  });
 }
 
 function ejecutar(programa: string, argumentos: string[], variables: Record<string, string> = {}) {

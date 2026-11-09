@@ -31,7 +31,7 @@ import { urlDeBase, validarNombreBase } from "../lib/centros";
 import { control } from "../lib/control";
 import { hashearPassword } from "../modulos/auth/auth.service";
 import { ARCHIVOS_MODELOS } from "../modulos/rutinas/rutinas.service";
-import { asegurarBase, datosInicialesCentro, migrarCentro } from "./herramientas-centros";
+import { asegurarBase, conMantenimiento, datosInicialesCentro, migrarCentro } from "./herramientas-centros";
 import { ejecutarPostgres } from "./herramientas-postgres";
 
 async function listar() {
@@ -237,12 +237,7 @@ async function eliminar(baseDatos: string) {
   if (confirmacion.trim() !== baseDatos) throw new Error("No coincide: no se borró nada.");
 
   // Primero la base: si algo falla después, el gimnasio sigue registrado (y desactivado) y se puede volver a correr.
-  const mantenimiento = new PrismaClient({ datasourceUrl: urlDeBase("postgres") });
-  try {
-    await mantenimiento.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${baseDatos}" WITH (FORCE)`);
-  } finally {
-    await mantenimiento.$disconnect();
-  }
+  await conMantenimiento((mantenimiento) => mantenimiento.$executeRawUnsafe(`DROP DATABASE IF EXISTS "${baseDatos}" WITH (FORCE)`));
   await control.$transaction([
     control.sesion.deleteMany({ where: { usuario: { centroId: centro.id } } }),
     control.recuperacionPassword.deleteMany({ where: { usuario: { centroId: centro.id } } }),
