@@ -5,21 +5,15 @@
 // gimnasio identificado, da error en vez de elegir una base cualquiera: ante la duda, se cierra.
 import { AsyncLocalStorage } from "node:async_hooks";
 import { PrismaClient } from "@prisma/client";
+import { validarNombreBase } from "./nombre-base";
 
-// El nombre de la base va en la dirección de conexión y en CREATE DATABASE: solo minúsculas, números y "_".
-const NOMBRE_BASE_VALIDO = /^[a-z][a-z0-9_]{0,62}$/;
+export { validarNombreBase };
 
 // Conexiones por gimnasio. El servidor de la base acepta 100 en total: con 3 por gimnasio entran muchos.
 const CONEXIONES_POR_CENTRO = 3;
 
 // Los gimnasios que no se usan hace un rato cierran sus conexiones (se vuelven a abrir solas al usarlos).
 const MINUTOS_INACTIVIDAD = 15;
-
-export function validarNombreBase(nombre: string) {
-  if (!NOMBRE_BASE_VALIDO.test(nombre)) {
-    throw new Error(`Nombre de base inválido: "${nombre}" (solo minúsculas, números y "_", empezando con una letra).`);
-  }
-}
 
 // Misma dirección que DATABASE_URL (servidor, usuario y contraseña), con otra base.
 export function urlDeBase(baseDatos: string, conexiones?: number) {

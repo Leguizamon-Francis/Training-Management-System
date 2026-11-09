@@ -38,7 +38,8 @@ export async function subirABackblaze(nombre: string, datos: Buffer, { idClave, 
       method: "POST",
       headers: {
         Authorization: destino.authorizationToken,
-        "X-Bz-File-Name": encodeURIComponent(nombre),
+        // Cada parte codificada por separado: la "/" queda tal cual y B2 la muestra como carpeta.
+        "X-Bz-File-Name": nombre.split("/").map(encodeURIComponent).join("/"),
         "Content-Type": "application/octet-stream",
         "X-Bz-Content-Sha1": crypto.createHash("sha1").update(datos).digest("hex"),
       },

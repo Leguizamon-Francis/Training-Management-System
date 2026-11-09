@@ -12,6 +12,13 @@ function derivarClave(clave: string, sal: Buffer) {
   return crypto.scryptSync(clave, sal, 32);
 }
 
+// Clave propia de cada base, derivada de la clave maestra (RESPALDO_CLAVE) con HKDF: así la copia de un gimnasio
+// no se abre con la clave de otro, sin tener que guardar una clave por gimnasio. Con la maestra se pueden volver
+// a calcular todas.
+export function claveDeBase(claveMaestra: string, baseDatos: string) {
+  return Buffer.from(crypto.hkdfSync("sha256", claveMaestra, "dv-training-respaldos", `base:${baseDatos}`, 32)).toString("hex");
+}
+
 export function cifrar(datos: Buffer, clave: string) {
   const sal = crypto.randomBytes(LARGO_SAL);
   const iv = crypto.randomBytes(LARGO_IV);

@@ -23,7 +23,7 @@ test("autoriza, pide la dirección de subida y sube el archivo con su SHA-1", as
     return responder(respuestas[pedidos.length - 1]);
   });
   try {
-    await subirABackblaze("entrenamiento-2026-11-04_04-00.dump.cifrado", datos, credenciales);
+    await subirABackblaze("dv_training/dv_training-2026-11-04_04-00.dump.cifrado", datos, credenciales);
   } finally {
     simulado.mock.restore();
   }
@@ -35,7 +35,7 @@ test("autoriza, pide la dirección de subida y sube el archivo con su SHA-1", as
   const encabezados = subida.opciones.headers as Record<string, string>;
   assert.equal(subida.url, "https://subida.b2");
   assert.equal(encabezados.Authorization, "token-subida");
-  assert.equal(encabezados["X-Bz-File-Name"], "entrenamiento-2026-11-04_04-00.dump.cifrado");
+  assert.equal(encabezados["X-Bz-File-Name"], "dv_training/dv_training-2026-11-04_04-00.dump.cifrado");
   assert.equal(encabezados["X-Bz-Content-Sha1"], crypto.createHash("sha1").update(datos).digest("hex"));
 });
 
