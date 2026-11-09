@@ -4,24 +4,24 @@
   "private": true,
   "scripts": {
     "dev": "tsx watch --env-file=.env src/index.ts",
-    "build": "prisma generate && tsc",
+    "generar": "prisma generate && prisma generate --schema prisma/control/schema.prisma",
+    "build": "npm run generar && tsc",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "dev:prueba": "tsx watch --env-file=.env.prueba src/index.ts",
     "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy",
-    "db:seed": "prisma db seed",
+    "db:migrate:control": "prisma migrate dev --schema prisma/control/schema.prisma",
+    "db:deploy": "tsx --env-file-if-exists=.env src/scripts/migrar.ts",
     "db:studio": "prisma studio",
     "plantillas": "tsx src/scripts/generar-plantillas.ts",
     "crear-admin": "tsx --env-file-if-exists=.env src/scripts/crear-admin.ts",
+    "centros": "tsx --env-file-if-exists=.env src/scripts/centros.ts",
     "respaldo": "tsx --env-file-if-exists=.env src/scripts/respaldo.ts",
     "respaldo:probar": "tsx --env-file-if-exists=.env src/scripts/respaldo.ts --probar",
     "respaldo:descifrar": "tsx --env-file-if-exists=.env src/scripts/respaldo.ts --descifrar",
-    "prueba:preparar": "node --env-file=.env.prueba node_modules/prisma/build/index.js migrate deploy && tsx --env-file=.env.prueba prisma/seed.ts",
-    "datos-ejemplo": "tsx --env-file-if-exists=.env.prueba src/scripts/datos-ejemplo.ts",
+    "prueba:preparar": "tsx --env-file=.env.prueba src/scripts/migrar.ts",
+    "centros:prueba": "tsx --env-file=.env.prueba src/scripts/centros.ts",
+    "datos-ejemplo": "tsx --env-file=.env.prueba src/scripts/datos-ejemplo.ts",
     "test": "tsx --test \"src/**/*.test.ts\""
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.0",

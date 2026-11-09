@@ -1,0 +1,74 @@
+// Base de control: los gimnasios (centros) y quién puede entrar a cada uno.
+// No guarda ningún dato de alumnos: esos viven en la base de cada gimnasio (prisma/schema.prisma),
+// así cada gimnasio queda aislado, también en sus respaldos.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client-control"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMIN // dueño o profesor del gimnasio: hace todo dentro de su gimnasio
+  DEMO // solo lectura (el gimnasio de la demo)
+  SUPERADMIN // administra el sistema: da de alta gimnasios (no pertenece a ninguno)
+}
+
+// Cada gimnasio tiene su propia base en el mismo servidor. Acá se guarda solo el NOMBRE de la base:
+// la dirección completa se arma con DATABASE_URL, así las contraseñas no quedan escritas en una tabla.
+model Centro {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  baseDatos     String    @unique
+  esDemo        Boolean   @default(false)
+  activo        Boolean   @default(true)
+  usuarios      Usuario[]
+  creadoEn      DateTime  @default(now())
+  actualizadoEn DateTime  @updatedAt
+}
+
+model Usuario {
+  id             Int                    @id @default(autoincrement())
+  email          String                 @unique
+  nombre         String
+  passwordHash   String
+  rol            Rol                    @default(ADMIN)
+  centroId       Int? // null solo para SUPERADMIN
+  centro         Centro?                @relation(fields: [centroId], references: [id], onDelete: Restrict)
+  sesiones       Sesion[]
+  recuperaciones RecuperacionPassword[]
+  creadoEn       DateTime               @default(now())
+  actualizadoEn  DateTime               @updatedAt
+
+  @@index([centroId])
+}
+
+// Link de "¿Olvidaste tu contraseña?". Como en las sesiones, se guarda solo el hash del token
+// (el token viaja en el link del mail). Vence a los 30 minutos y se borra al usarlo.
+model RecuperacionPassword {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiraEn  DateTime
+  creadoEn  DateTime @default(now())
+
+  @@index([usuarioId])
+}
+
+// En la base se guarda solo el hash del token; el token viaja en una cookie httpOnly.
+model Sesion {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash     String   @unique
+  expiraEn      DateTime
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+
+  @@index([usuarioId])
+}

@@ -3,7 +3,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { env } from "./config/env";
-import { prisma } from "./lib/prisma";
+import { control } from "./lib/control";
 import { manejarErrores, rutaNoEncontrada } from "./middlewares/errores";
 import { requiereSesion } from "./middlewares/requiereSesion";
 import { z } from "zod";
@@ -54,9 +54,9 @@ app.use(cookieParser());
 
 // ---------- Rutas públicas ----------
 
-// Permite comprobar que la API está levantada y conectada a la base.
+// Permite comprobar que la API está levantada y conectada a la base de control.
 app.get("/api/salud", async (_req, res) => {
-  await prisma.$queryRaw`SELECT 1`;
+  await control.$queryRaw`SELECT 1`;
   res.json({ estado: "ok", baseDeDatos: "conectada" });
 });
 

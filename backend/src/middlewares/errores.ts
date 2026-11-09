@@ -21,7 +21,8 @@ export const manejarErrores: ErrorRequestHandler = (error, _req, res, _next) => 
     return;
   }
   // Choques con la base que los servicios no alcanzan a prever (ej.: dos pedidos casi simultáneos).
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+  // Por nombre además de por clase: la base de control tiene su propio cliente, con sus propias clases.
+  if (error instanceof Prisma.PrismaClientKnownRequestError || error?.name === "PrismaClientKnownRequestError") {
     if (error.code === "P2002") {
       res.status(409).json({ error: "Ya existe un registro con esos datos" });
       return;

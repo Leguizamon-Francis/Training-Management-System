@@ -3,7 +3,7 @@
 // También sirve si el usuario se olvida la contraseña: se vuelve a ejecutar con el mismo email.
 import readline from "node:readline";
 import { z } from "zod";
-import { prisma } from "../lib/prisma";
+import { control } from "../lib/control";
 import { hashearPassword } from "../modulos/auth/auth.service";
 
 const esquema = z.object({
@@ -25,6 +25,15 @@ async function main() {
   console.log("Crear o actualizar el usuario administrador");
   console.log("(la contraseña se ve mientras se escribe: hacerlo sin nadie mirando)\n");
 
+  // Cada usuario pertenece a un gimnasio y solo ve los datos de ese gimnasio.
+  const centros = await control.centro.findMany({ orderBy: { id: "asc" } });
+  if (centros.length === 0) throw new Error('Todavía no hay gimnasios: crear uno con npm run centros -- crear.');
+  console.log("Gimnasios:");
+  for (const c of centros) console.log(`  ${c.baseDatos} — ${c.nombre}`);
+  const baseDatos = (await preguntar("Gimnasio (nombre de la base): ")).trim();
+  const centro = centros.find((c) => c.baseDatos === baseDatos);
+  if (!centro) throw new Error(`No hay ningún gimnasio con la base "${baseDatos}".`);
+
   const email = await preguntar("Email: ");
   const nombre = await preguntar("Nombre: ");
   const password = await preguntar("Contraseña (mínimo 8 caracteres): ");
@@ -41,16 +50,19 @@ async function main() {
   const datos = resultado.data;
   const passwordHash = await hashearPassword(datos.password);
 
-  const existente = await prisma.usuario.findUnique({ where: { email: datos.email } });
+  const existente = await control.usuario.findUnique({ where: { email: datos.email } });
+  if (existente && existente.centroId !== centro.id) {
+    throw new Error(`El email ${datos.email} ya es de un usuario de otro gimnasio.`);
+  }
   if (existente) {
-    await prisma.$transaction([
-      prisma.usuario.update({ where: { id: existente.id }, data: { nombre: datos.nombre, passwordHash } }),
+    await control.$transaction([
+      control.usuario.update({ where: { id: existente.id }, data: { nombre: datos.nombre, passwordHash } }),
       // Al cambiar la contraseña se cierran todas las sesiones abiertas.
-      prisma.sesion.deleteMany({ where: { usuarioId: existente.id } }),
+      control.sesion.deleteMany({ where: { usuarioId: existente.id } }),
     ]);
     console.log(`\nUsuario ${datos.email} actualizado.`);
   } else {
-    await prisma.usuario.create({ data: { email: datos.email, nombre: datos.nombre, passwordHash } });
+    await control.usuario.create({ data: { email: datos.email, nombre: datos.nombre, passwordHash, centroId: centro.id } });
     console.log(`\nUsuario ${datos.email} creado.`);
   }
 }
@@ -62,5 +74,5 @@ main()
   })
   .finally(async () => {
     rl.close();
-    await prisma.$disconnect();
+    await control.$disconnect();
   });

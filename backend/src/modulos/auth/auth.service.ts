@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-import type { Usuario } from "@prisma/client";
-import { prisma } from "../../lib/prisma";
+import type { Centro, Usuario } from ".prisma/client-control";
+import { control } from "../../lib/control";
 
 export const NOMBRE_COOKIE = "sesion";
 
@@ -53,59 +53,74 @@ function hashearToken(token: string) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-// Datos del usuario que se pueden enviar al frontend (nunca el passwordHash).
-function datosPublicos(usuario: Usuario) {
-  return { id: usuario.id, email: usuario.email, nombre: usuario.nombre, rol: usuario.rol };
+type UsuarioConCentro = Usuario & { centro: Centro | null };
+const conCentro = { include: { centro: true } } as const;
+
+// Datos del usuario que se pueden enviar al frontend (nunca el passwordHash ni el nombre de la base).
+function datosPublicos(usuario: UsuarioConCentro) {
+  return {
+    id: usuario.id,
+    email: usuario.email,
+    nombre: usuario.nombre,
+    rol: usuario.rol,
+    centro: usuario.centro && { nombre: usuario.centro.nombre, esDemo: usuario.centro.esDemo },
+  };
 }
 
 export type UsuarioSesion = ReturnType<typeof datosPublicos>;
 
+// Solo entra quien pertenece a un gimnasio activo (el panel de superadministrador todavía no existe).
+function puedeEntrar(usuario: UsuarioConCentro) {
+  return !!usuario.centro?.activo;
+}
+
 export async function iniciarSesion(email: string, password: string) {
-  const usuario = await prisma.usuario.findUnique({ where: { email } });
-  if (!usuario || !(await bcrypt.compare(password, usuario.passwordHash))) {
+  const usuario = await control.usuario.findUnique({ where: { email }, ...conCentro });
+  if (!usuario || !(await bcrypt.compare(password, usuario.passwordHash)) || !puedeEntrar(usuario)) {
     return null;
   }
 
-  await prisma.sesion.deleteMany({ where: { usuarioId: usuario.id, expiraEn: { lt: new Date() } } });
+  await control.sesion.deleteMany({ where: { usuarioId: usuario.id, expiraEn: { lt: new Date() } } });
 
   const token = crypto.randomBytes(32).toString("base64url");
   const expiraEn = new Date(Date.now() + DURACION_SESION_MS);
-  await prisma.sesion.create({
+  await control.sesion.create({
     data: { usuarioId: usuario.id, tokenHash: hashearToken(token), expiraEn },
   });
 
   return { token, expiraEn, usuario: datosPublicos(usuario) };
 }
 
-export async function buscarUsuarioPorToken(token: string) {
-  const sesion = await prisma.sesion.findUnique({
+// Usuario de la sesión y nombre de la base de su gimnasio (null si la sesión no sirve).
+export async function buscarSesion(token: string) {
+  const sesion = await control.sesion.findUnique({
     where: { tokenHash: hashearToken(token) },
-    include: { usuario: true },
+    include: { usuario: conCentro },
   });
-  if (!sesion || sesion.expiraEn < new Date()) {
+  if (!sesion || sesion.expiraEn < new Date() || !puedeEntrar(sesion.usuario)) {
     return null;
   }
-  return datosPublicos(sesion.usuario);
+  return { usuario: datosPublicos(sesion.usuario), baseDatos: sesion.usuario.centro!.baseDatos };
 }
 
 // Para lo que no se puede deshacer, además de la sesión se pide la contraseña.
 export async function passwordCorrecta(usuarioId: number, password: string) {
-  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+  const usuario = await control.usuario.findUnique({ where: { id: usuarioId } });
   return !!usuario && bcrypt.compare(password, usuario.passwordHash);
 }
 
 // Cierra las demás sesiones abiertas; la actual sigue. false si la contraseña actual no es correcta.
 export async function cambiarPassword(usuarioId: number, actual: string, nueva: string, tokenActual: string) {
   if (!(await passwordCorrecta(usuarioId, actual))) return false;
-  await prisma.$transaction([
-    prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: await hashearPassword(nueva) } }),
-    prisma.sesion.deleteMany({ where: { usuarioId, tokenHash: { not: hashearToken(tokenActual) } } }),
+  await control.$transaction([
+    control.usuario.update({ where: { id: usuarioId }, data: { passwordHash: await hashearPassword(nueva) } }),
+    control.sesion.deleteMany({ where: { usuarioId, tokenHash: { not: hashearToken(tokenActual) } } }),
   ]);
   return true;
 }
 
 export async function cambiarNombre(usuarioId: number, nombre: string) {
-  return datosPublicos(await prisma.usuario.update({ where: { id: usuarioId }, data: { nombre } }));
+  return datosPublicos(await control.usuario.update({ where: { id: usuarioId }, data: { nombre }, ...conCentro }));
 }
 
 // El email es el dato para ingresar: cambiarlo pide la contraseña actual.
@@ -113,27 +128,28 @@ export async function cambiarEmail(usuarioId: number, email: string, actual: str
   if (!(await passwordCorrecta(usuarioId, actual))) {
     return { motivo: "password" as const };
   }
-  const otro = await prisma.usuario.findUnique({ where: { email } });
+  const otro = await control.usuario.findUnique({ where: { email } });
   if (otro && otro.id !== usuarioId) {
     return { motivo: "email" as const };
   }
-  return { usuario: datosPublicos(await prisma.usuario.update({ where: { id: usuarioId }, data: { email } })) };
+  return { usuario: datosPublicos(await control.usuario.update({ where: { id: usuarioId }, data: { email }, ...conCentro })) };
 }
 
 export async function cerrarSesion(token: string) {
-  await prisma.sesion.deleteMany({ where: { tokenHash: hashearToken(token) } });
+  await control.sesion.deleteMany({ where: { tokenHash: hashearToken(token) } });
 }
 
 // ---------- "¿Olvidaste tu contraseña?" ----------
 
 // Crea el link de recuperación (null si el email no es de ningún usuario). Pedir uno nuevo anula los anteriores.
 export async function crearRecuperacion(email: string) {
-  const usuario = await prisma.usuario.findUnique({ where: { email } });
-  if (!usuario) return null;
+  const usuario = await control.usuario.findUnique({ where: { email }, ...conCentro });
+  // Sin gimnasio activo no entra: tampoco se le manda el link.
+  if (!usuario || !puedeEntrar(usuario)) return null;
   const token = crypto.randomBytes(32).toString("base64url");
-  await prisma.$transaction([
-    prisma.recuperacionPassword.deleteMany({ where: { usuarioId: usuario.id } }),
-    prisma.recuperacionPassword.create({
+  await control.$transaction([
+    control.recuperacionPassword.deleteMany({ where: { usuarioId: usuario.id } }),
+    control.recuperacionPassword.create({
       data: { usuarioId: usuario.id, tokenHash: hashearToken(token), expiraEn: new Date(Date.now() + MINUTOS_LINK_RECUPERACION * 60_000) },
     }),
   ]);
@@ -143,13 +159,13 @@ export async function crearRecuperacion(email: string) {
 // Cambia la contraseña con el token del link. Después borra el link (sirve una sola vez) y cierra todas
 // las sesiones, por si alguien más estaba usando la cuenta. false si el link no existe o venció.
 export async function restablecerPassword(token: string, nueva: string) {
-  const recuperacion = await prisma.recuperacionPassword.findUnique({ where: { tokenHash: hashearToken(token) } });
+  const recuperacion = await control.recuperacionPassword.findUnique({ where: { tokenHash: hashearToken(token) } });
   if (!recuperacion || recuperacion.expiraEn < new Date()) return false;
   const { usuarioId } = recuperacion;
-  await prisma.$transaction([
-    prisma.usuario.update({ where: { id: usuarioId }, data: { passwordHash: await hashearPassword(nueva) } }),
-    prisma.recuperacionPassword.deleteMany({ where: { usuarioId } }),
-    prisma.sesion.deleteMany({ where: { usuarioId } }),
+  await control.$transaction([
+    control.usuario.update({ where: { id: usuarioId }, data: { passwordHash: await hashearPassword(nueva) } }),
+    control.recuperacionPassword.deleteMany({ where: { usuarioId } }),
+    control.sesion.deleteMany({ where: { usuarioId } }),
   ]);
   return true;
 }

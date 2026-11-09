@@ -1,12 +1,13 @@
 // Copia alumnos con todos sus datos de una base a otra (ej.: alumnos de ejemplo de la compu al sistema publicado).
 // El archivo lo arma un exportador a partir de la otra base: JSON, o el mismo JSON comprimido con gzip y en base64
 // (más corto para pegarlo en una terminal). Uso, desde la carpeta backend:
-//   npx tsx src/scripts/importar-alumnos.ts /tmp/alumnos.txt
+//   npx tsx src/scripts/importar-alumnos.ts /tmp/alumnos.txt <base del gimnasio de destino>
 // Membresías (por modalidad), perfiles y tests (por nombre) se buscan en la base de destino; los perfiles y tests
 // que falten se crean. Un alumno cuyo DNI ya existe se saltea: correrlo dos veces no duplica nada.
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import type { CategoriaPrueba, Lado, MedioPago, Modalidad, OrigenResultado, TipoAnotacion, TipoBloque } from "@prisma/client";
+import { clienteDeCentro, desconectarCentros, enCentro } from "../lib/centros";
 import { prisma } from "../lib/prisma";
 
 // Fechas como texto ISO y montos como texto ("25000.00"), tal como salen de JSON.stringify.
@@ -167,15 +168,18 @@ async function importar(alumno: AlumnoExportado) {
 }
 
 async function main() {
-  const ruta = process.argv[2];
-  if (!ruta) {
-    console.error("Uso: npx tsx src/scripts/importar-alumnos.ts <archivo>");
+  const [ruta, baseDatos] = process.argv.slice(2);
+  if (!ruta || !baseDatos) {
+    console.error("Uso: npx tsx src/scripts/importar-alumnos.ts <archivo> <base del gimnasio de destino>");
     process.exitCode = 1;
     return;
   }
   const { alumnos } = leerArchivo(ruta);
   console.log(`Importando ${alumnos.length} ${alumnos.length === 1 ? "alumno" : "alumnos"}:`);
-  for (const alumno of alumnos) await importar(alumno);
+  // Todo lo que sigue va a la base de ese gimnasio y a ninguna otra.
+  await enCentro(clienteDeCentro(baseDatos), async () => {
+    for (const alumno of alumnos) await importar(alumno);
+  });
   console.log("Listo.");
 }
 
@@ -184,4 +188,4 @@ main()
     console.error(error);
     process.exitCode = 1;
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => desconectarCentros());

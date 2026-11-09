@@ -1,4 +1,5 @@
-// Modelo de datos del sistema de gestión de entrenamiento.
+// Modelo de datos de CADA gimnasio (una base por gimnasio). Los gimnasios, usuarios y sesiones
+// están en la base de control: prisma/control/schema.prisma.
 // Detalle y decisiones: docs/propuesta-etapa1.md
 //
 // Convenciones:
@@ -12,14 +13,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Solo lo usa la línea de comandos de Prisma (migraciones). El sistema arma la dirección de cada
+  // gimnasio con DATABASE_URL y el nombre de su base (lib/centros.ts).
+  url      = env("CENTRO_DATABASE_URL")
 }
 
 // ---------- Enums ----------
 
-enum Rol {
-  ADMIN
-}
 
 enum TipoAnotacion {
   OBSERVACION
@@ -66,46 +66,6 @@ enum TipoBloque {
 enum MedioPago {
   EFECTIVO
   TRANSFERENCIA
-}
-
-// ---------- Usuario y sesión ----------
-
-model Usuario {
-  id             Int                    @id @default(autoincrement())
-  email          String                 @unique
-  nombre         String
-  passwordHash   String
-  rol            Rol                    @default(ADMIN)
-  sesiones       Sesion[]
-  recuperaciones RecuperacionPassword[]
-  creadoEn       DateTime               @default(now())
-  actualizadoEn  DateTime               @updatedAt
-}
-
-// Link de "¿Olvidaste tu contraseña?". Como en las sesiones, se guarda solo el hash del token
-// (el token viaja en el link del mail). Vence a los 30 minutos y se borra al usarlo.
-model RecuperacionPassword {
-  id        Int      @id @default(autoincrement())
-  usuarioId Int
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tokenHash String   @unique
-  expiraEn  DateTime
-  creadoEn  DateTime @default(now())
-
-  @@index([usuarioId])
-}
-
-// En la base se guarda solo el hash del token; el token viaja en una cookie httpOnly.
-model Sesion {
-  id            Int      @id @default(autoincrement())
-  usuarioId     Int
-  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  tokenHash     String   @unique
-  expiraEn      DateTime
-  creadoEn      DateTime @default(now())
-  actualizadoEn DateTime @updatedAt
-
-  @@index([usuarioId])
 }
 
 // ---------- Alumnos ----------
