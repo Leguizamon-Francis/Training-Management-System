@@ -23,7 +23,7 @@ export interface AlumnoResumen {
 // Ficha completa.
 export interface Alumno extends AlumnoResumen {
   email: string | null;
-  profesion: string;
+  profesion: string | null;
   detallePerfil: string | null;
   lesiones: string | null;
   molestias: string | null;

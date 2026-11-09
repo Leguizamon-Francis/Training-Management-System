@@ -44,7 +44,20 @@ export default function Pagos() {
       {filas && (
         <div className="tarjeta seccion">
           <h2>Estado de las cuotas</h2>
-          <div className="filtros-chips">
+          {/* En el celular los filtros van en un desplegable; en la computadora, como botones. */}
+          <select
+            className="filtro-desplegable"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value as Filtro)}
+            aria-label="Filtrar por estado de la cuota"
+          >
+            {FILTROS.map((f) => (
+              <option key={f.valor} value={f.valor}>
+                {f.etiqueta} ({filas.filter(f.cumple).length})
+              </option>
+            ))}
+          </select>
+          <div className="filtros-chips filtros-chips-cuotas">
             {FILTROS.map((f) => (
               <button
                 key={f.valor}

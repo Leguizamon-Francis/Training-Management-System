@@ -54,6 +54,7 @@ function Botones({ guardando, onCancelar }: { guardando: boolean; onCancelar: ()
 function FormularioNombre({ onListo, onCancelar }: PropsFormulario) {
   const { usuario, actualizarUsuario } = useSesion();
   const [nombre, setNombre] = useState(usuario?.nombre ?? "");
+  const [actual, setActual] = useState("");
   const { guardando, error, errores, enviar } = useEnvio();
 
   return (
@@ -62,7 +63,7 @@ function FormularioNombre({ onListo, onCancelar }: PropsFormulario) {
       noValidate
       onSubmit={(evento) =>
         enviar(evento, async () => {
-          actualizarUsuario((await authApi.cambiarNombre(nombre)).usuario);
+          actualizarUsuario((await authApi.cambiarNombre(nombre, actual)).usuario);
           onListo("El nombre se cambió.");
         })
       }
@@ -71,6 +72,9 @@ function FormularioNombre({ onListo, onCancelar }: PropsFormulario) {
       <div className="grilla">
         <Campo etiqueta="Nombre de usuario" obligatorio errores={errores.nombre}>
           <input value={nombre} onChange={(e) => setNombre(e.target.value)} autoComplete="name" />
+        </Campo>
+        <Campo etiqueta="Contraseña actual" obligatorio errores={errores.actual}>
+          <input type="password" value={actual} onChange={(e) => setActual(e.target.value)} autoComplete="current-password" />
         </Campo>
       </div>
       <Botones guardando={guardando} onCancelar={onCancelar} />

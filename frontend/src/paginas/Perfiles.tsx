@@ -10,27 +10,19 @@ const PERFIL_VACIO: DatosPerfil = { nombre: "", mesesReevaluacion: "" };
 
 const textoMeses = (meses: number) => (meses === 1 ? "Cada 1 mes" : `Cada ${meses} meses`);
 
-interface PropsFormulario {
-  inicial: DatosPerfil;
-  textoBoton: string;
-  onGuardar: (datos: DatosPerfil) => Promise<void>;
-  onCancelar?: () => void;
-}
-
-function FormularioPerfil({ inicial, textoBoton, onGuardar, onCancelar }: PropsFormulario) {
-  const [datos, setDatos] = useState(inicial);
+// Envía un formulario y muestra sus errores (general y por campo).
+function useEnvio() {
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [errores, setErrores] = useState<Record<string, string[]>>({});
 
-  async function enviar(evento: FormEvent<HTMLFormElement>) {
+  async function enviar(evento: FormEvent<HTMLFormElement>, accion: () => Promise<void>) {
     evento.preventDefault();
     setError("");
     setErrores({});
     setGuardando(true);
     try {
-      await onGuardar(datos);
-      setDatos(PERFIL_VACIO);
+      await accion();
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo guardar");
       if (err instanceof ErrorApi) setErrores(err.campos);
@@ -39,8 +31,40 @@ function FormularioPerfil({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
     }
   }
 
+  return { guardando, error, errores, enviar };
+}
+
+function CampoPassword({ valor, onCambiar, errores }: { valor: string; onCambiar: (valor: string) => void; errores?: string[] }) {
   return (
-    <form onSubmit={enviar} noValidate>
+    <Campo etiqueta="Tu contraseña" obligatorio errores={errores}>
+      <input type="password" value={valor} onChange={(e) => onCambiar(e.target.value)} autoComplete="current-password" />
+    </Campo>
+  );
+}
+
+interface PropsFormulario {
+  inicial: DatosPerfil;
+  textoBoton: string;
+  onGuardar: (datos: DatosPerfil, password: string) => Promise<void>;
+  onCancelar?: () => void;
+}
+
+function FormularioPerfil({ inicial, textoBoton, onGuardar, onCancelar }: PropsFormulario) {
+  const [datos, setDatos] = useState(inicial);
+  const [password, setPassword] = useState("");
+  const { guardando, error, errores, enviar } = useEnvio();
+
+  return (
+    <form
+      noValidate
+      onSubmit={(evento) =>
+        enviar(evento, async () => {
+          await onGuardar(datos, password);
+          setDatos(PERFIL_VACIO);
+          setPassword("");
+        })
+      }
+    >
       {error && <p className="mensaje-error">{error}</p>}
       <div className="formulario-perfil">
         <Campo etiqueta="Nombre" obligatorio errores={errores.nombre}>
@@ -61,6 +85,7 @@ function FormularioPerfil({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
             placeholder="Ej.: 3"
           />
         </Campo>
+        <CampoPassword valor={password} onCambiar={setPassword} errores={errores.password} />
         <div className="acciones acciones-formulario formulario-prueba-acciones">
           {onCancelar && (
             <button type="button" className="boton-secundario" onClick={onCancelar}>
@@ -76,37 +101,65 @@ function FormularioPerfil({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
   );
 }
 
+// Confirmación para eliminar un perfil, en la misma fila: pide la contraseña.
+function ConfirmarEliminar({ perfil, onEliminar, onCancelar }: { perfil: Perfil; onEliminar: (password: string) => Promise<void>; onCancelar: () => void }) {
+  const [password, setPassword] = useState("");
+  const { guardando, error, errores, enviar } = useEnvio();
+
+  return (
+    <form noValidate onSubmit={(evento) => enviar(evento, () => onEliminar(password))}>
+      <p>¿Eliminar el perfil "{perfil.nombre}"?</p>
+      {error && <p className="mensaje-error">{error}</p>}
+      <div className="formulario-perfil">
+        <CampoPassword valor={password} onCambiar={setPassword} errores={errores.password} />
+        <div className="acciones acciones-formulario formulario-prueba-acciones">
+          <button type="button" className="boton-secundario" onClick={onCancelar}>
+            Cancelar
+          </button>
+          <button type="submit" className="boton boton-peligro" disabled={guardando}>
+            {guardando ? "Eliminando…" : "Eliminar"}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
 // Configuración → Perfiles: nombre de cada perfil y cada cuántos meses se reevalúa a sus alumnos.
+// Crear, editar y eliminar se confirman con la contraseña.
 export default function Perfiles() {
   const { datos: perfiles, error, setError, recargar } = useCarga(() => perfilesApi.listar(), []);
   const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
 
-  async function crear(datos: DatosPerfil) {
-    await perfilesApi.crear(datos);
+  async function crear(datos: DatosPerfil, password: string) {
+    await perfilesApi.crear(datos, password);
     await recargar();
   }
 
-  async function actualizar(id: number, datos: DatosPerfil) {
-    await perfilesApi.actualizar(id, datos);
+  async function actualizar(id: number, datos: DatosPerfil, password: string) {
+    await perfilesApi.actualizar(id, datos, password);
     setEditandoId(null);
     await recargar();
   }
 
+  async function eliminar(id: number, password: string) {
+    await perfilesApi.eliminar(id, password);
+    setEliminandoId(null);
+    setError("");
+    await recargar();
+  }
+
   // Solo se puede eliminar un perfil que no tiene ningún alumno.
-  async function eliminar(perfil: Perfil) {
+  function pedirEliminar(perfil: Perfil) {
     if (perfil.alumnos > 0) {
       const cuantos = perfil.alumnos === 1 ? "1 alumno lo tiene" : `${perfil.alumnos} alumnos lo tienen`;
       setError(`No se puede eliminar "${perfil.nombre}": ${cuantos}. Primero cambiales el perfil desde su ficha.`);
       return;
     }
-    if (!window.confirm(`¿Eliminar el perfil "${perfil.nombre}"?`)) return;
-    try {
-      await perfilesApi.eliminar(perfil.id);
-      setError("");
-      await recargar();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo eliminar");
-    }
+    setError("");
+    setEditandoId(null);
+    setEliminandoId(perfil.id);
   }
 
   return (
@@ -144,8 +197,18 @@ export default function Perfiles() {
                       <FormularioPerfil
                         inicial={{ nombre: perfil.nombre, mesesReevaluacion: String(perfil.mesesReevaluacion) }}
                         textoBoton="Guardar"
-                        onGuardar={(datos) => actualizar(perfil.id, datos)}
+                        onGuardar={(datos, password) => actualizar(perfil.id, datos, password)}
                         onCancelar={() => setEditandoId(null)}
+                      />
+                    </td>
+                  </tr>
+                ) : eliminandoId === perfil.id ? (
+                  <tr key={perfil.id}>
+                    <td colSpan={4}>
+                      <ConfirmarEliminar
+                        perfil={perfil}
+                        onEliminar={(password) => eliminar(perfil.id, password)}
+                        onCancelar={() => setEliminandoId(null)}
                       />
                     </td>
                   </tr>
@@ -155,10 +218,17 @@ export default function Perfiles() {
                     <td>{textoMeses(perfil.mesesReevaluacion)}</td>
                     <td>{perfil.alumnos}</td>
                     <td className="sin-salto">
-                      <button type="button" className="boton-link" onClick={() => setEditandoId(perfil.id)}>
+                      <button
+                        type="button"
+                        className="boton-link"
+                        onClick={() => {
+                          setEliminandoId(null);
+                          setEditandoId(perfil.id);
+                        }}
+                      >
                         Editar
                       </button>
-                      <button type="button" className="boton-link peligro" onClick={() => eliminar(perfil)}>
+                      <button type="button" className="boton-link peligro" onClick={() => pedirEliminar(perfil)}>
                         Eliminar
                       </button>
                     </td>

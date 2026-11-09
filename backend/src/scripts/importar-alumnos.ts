@@ -16,7 +16,7 @@ interface AlumnoExportado {
     apellido: string;
     dni: string;
     fechaNacimiento: string;
-    profesion: string;
+    profesion: string | null;
     telefono: string;
     email: string | null;
     detallePerfil: string | null;

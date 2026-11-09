@@ -20,6 +20,7 @@ export const esquemaCambioPassword = z.object({
 
 export type DatosCambioPassword = z.infer<typeof esquemaCambioPassword>;
 
+// La contraseña ("actual") la revisa exigirPassword antes de validar.
 export const esquemaCambioNombre = z.object({
   nombre: z.string({ error: "Ingresá el nombre" }).trim().min(1, "Ingresá el nombre").max(60, "Máximo 60 caracteres"),
 });

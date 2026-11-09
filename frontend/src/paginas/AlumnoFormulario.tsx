@@ -34,7 +34,7 @@ function datosDesdeAlumno(alumno: Alumno): DatosAlumno {
     fechaNacimiento: alumno.fechaNacimiento.slice(0, 10),
     telefono: alumno.telefono,
     email: alumno.email ?? "",
-    profesion: alumno.profesion,
+    profesion: alumno.profesion ?? "",
     perfilId: String(alumno.perfil.id),
     detallePerfil: alumno.detallePerfil ?? "",
     lesiones: alumno.lesiones ?? "",
@@ -142,7 +142,7 @@ export default function AlumnoFormulario() {
             <Campo etiqueta="Email" errores={errores.email}>
               <input {...control("email")} type="email" />
             </Campo>
-            <Campo etiqueta="Profesión" obligatorio errores={errores.profesion}>
+            <Campo etiqueta="Profesión" errores={errores.profesion}>
               <input {...control("profesion")} />
             </Campo>
           </div>
@@ -151,9 +151,9 @@ export default function AlumnoFormulario() {
         <div className="tarjeta seccion">
           <h2>Perfil</h2>
           <div className="grilla">
-            <Campo etiqueta="Perfil" obligatorio errores={errores.perfilId}>
+            <Campo etiqueta="Tipo" obligatorio errores={errores.perfilId}>
               <select {...control("perfilId")}>
-                <option value="">Elegí un perfil…</option>
+                <option value="">Elegí un tipo…</option>
                 {perfiles?.map((perfil) => (
                   <option key={perfil.id} value={perfil.id}>
                     {perfil.nombre}
@@ -163,7 +163,7 @@ export default function AlumnoFormulario() {
             </Campo>
           </div>
           <Campo
-            etiqueta="Detalle del perfil"
+            etiqueta="Detalle"
             errores={errores.detallePerfil}
             ayuda="Ej.: deporte que practica, objetivo, lesión de la que se recupera"
           >

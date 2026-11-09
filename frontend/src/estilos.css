@@ -230,6 +230,21 @@ h1 {
   resize: vertical;
 }
 
+/* Safari del iPhone le da a los campos de fecha un ancho mínimo propio y no respeta width: 100%:
+   sin esto, el campo se sale de la pantalla en el celular. */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  margin: 0; /* Safari le suma un margen propio y el campo queda más alto que los demás */
+}
+
 /* Dato que completa el sistema (ej.: la unidad de un test): se ve como campo pero no se escribe. */
 .campo input[readonly] {
   background: var(--color-fondo);
@@ -1233,10 +1248,10 @@ button.indicador:hover {
   margin-top: 1.625rem;
 }
 
-/* Configuración → Perfiles: nombre, meses y botones en una fila. */
+/* Configuración → Perfiles: nombre, meses, contraseña y botones en una fila. */
 .formulario-perfil {
   display: grid;
-  grid-template-columns: 2fr 1fr auto;
+  grid-template-columns: 2fr 1fr 1fr auto;
   gap: 0 0.75rem;
   align-items: start;
 }
@@ -1449,6 +1464,30 @@ button.indicador:hover {
   gap: 0.5rem;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+/* Filtro en desplegable: solo en el celular, en lugar de los botones. */
+.filtro-desplegable {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .filtro-desplegable {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.625rem 0.75rem;
+    border: 2px solid var(--color-borde);
+    border-radius: var(--radio);
+    font: inherit;
+    font-weight: 600;
+    background: var(--color-superficie);
+    color: var(--color-texto);
+  }
+
+  .filtros-chips-cuotas {
+    display: none;
+  }
 }
 
 .chip {
@@ -2006,8 +2045,10 @@ button.indicador:hover {
     display: none;
   }
 
-  .tabla-cuotas .celda-membresia,
-  .tabla-cuotas .oculta-celular {
+  /* "td." para que pese más que ".tabla-cuotas td.numero": si no, la deuda vacía ("—") se seguía
+     viendo y el botón de WhatsApp quedaba solo en una tercera línea. */
+  .tabla-cuotas td.celda-membresia,
+  .tabla-cuotas td.oculta-celular {
     display: none;
   }
 

@@ -54,7 +54,12 @@ export const esquemaAlumno = z.object({
     .nullish()
     .transform((valor) => valor || null)
     .pipe(z.email("Email inválido").nullable()),
-  profesion: textoObligatorio("La profesión es obligatoria"),
+  profesion: z
+    .string()
+    .trim()
+    .max(100, "Máximo 100 caracteres")
+    .nullish()
+    .transform((valor) => valor || null),
   perfilId: z.coerce.number({ error: "Elegí un perfil" }).int("Elegí un perfil").positive("Elegí un perfil"),
   detallePerfil: textoLargo,
   lesiones: textoLargo,

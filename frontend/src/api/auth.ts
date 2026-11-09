@@ -18,7 +18,8 @@ export const authApi = {
   cambiarPassword: (actual: string, nueva: string) =>
     pedir<void>("/auth/password", { metodo: "POST", datos: { actual, nueva } }),
 
-  cambiarNombre: (nombre: string) => pedir<{ usuario: Usuario }>("/auth/nombre", { metodo: "PUT", datos: { nombre } }),
+  cambiarNombre: (nombre: string, actual: string) =>
+    pedir<{ usuario: Usuario }>("/auth/nombre", { metodo: "PUT", datos: { nombre, actual } }),
 
   cambiarEmail: (email: string, actual: string) =>
     pedir<{ usuario: Usuario }>("/auth/email", { metodo: "PUT", datos: { email, actual } }),

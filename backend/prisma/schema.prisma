@@ -116,7 +116,7 @@ model Alumno {
   apellido         String
   dni              String   @unique
   fechaNacimiento  DateTime @db.Date
-  profesion        String
+  profesion        String?
   telefono         String
   email            String?
   perfilId         Int

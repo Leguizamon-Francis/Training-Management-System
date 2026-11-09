@@ -1,4 +1,4 @@
-import { Router, type Request, type Response } from "express";
+import { Router, type Request, type RequestHandler, type Response } from "express";
 import { env } from "../../config/env";
 import { enviarEmail, escaparHtml } from "../../lib/email";
 import { requiereSesion } from "../../middlewares/requiereSesion";
@@ -28,6 +28,7 @@ import {
   MINUTOS_LINK_RECUPERACION,
   minutosDeBloqueo,
   NOMBRE_COOKIE,
+  passwordCorrecta,
   registrarIntentoFallido,
   restablecerPassword,
 } from "./auth.service";
@@ -58,6 +59,26 @@ export function rechazarPassword(req: Request, res: Response, campo: string, men
 
 export function aceptarPassword(req: Request) {
   limpiarIntentos(claveIntentos(req));
+}
+
+// Middleware para cambios que se confirman con la contraseña del usuario (va antes de validar(), que
+// descarta los campos que no están en el esquema). Cuenta para el límite de intentos fallidos.
+export function exigirPassword(campo = "password"): RequestHandler {
+  return async (req, res, next) => {
+    if (respondioBloqueo(req, res)) return;
+    const password: unknown = req.body?.[campo];
+    if (typeof password !== "string" || password === "") {
+      const mensaje = "Ingresá tu contraseña para confirmar";
+      res.status(400).json({ error: mensaje, campos: { [campo]: [mensaje] } });
+      return;
+    }
+    if (!(await passwordCorrecta(req.usuario!.id, password))) {
+      rechazarPassword(req, res, campo, "La contraseña no es correcta");
+      return;
+    }
+    aceptarPassword(req);
+    next();
+  };
 }
 
 // POST /api/auth/login  { email, password }
@@ -105,8 +126,8 @@ authRouter.post("/password", requiereSesion, validar(esquemaCambioPassword), asy
   res.status(204).end();
 });
 
-// PUT /api/auth/nombre  { nombre }
-authRouter.put("/nombre", requiereSesion, validar(esquemaCambioNombre), async (req, res) => {
+// PUT /api/auth/nombre  { nombre, actual }
+authRouter.put("/nombre", requiereSesion, exigirPassword("actual"), validar(esquemaCambioNombre), async (req, res) => {
   const { nombre } = req.body as DatosCambioNombre;
   res.json({ usuario: await cambiarNombre(req.usuario!.id, nombre) });
 });
