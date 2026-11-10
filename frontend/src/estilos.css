@@ -136,6 +136,12 @@ h1 {
   stroke: var(--logo-flecha);
 }
 
+@keyframes aparecer-fondo {
+  from {
+    opacity: 0;
+  }
+}
+
 @keyframes aparecer {
   from {
     opacity: 0;
@@ -369,7 +375,17 @@ input[type="date"]::-webkit-date-and-time-value {
 }
 
 .boton-menu,
+.boton-cerrar-menu,
 .solo-angosto {
+  display: none;
+}
+
+/* En la compu el panel del menú no forma una caja: sus hijos van directo en la barra del encabezado. */
+.panel-menu {
+  display: contents;
+}
+
+.fondo-menu {
   display: none;
 }
 
@@ -2057,38 +2073,71 @@ button.indicador:hover {
     display: none;
   }
 
-  .menu,
-  .encabezado-usuario {
-    display: none;
-  }
-
-  .menu-abierto .menu {
+  /* Panel que entra desde la derecha. Las secciones van abajo y alineadas a la derecha, donde llega el pulgar;
+     "Cerrar" queda arriba. Cerrado, no se ve ni se puede llegar con el teclado (visibility). */
+  .panel-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    width: min(17rem, 82vw);
     display: flex;
     flex-direction: column;
-    width: 100%;
+    gap: 0.75rem;
+    padding: calc(0.75rem + env(safe-area-inset-top)) 1rem calc(1.25rem + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    background: var(--color-superficie);
+    border-left: 2px solid var(--color-borde);
+    box-shadow: var(--sombra-alta);
+    transform: translateX(100%);
+    visibility: hidden;
+    transition: transform 0.2s ease-out, visibility 0.2s;
   }
 
-  /* El menú principal y la fila del usuario, cada uno en su propia línea a todo el ancho. Sin esto, Safari del
-     iPhone dejaba el menú al lado del logo: .menu tiene flex: 1 (base 0) y entraba en la primera fila. */
-  .menu-abierto > .menu,
-  .menu-abierto > .encabezado-usuario {
-    flex: 0 0 100%;
+  .menu-abierto .panel-menu {
+    transform: none;
+    visibility: visible;
   }
 
-  .menu-abierto .menu a {
+  .boton-cerrar-menu {
+    display: inline-block;
+    align-self: flex-end;
+    min-height: 2.5rem;
+    margin-bottom: auto; /* empuja el resto hacia abajo */
+  }
+
+  .panel-menu .menu {
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .panel-menu .menu a {
+    padding: 0.875rem 0.75rem;
+    text-align: right;
+    font-size: 1.05rem;
+  }
+
+  .panel-menu .encabezado-usuario {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid var(--color-borde);
+  }
+
+  .panel-menu .encabezado-usuario .boton-secundario {
     padding: 0.75rem;
   }
 
-  .menu-abierto .encabezado-usuario {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-    gap: 0.5rem;
-  }
-
-  .menu-abierto .encabezado-usuario .boton-secundario {
-    padding: 0.625rem 0.75rem;
+  .fondo-menu {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: rgba(15, 23, 32, 0.55);
+    animation: aparecer-fondo 0.2s ease-out;
   }
 }
 
