@@ -1600,8 +1600,9 @@ button.indicador:hover {
     grid-column: 2;
   }
 
-  /* Título, tipo de pago y el texto de qué período cubre: a la izquierda y a todo el ancho (en una línea). */
-  .formulario-registrar-pago > :is(h3, .opciones-tipo, p.texto-suave) {
+  /* Título, tipo de pago, el texto de qué período cubre y los avisos de error (ej.: "no tiene una membresía
+     asignada"): a la izquierda y a todo el ancho. */
+  .formulario-registrar-pago > :is(h3, .opciones-tipo, p.texto-suave, p.mensaje-error) {
     grid-column: 1 / -1;
     contain: none;
   }
