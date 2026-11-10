@@ -1089,6 +1089,33 @@ button.indicador:hover {
   grid-template-columns: 1fr auto;
 }
 
+/* Mes del reporte: ‹ Noviembre de 2026 › */
+.selector-mes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.selector-mes span {
+  flex: 1;
+  min-width: 11rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.selector-mes .boton-secundario {
+  min-width: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.selector-mes .boton-secundario:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 .lista-asistencia {
   display: grid;
   gap: 0.5rem;

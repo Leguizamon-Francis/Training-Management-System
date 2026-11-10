@@ -5,7 +5,12 @@ import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
-import { coincideBusqueda, formatearFecha, hoyComoTexto, nombreDelMes } from "../utils/formato";
+import { coincideBusqueda, formatearFecha, hoyComoTexto, nombreDelMes, sumarMeses } from "../utils/formato";
+
+// "aaaa-mm" más o menos meses.
+function moverMes(mes: string, cantidad: number) {
+  return sumarMeses(`${mes}-01`, cantidad).slice(0, 7);
+}
 
 // Cuántos alumnos muestra "Alumnos con más asistencias".
 const CANTIDAD_MAS_ASISTENCIAS = 3;
@@ -133,13 +138,25 @@ export default function Asistencias() {
               onChange={(e) => setBuscar(e.target.value)}
               aria-label="Buscar alumno"
             />
-            <input
-              type="month"
-              value={mes}
-              max={mesActual}
-              onChange={(e) => e.target.value && setMes(e.target.value)}
-              aria-label="Mes del reporte"
-            />
+            {/* Flechas en lugar de <input type="month">: ese campo lo dibuja cada navegador (Safari lo muestra en el
+                idioma del teléfono y más ancho que la pantalla). No se puede pasar del mes actual. */}
+            <div className="selector-mes" role="group" aria-label="Mes del reporte">
+              <button type="button" className="boton-secundario" onClick={() => setMes(moverMes(mes, -1))} aria-label="Mes anterior">
+                ‹
+              </button>
+              <span className="primera-mayuscula" aria-live="polite">
+                {nombreDelMes(mes)}
+              </span>
+              <button
+                type="button"
+                className="boton-secundario"
+                onClick={() => setMes(moverMes(mes, 1))}
+                disabled={mes >= mesActual}
+                aria-label="Mes siguiente"
+              >
+                ›
+              </button>
+            </div>
           </div>
 
           {error && <p className="mensaje-error">{error}</p>}
