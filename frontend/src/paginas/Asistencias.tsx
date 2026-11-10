@@ -5,24 +5,18 @@ import BotonVerTodos from "../componentes/BotonVerTodos";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
-import { coincideBusqueda, formatearFecha, hoyComoTexto, nombreDelMes, sumarMeses } from "../utils/formato";
-
-// "aaaa-mm" más o menos meses.
-function moverMes(mes: string, cantidad: number) {
-  return sumarMeses(`${mes}-01`, cantidad).slice(0, 7);
-}
+import { coincideBusqueda, formatearFecha, hoyComoTexto, nombreDelMes } from "../utils/formato";
 
 // Cuántos alumnos muestra "Alumnos con más asistencias".
 const CANTIDAD_MAS_ASISTENCIAS = 3;
 
-// Reportes de asistencia de un mes y lista de alumnos: al entrar a uno se ve su historial.
+// Reportes de asistencia del mes en curso y lista de alumnos: al entrar a uno se ve su historial.
 export default function Asistencias() {
-  const mesActual = hoyComoTexto().slice(0, 7);
-  const [mes, setMes] = useState(mesActual);
+  const mes = hoyComoTexto().slice(0, 7);
   const [buscar, setBuscar] = useState("");
   const [abierto, setAbierto] = useState<"hoy" | "masAsistencias" | null>(null); // un cuadro abierto a la vez
   const { datos: resumen, error } = useCarga(() => asistenciasApi.resumen(mes), [mes]);
-  // "Asistencias de hoy" no depende del mes elegido: siempre es el día de hoy.
+  // "Asistencias de hoy": siempre el día de hoy.
   const { datos: vinieronHoy } = useCarga(
     () => asistenciasApi.dia(hoyComoTexto()).then((alumnos) => alumnos.filter((alumno) => alumno.presente)),
     [],
@@ -31,7 +25,7 @@ export default function Asistencias() {
   const visibles = resumen?.alumnos.filter((a) => coincideBusqueda(`${a.nombre} ${a.apellido}`, buscar)) ?? [];
 
   const lista = useListaCorta(visibles, ALUMNOS_POR_LISTA);
-  // El resumen ya viene ordenado de más a menos asistencias en el mes elegido.
+  // El resumen ya viene ordenado de más a menos asistencias en el mes.
   const masAsistencias = resumen?.alumnos.filter((alumno) => alumno.cantidad > 0).slice(0, CANTIDAD_MAS_ASISTENCIAS) ?? [];
 
   const alternar = (cuadro: "hoy" | "masAsistencias") => setAbierto(abierto === cuadro ? null : cuadro);
@@ -55,7 +49,7 @@ export default function Asistencias() {
               <span className="indicador-etiqueta">Asistencias de hoy</span>
               <strong className="indicador-valor">{vinieronHoy?.length ?? "…"}</strong>
             </button>
-            {/* El ranking es del mes elegido abajo; el cuadro muestra al primero. */}
+            {/* El ranking es del mes en curso; el cuadro muestra al primero. */}
             <button
               type="button"
               className={`tarjeta indicador${abierto === "masAsistencias" ? " activo" : ""}`}
@@ -130,7 +124,7 @@ export default function Asistencias() {
             )}
           </div>
 
-          <div className="filtros filtros-asistencia">
+          <div className="filtros filtros-simple">
             <input
               type="search"
               placeholder="Buscar alumno"
@@ -138,25 +132,6 @@ export default function Asistencias() {
               onChange={(e) => setBuscar(e.target.value)}
               aria-label="Buscar alumno"
             />
-            {/* Flechas en lugar de <input type="month">: ese campo lo dibuja cada navegador (Safari lo muestra en el
-                idioma del teléfono y más ancho que la pantalla). No se puede pasar del mes actual. */}
-            <div className="selector-mes" role="group" aria-label="Mes del reporte">
-              <button type="button" className="boton-secundario" onClick={() => setMes(moverMes(mes, -1))} aria-label="Mes anterior">
-                ‹
-              </button>
-              <span className="primera-mayuscula" aria-live="polite">
-                {nombreDelMes(mes)}
-              </span>
-              <button
-                type="button"
-                className="boton-secundario"
-                onClick={() => setMes(moverMes(mes, 1))}
-                disabled={mes >= mesActual}
-                aria-label="Mes siguiente"
-              >
-                ›
-              </button>
-            </div>
           </div>
 
           {error && <p className="mensaje-error">{error}</p>}
