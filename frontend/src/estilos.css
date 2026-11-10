@@ -1134,6 +1134,8 @@ button.indicador:hover {
   border-top: none;
 }
 
+/* El texto a la izquierda y el botón a la derecha. Si no entran en una línea, el botón baja, pero sigue a la
+   derecha (margin-left: auto). */
 .fila-configuracion-dato {
   display: flex;
   flex-wrap: wrap;
@@ -1141,6 +1143,15 @@ button.indicador:hover {
   align-items: center;
   gap: 0.5rem 1rem;
   min-height: 2.5rem;
+}
+
+.fila-configuracion-dato > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere; /* emails largos */
+}
+
+.fila-configuracion-dato > :not(:first-child) {
+  margin-left: auto;
 }
 
 .fila-configuracion .formulario-pago {
