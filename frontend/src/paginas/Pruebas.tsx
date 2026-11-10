@@ -5,6 +5,7 @@ import { pruebasApi, type DatosPrueba, type Prueba } from "../api/pruebas";
 import Campo from "../componentes/Campo";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_CATEGORIA } from "../utils/evaluaciones";
+import { useConfirmar } from "../componentes/Confirmar";
 
 const PRUEBA_VACIA: DatosPrueba = { nombre: "", categoria: "", unidad: "", porLado: false, activa: true };
 
@@ -92,6 +93,7 @@ function FormularioPrueba({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
 }
 
 export default function Pruebas() {
+  const confirmar = useConfirmar();
   const [incluirInactivas, setIncluirInactivas] = useState(false);
   const { datos: pruebas, error, setError, recargar } = useCarga(() => pruebasApi.listar(incluirInactivas), [incluirInactivas]);
   const [editandoId, setEditandoId] = useState<number | null>(null);
@@ -109,7 +111,10 @@ export default function Pruebas() {
 
   // "Desactivar": deja de ofrecerse al cargar evaluaciones; "Restaurar" la vuelve a activar.
   async function alternarActiva(prueba: Prueba) {
-    if (prueba.activa && !window.confirm(`¿Desactivar "${prueba.nombre}"? Se puede restaurar más adelante.`)) {
+    if (
+      prueba.activa &&
+      !(await confirmar({ titulo: `¿Desactivar "${prueba.nombre}"?`, mensaje: "Se puede restaurar más adelante.", textoConfirmar: "Desactivar" }))
+    ) {
       return;
     }
     try {
@@ -122,8 +127,13 @@ export default function Pruebas() {
 
   // "Eliminar": permanente. Los resultados que ya se cargaron con esa prueba se conservan.
   async function eliminar(prueba: Prueba) {
-    const pregunta = `¿Eliminar "${prueba.nombre}" para siempre? Deja de aparecer acá y no se puede deshacer. Los resultados que ya se cargaron se conservan en las evaluaciones de cada alumno.`;
-    if (!window.confirm(pregunta)) return;
+    const si = await confirmar({
+      titulo: `¿Eliminar "${prueba.nombre}" para siempre?`,
+      mensaje: "Deja de aparecer acá y no se puede deshacer. Los resultados que ya se cargaron se conservan en las evaluaciones de cada alumno.",
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await pruebasApi.eliminar(prueba.id);
       await recargar();

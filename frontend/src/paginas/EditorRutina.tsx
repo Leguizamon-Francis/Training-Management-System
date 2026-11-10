@@ -6,6 +6,7 @@ import Cargando from "../componentes/Cargando";
 import PlanillaEditable, { type ControlPlanilla } from "../componentes/PlanillaEditable";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
+import { useConfirmar } from "../componentes/Confirmar";
 
 // Completar una rutina sobre la planilla PDF.
 // - Nueva (/rutinas/:alumnoId/nueva?tipo=…, o /rutinas/sin-alumno/nueva?tipo=…): parte de la plantilla del
@@ -14,6 +15,7 @@ import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 // - Existente (/rutinas/editar/:rutinaId): parte de la rutina guardada.
 // Al guardar, lo escrito queda en el perfil del alumno, o en "Rutinas sin alumno".
 export default function EditorRutina() {
+  const confirmar = useConfirmar();
   const parametros = useParams();
   const [busqueda] = useSearchParams();
   const navigate = useNavigate();
@@ -56,8 +58,15 @@ export default function EditorRutina() {
     }
   }
 
-  function cancelar() {
-    if (window.confirm("¿Salir sin guardar? Se pierde lo que escribiste en la planilla.")) {
+  async function cancelar() {
+    const si = await confirmar({
+      titulo: "¿Salir sin guardar?",
+      mensaje: "Se pierde lo que escribiste en la planilla.",
+      textoConfirmar: "Salir sin guardar",
+      textoCancelar: "Seguir editando",
+      peligro: true,
+    });
+    if (si) {
       navigate(volverA, { state: origen });
     }
   }

@@ -14,6 +14,7 @@ import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
 import { ETIQUETAS_CAMPO, formatearValorCambio } from "../utils/alumnos";
 import { calcularEdad, formatearFecha, formatearFechaHora } from "../utils/formato";
+import { useConfirmar } from "../componentes/Confirmar";
 
 function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
@@ -25,6 +26,7 @@ function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode })
 }
 
 export default function AlumnoFicha() {
+  const confirmar = useConfirmar();
   const idAlumno = Number(useParams().id);
   const { datos, error, setError, recargar } = useCarga(
     () => Promise.all([alumnosApi.obtener(idAlumno), alumnosApi.historial(idAlumno)]),
@@ -48,10 +50,17 @@ export default function AlumnoFicha() {
 
   async function alternarEstado() {
     const nombre = `${alumno.nombre} ${alumno.apellido}`;
-    const pregunta = alumno.activo
-      ? `¿Dar de baja a ${nombre}? Sus datos se conservan y se puede reactivar cuando quieras.`
-      : `¿Reactivar a ${nombre}?`;
-    if (!window.confirm(pregunta)) return;
+    const si = await confirmar(
+      alumno.activo
+        ? {
+            titulo: `¿Dar de baja a ${nombre}?`,
+            mensaje: "Sus datos se conservan y se puede reactivar cuando quieras.",
+            textoConfirmar: "Dar de baja",
+            peligro: true,
+          }
+        : { titulo: `¿Reactivar a ${nombre}?`, textoConfirmar: "Reactivar" },
+    );
+    if (!si) return;
 
     setProcesando(true);
     try {

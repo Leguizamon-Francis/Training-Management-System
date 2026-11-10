@@ -484,6 +484,48 @@ input[type="date"]::-webkit-date-and-time-value {
   font-size: 0.95rem;
 }
 
+/* Ventana de confirmación (componentes/Confirmar.tsx), en lugar del aviso del navegador: con los colores, bordes
+   y botones de la app. En el celular, apoyada abajo y a todo el ancho, cerca del pulgar. */
+.dialogo-confirmar {
+  width: min(28rem, calc(100% - 2rem));
+  padding: 1.25rem;
+  border: 2px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  box-shadow: var(--sombra-alta);
+  animation: aparecer 0.15s ease-out;
+}
+
+.dialogo-confirmar::backdrop {
+  background: rgba(15, 23, 32, 0.55);
+}
+
+.dialogo-confirmar h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+}
+
+.dialogo-confirmar p {
+  margin: 0 0 1.25rem;
+  color: var(--color-texto-suave);
+}
+
+.dialogo-confirmar h2:last-of-type + .acciones {
+  margin-top: 1rem;
+}
+
+@media (max-width: 760px) {
+  .dialogo-confirmar {
+    width: calc(100% - 1.5rem);
+    margin: auto auto calc(0.75rem + env(safe-area-inset-bottom));
+  }
+
+  .dialogo-confirmar .acciones > * {
+    flex: 1;
+  }
+}
+
 /* Aviso al tocar en la demo algo que no se puede usar (WhatsApp, descargas, Configuración). */
 .aviso-demo {
   position: fixed;

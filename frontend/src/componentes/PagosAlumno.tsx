@@ -19,6 +19,7 @@ import FormularioCorregirPago from "./FormularioCorregirPago";
 import FormularioPago from "./FormularioPago";
 import { IconoMensaje } from "./Iconos";
 import SelectorPlan from "./SelectorPlan";
+import { useConfirmar } from "./Confirmar";
 
 interface Props {
   alumno: { id: number; nombre: string; apellido: string; telefono: string; activo: boolean };
@@ -32,6 +33,7 @@ function Contenedor({ enFicha, children }: { enFicha: boolean; children: ReactNo
 
 // Membresía, estado de la cuota, deuda y pagos de un alumno.
 export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props) {
+  const confirmar = useConfirmar();
   const { datos, error, setError, recargar } = useCarga(() => pagosApi.obtener(alumno.id), [alumno.id]);
   const [registrando, setRegistrando] = useState(false);
   const [corrigiendo, setCorrigiendo] = useState<Pago | null>(null);
@@ -49,12 +51,23 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
     const { cuotasAdeudadas, deudaTotal } = datos.situacion;
     const cantidad = `${cuotasAdeudadas.length} ${cuotasAdeudadas.length === 1 ? "cuota" : "cuotas"}`;
     const monto = Number(deudaTotal) > 0 ? ` (${formatearMoneda(deudaTotal)})` : "";
-    if (!window.confirm(`¿Anular la deuda de ${cantidad}${monto}? No se le van a cobrar.`)) return;
+    const si = await confirmar({
+      titulo: "¿Anular la deuda?",
+      mensaje: `${cantidad}${monto}: no se le van a cobrar.`,
+      textoConfirmar: "Anular deuda",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await pagosApi.anularDeuda(alumno.id);
       if (
         alumno.activo &&
-        window.confirm(`¿Dar de baja a ${alumno.nombre} ${alumno.apellido}? Si sigue activo, se le van a volver a acumular cuotas.`)
+        (await confirmar({
+          titulo: `¿Dar de baja a ${alumno.nombre} ${alumno.apellido}?`,
+          mensaje: "Si sigue activo, se le van a volver a acumular cuotas.",
+          textoConfirmar: "Dar de baja",
+          textoCancelar: "Dejarlo activo",
+        }))
       ) {
         await alumnosApi.cambiarEstado(alumno.id, false);
       }
@@ -66,8 +79,13 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
   }
 
   async function eliminarPago(pago: Pago) {
-    const pregunta = `¿Eliminar el pago de ${formatearMoneda(pago.importe)} del ${formatearFecha(pago.fecha)}? No se puede deshacer.`;
-    if (!window.confirm(pregunta)) return;
+    const si = await confirmar({
+      titulo: "¿Eliminar el pago?",
+      mensaje: `Pago de ${formatearMoneda(pago.importe)} del ${formatearFecha(pago.fecha)}. No se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await pagosApi.eliminar(pago.id);
       setCorrigiendo(null);

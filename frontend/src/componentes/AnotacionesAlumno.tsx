@@ -9,6 +9,7 @@ import BotonVerTodos from "./BotonVerTodos";
 import Campo from "./Campo";
 import Cargando from "./Cargando";
 import Desplegable from "./Desplegable";
+import { useConfirmar } from "./Confirmar";
 
 // Caracteres del detalle que se muestran antes de "Ver más".
 const LARGO_RESUMEN = 60;
@@ -104,6 +105,7 @@ function FormularioAnotacion({ inicial, textoBoton, onGuardar, onCancelar }: Pro
 
 // Sección de anotaciones de entrenamiento dentro de la ficha del alumno.
 export default function AnotacionesAlumno({ alumnoId }: { alumnoId: number }) {
+  const confirmar = useConfirmar();
   const { datos: anotaciones, error, setError, recargar } = useCarga(() => anotacionesApi.listar(alumnoId), [alumnoId]);
   const [filtroTipo, setFiltroTipo] = useState<TipoAnotacion | "">("");
   const [editandoId, setEditandoId] = useState<number | null>(null);
@@ -133,7 +135,13 @@ export default function AnotacionesAlumno({ alumnoId }: { alumnoId: number }) {
   }
 
   async function eliminar(anotacion: Anotacion) {
-    if (!window.confirm(`¿Eliminar la anotación del ${formatearFecha(anotacion.fecha)}? No se puede deshacer.`)) return;
+    const si = await confirmar({
+      titulo: "¿Eliminar la anotación?",
+      mensaje: `Anotación del ${formatearFecha(anotacion.fecha)}. No se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await anotacionesApi.eliminar(anotacion.id);
       await recargar();

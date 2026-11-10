@@ -5,8 +5,10 @@ import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_LADO, ETIQUETAS_ORIGEN, formatearNumero } from "../utils/evaluaciones";
 import { formatearFecha } from "../utils/formato";
+import { useConfirmar } from "../componentes/Confirmar";
 
 export default function EvaluacionDetalle() {
+  const confirmar = useConfirmar();
   const evaluacionId = Number(useParams().evaluacionId);
   const navigate = useNavigate();
   const { datos, error, setError } = useCarga(async () => {
@@ -19,8 +21,13 @@ export default function EvaluacionDetalle() {
   const { evaluacion, alumno } = datos;
 
   async function eliminar() {
-    const pregunta = `¿Eliminar la evaluación n° ${evaluacion.idEvaluacion} (${formatearFecha(evaluacion.fecha)}) con todos sus resultados? No se puede deshacer.`;
-    if (!window.confirm(pregunta)) return;
+    const si = await confirmar({
+      titulo: `¿Eliminar la evaluación n° ${evaluacion.idEvaluacion}?`,
+      mensaje: `Evaluación del ${formatearFecha(evaluacion.fecha)}, con todos sus resultados. No se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await evaluacionesApi.eliminar(evaluacion.id);
       navigate(`/evaluaciones/alumnos/${evaluacion.alumnoId}`);

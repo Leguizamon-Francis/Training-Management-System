@@ -3,6 +3,7 @@ import { alumnosApi } from "../api/alumnos";
 import { planesApi, type Plan } from "../api/planes";
 import { useCarga } from "../hooks/useCarga";
 import { textoPrecioPlan } from "../utils/pagos";
+import { useConfirmar } from "./Confirmar";
 
 interface Props {
   alumnoId: number;
@@ -14,6 +15,7 @@ interface Props {
 
 // Lista desplegable para asignar o cambiar la membresía de un alumno (se guarda al elegir).
 export default function SelectorPlan({ alumnoId, planActual, onCambio, conEtiqueta = true, children }: Props) {
+  const confirmar = useConfirmar();
   const { datos: planes, error, setError } = useCarga(() => planesApi.listar(), []);
   const [guardando, setGuardando] = useState(false);
 
@@ -21,10 +23,11 @@ export default function SelectorPlan({ alumnoId, planActual, onCambio, conEtique
     // Si se cancela la confirmación, el select vuelve solo al plan actual (su valor sale de planActual).
     const nuevo = planes?.find((plan) => String(plan.id) === valor) ?? null;
     let pregunta: string;
-    if (!planActual) pregunta = `¿Asignar la membresía "${nuevo?.nombre}"?`;
-    else if (!nuevo) pregunta = `¿Quitar la membresía "${planActual.nombre}"?`;
-    else pregunta = `¿Cambiar la membresía de "${planActual.nombre}" a "${nuevo.nombre}"?`;
-    if (!window.confirm(pregunta)) return;
+    let accion: string;
+    if (!planActual) [pregunta, accion] = [`¿Asignar la membresía "${nuevo?.nombre}"?`, "Asignar"];
+    else if (!nuevo) [pregunta, accion] = [`¿Quitar la membresía "${planActual.nombre}"?`, "Quitar"];
+    else [pregunta, accion] = [`¿Cambiar la membresía de "${planActual.nombre}" a "${nuevo.nombre}"?`, "Cambiar"];
+    if (!(await confirmar({ titulo: pregunta, textoConfirmar: accion }))) return;
 
     setGuardando(true);
     setError("");

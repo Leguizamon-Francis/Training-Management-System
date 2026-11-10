@@ -8,11 +8,13 @@ import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda, formatearFecha, formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
+import { useConfirmar } from "../componentes/Confirmar";
 
 // Lista de alumnos activos: al entrar a uno se ven sus rutinas y se crea una nueva. Abajo, las rutinas sin alumno.
 // Con ?nueva=1 (botón "Nueva rutina"), al elegir el alumno ya se ofrecen los modelos; también se puede armar
 // una sin alumno con el botón "Rutina sin datos de alumno".
 export default function Rutinas() {
+  const confirmar = useConfirmar();
   const { datos: alumnos, error } = useCarga(() => rutinasApi.alumnos(), []);
   const { datos: sueltas, error: errorSueltas, setError: setErrorSueltas, recargar } = useCarga(() => rutinasApi.sueltas(), []);
   const [buscar, setBuscar] = useState("");
@@ -29,7 +31,13 @@ export default function Rutinas() {
 
   async function eliminar(rutina: Rutina) {
     const fecha = formatearFechaHora(rutina.creadoEn).slice(0, 10);
-    if (!window.confirm(`¿Eliminar la rutina creada el ${fecha}? No se puede deshacer.`)) return;
+    const si = await confirmar({
+      titulo: "¿Eliminar la rutina?",
+      mensaje: `Rutina creada el ${fecha}. No se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await rutinasApi.eliminar(rutina.id);
       await recargar();

@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import Cargando from "./componentes/Cargando";
 import Layout from "./componentes/Layout";
 import RutaProtegida from "./componentes/RutaProtegida";
+import { ProveedorConfirmar } from "./componentes/Confirmar";
 import { ProveedorSesion } from "./componentes/Sesion";
 import AlumnoEvaluaciones from "./paginas/AlumnoEvaluaciones";
 import AlumnoFicha from "./paginas/AlumnoFicha";
@@ -58,48 +59,50 @@ export default function App() {
   return (
     <BrowserRouter>
       <ProveedorSesion>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/olvide-password" element={<OlvidePassword />} />
-          <Route path="/restablecer-password" element={<RestablecerPassword />} />
+        <ProveedorConfirmar>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/olvide-password" element={<OlvidePassword />} />
+            <Route path="/restablecer-password" element={<RestablecerPassword />} />
 
-          <Route element={<RutaProtegida />}>
-            <Route element={<Layout />}>
-              <Route index element={<Inicio />} />
-              <Route path="alumnos" element={<Alumnos />} />
-              <Route path="alumnos/nuevo" element={<AlumnoFormulario />} />
-              <Route path="alumnos/:id" element={<AlumnoFicha />} />
-              <Route path="alumnos/:id/editar" element={<AlumnoFormulario />} />
-              <Route path="alumnos/:id/evaluaciones/*" element={<DireccionVieja />} />
-              <Route path="evaluaciones/alumnos/:id" element={<AlumnoEvaluaciones />} />
-              <Route path="evaluaciones/alumnos/:id/nueva" element={<EvaluacionFormulario />} />
-              <Route path="evaluaciones" element={<Evaluaciones />} />
-              <Route path="evaluaciones/configuracion" element={<Pruebas />} />
-              <Route path="evaluaciones/:evaluacionId" element={<EvaluacionDetalle />} />
-              <Route path="evaluaciones/:evaluacionId/editar" element={<EvaluacionFormulario />} />
-              <Route path="membresias" element={<Pagos />} />
-              <Route path="membresias/nuevo" element={<PagoNuevo />} />
-              <Route path="membresias/alumnos/:id" element={<PagosDeAlumno />} />
-              <Route path="membresias/configuracion" element={<GestionPlanes />} />
-              <Route path="membresias/ingresos" element={<Ingresos />} />
-              <Route path="pagos/*" element={<DireccionVieja />} />
-              <Route path="ingresos" element={<DireccionVieja />} />
-              <Route path="rutinas" element={<Rutinas />} />
-              <Route path="rutinas/:alumnoId" element={<RutinasAlumno />} />
-              <Route path="rutinas/sin-alumno/nueva" element={editorRutina} />
-              <Route path="rutinas/:alumnoId/nueva" element={editorRutina} />
-              <Route path="rutinas/editar/:rutinaId" element={editorRutina} />
-              <Route path="asistencias" element={<Asistencias />} />
-              <Route path="asistencias/registrar" element={<RegistrarAsistencia />} />
-              <Route path="asistencias/:alumnoId" element={<AsistenciasAlumno />} />
-              <Route path="configuracion" element={<Configuracion />} />
-              <Route path="configuracion/eliminar-alumno" element={<EliminarAlumno />} />
-              <Route path="configuracion/perfiles" element={<Perfiles />} />
+            <Route element={<RutaProtegida />}>
+              <Route element={<Layout />}>
+                <Route index element={<Inicio />} />
+                <Route path="alumnos" element={<Alumnos />} />
+                <Route path="alumnos/nuevo" element={<AlumnoFormulario />} />
+                <Route path="alumnos/:id" element={<AlumnoFicha />} />
+                <Route path="alumnos/:id/editar" element={<AlumnoFormulario />} />
+                <Route path="alumnos/:id/evaluaciones/*" element={<DireccionVieja />} />
+                <Route path="evaluaciones/alumnos/:id" element={<AlumnoEvaluaciones />} />
+                <Route path="evaluaciones/alumnos/:id/nueva" element={<EvaluacionFormulario />} />
+                <Route path="evaluaciones" element={<Evaluaciones />} />
+                <Route path="evaluaciones/configuracion" element={<Pruebas />} />
+                <Route path="evaluaciones/:evaluacionId" element={<EvaluacionDetalle />} />
+                <Route path="evaluaciones/:evaluacionId/editar" element={<EvaluacionFormulario />} />
+                <Route path="membresias" element={<Pagos />} />
+                <Route path="membresias/nuevo" element={<PagoNuevo />} />
+                <Route path="membresias/alumnos/:id" element={<PagosDeAlumno />} />
+                <Route path="membresias/configuracion" element={<GestionPlanes />} />
+                <Route path="membresias/ingresos" element={<Ingresos />} />
+                <Route path="pagos/*" element={<DireccionVieja />} />
+                <Route path="ingresos" element={<DireccionVieja />} />
+                <Route path="rutinas" element={<Rutinas />} />
+                <Route path="rutinas/:alumnoId" element={<RutinasAlumno />} />
+                <Route path="rutinas/sin-alumno/nueva" element={editorRutina} />
+                <Route path="rutinas/:alumnoId/nueva" element={editorRutina} />
+                <Route path="rutinas/editar/:rutinaId" element={editorRutina} />
+                <Route path="asistencias" element={<Asistencias />} />
+                <Route path="asistencias/registrar" element={<RegistrarAsistencia />} />
+                <Route path="asistencias/:alumnoId" element={<AsistenciasAlumno />} />
+                <Route path="configuracion" element={<Configuracion />} />
+                <Route path="configuracion/eliminar-alumno" element={<EliminarAlumno />} />
+                <Route path="configuracion/perfiles" element={<Perfiles />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ProveedorConfirmar>
       </ProveedorSesion>
     </BrowserRouter>
   );

@@ -8,8 +8,10 @@ import VolverAlumno from "../componentes/VolverAlumno";
 import { useCarga } from "../hooks/useCarga";
 import { formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
+import { useConfirmar } from "../componentes/Confirmar";
 
 export default function RutinasAlumno() {
+  const confirmar = useConfirmar();
   const alumnoId = Number(useParams().alumnoId);
   const navigate = useNavigate();
   const { datos, error, setError, recargar } = useCarga(
@@ -24,7 +26,13 @@ export default function RutinasAlumno() {
 
   async function eliminar(rutina: Rutina) {
     const fecha = formatearFechaHora(rutina.creadoEn).slice(0, 10);
-    if (!window.confirm(`¿Eliminar la rutina creada el ${fecha}? No se puede deshacer.`)) return;
+    const si = await confirmar({
+      titulo: "¿Eliminar la rutina?",
+      mensaje: `Rutina creada el ${fecha}. No se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      peligro: true,
+    });
+    if (!si) return;
     try {
       await rutinasApi.eliminar(rutina.id);
       await recargar();
