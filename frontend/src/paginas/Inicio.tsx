@@ -62,31 +62,27 @@ function ListaAlumnos({ filas, lista }: { filas: FilaPanel[]; lista: (typeof LIS
   );
 }
 
-// Cumpleaños de lunes a domingo, en una tarjeta del tamaño de las de arriba: el nombre lleva a la ficha y el de
-// hoy se destaca.
+// Cumpleaños de lunes a domingo, en una tarjeta del tamaño de las de arriba (solo si alguien cumple esa semana):
+// el nombre lleva a la ficha y el de hoy se destaca.
 function Cumpleanios({ alumnos }: { alumnos: Panel["cumpleanios"] }) {
   const hoy = hoyComoTexto();
   return (
     <div className="tarjeta indicador indicador-cumples">
       <IconoCumple />
       <span className="indicador-etiqueta">Cumplen años esta semana</span>
-      {alumnos.length === 0 ? (
-        <span className="texto-suave">Nadie esta semana.</span>
-      ) : (
-        <ul className="lista-cumples">
-          {alumnos.map((alumno) => (
-            <li key={alumno.id}>
-              <Link to={`/alumnos/${alumno.id}`}>
-                {alumno.apellido}, {alumno.nombre}
-              </Link>
-              <span className={alumno.fecha === hoy ? "cumple-hoy" : "texto-suave"}>
-                {alumno.fecha === hoy ? "¡Hoy!" : diaDeLaSemana(alumno.fecha)} {formatearFecha(alumno.fecha).slice(0, 5)} · cumple{" "}
-                {alumno.edad}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="lista-cumples">
+        {alumnos.map((alumno) => (
+          <li key={alumno.id}>
+            <Link to={`/alumnos/${alumno.id}`}>
+              {alumno.apellido}, {alumno.nombre}
+            </Link>
+            <span className={alumno.fecha === hoy ? "cumple-hoy" : "texto-suave"}>
+              {alumno.fecha === hoy ? "¡Hoy!" : diaDeLaSemana(alumno.fecha)} {formatearFecha(alumno.fecha).slice(0, 5)} · cumple{" "}
+              {alumno.edad}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -122,7 +118,8 @@ function Indicadores({ panel }: { panel: Panel }) {
             <strong className="indicador-valor">{panel[clave].length}</strong>
           </button>
         ))}
-        <Cumpleanios alumnos={panel.cumpleanios} />
+        {/* Solo las semanas en que alguien cumple años. */}
+        {panel.cumpleanios.length > 0 && <Cumpleanios alumnos={panel.cumpleanios} />}
       </div>
       {listaAbierta && <ListaAlumnos filas={panel[listaAbierta.clave]} lista={listaAbierta} />}
       {panel.destacadoMes && <AlumnoDestacado periodo={nombreDelMes(hoyComoTexto().slice(0, 7))} destacado={panel.destacadoMes} />}
