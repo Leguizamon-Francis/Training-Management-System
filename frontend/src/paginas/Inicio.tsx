@@ -62,27 +62,26 @@ function ListaAlumnos({ filas, lista }: { filas: FilaPanel[]; lista: (typeof LIS
   );
 }
 
-// Cumpleaños de lunes a domingo: el nombre lleva a la ficha; el de hoy se destaca.
+// Cumpleaños de lunes a domingo, en una tarjeta del tamaño de las de arriba: el nombre lleva a la ficha y el de
+// hoy se destaca.
 function Cumpleanios({ alumnos }: { alumnos: Panel["cumpleanios"] }) {
   const hoy = hoyComoTexto();
   return (
-    <div className="tarjeta seccion">
-      <h2 className="titulo-con-icono">
-        <IconoCumple />
-        Cumplen años esta semana
-      </h2>
+    <div className="tarjeta indicador indicador-cumples">
+      <IconoCumple />
+      <span className="indicador-etiqueta">Cumplen años esta semana</span>
       {alumnos.length === 0 ? (
-        <p className="texto-suave">Nadie cumple años esta semana.</p>
+        <span className="texto-suave">Nadie esta semana.</span>
       ) : (
-        <ul className="lista-panel">
+        <ul className="lista-cumples">
           {alumnos.map((alumno) => (
             <li key={alumno.id}>
               <Link to={`/alumnos/${alumno.id}`}>
                 {alumno.apellido}, {alumno.nombre}
               </Link>
               <span className={alumno.fecha === hoy ? "cumple-hoy" : "texto-suave"}>
-                {alumno.fecha === hoy ? "¡Hoy!" : diaDeLaSemana(alumno.fecha)}{" "}
-                {formatearFecha(alumno.fecha)} · cumple {alumno.edad} {alumno.edad === 1 ? "año" : "años"}
+                {alumno.fecha === hoy ? "¡Hoy!" : diaDeLaSemana(alumno.fecha)} {formatearFecha(alumno.fecha).slice(0, 5)} · cumple{" "}
+                {alumno.edad}
               </span>
             </li>
           ))}
@@ -104,7 +103,7 @@ function Indicadores({ panel }: { panel: Panel }) {
 
   return (
     <>
-      <div className="indicadores">
+      <div className="indicadores indicadores-inicio">
         <Link to="/alumnos" state={{ desde: "inicio" }} className="tarjeta indicador">
           <IconoAlumnos />
           <span className="indicador-etiqueta">Alumnos activos</span>
@@ -123,9 +122,9 @@ function Indicadores({ panel }: { panel: Panel }) {
             <strong className="indicador-valor">{panel[clave].length}</strong>
           </button>
         ))}
+        <Cumpleanios alumnos={panel.cumpleanios} />
       </div>
       {listaAbierta && <ListaAlumnos filas={panel[listaAbierta.clave]} lista={listaAbierta} />}
-      <Cumpleanios alumnos={panel.cumpleanios} />
       {panel.destacadoMes && <AlumnoDestacado periodo={nombreDelMes(hoyComoTexto().slice(0, 7))} destacado={panel.destacadoMes} />}
       {panel.destacadoAnio && <AlumnoDestacado periodo={`año ${hoyComoTexto().slice(0, 4)}`} destacado={panel.destacadoAnio} />}
     </>

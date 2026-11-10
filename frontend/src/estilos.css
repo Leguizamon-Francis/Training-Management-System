@@ -921,6 +921,47 @@ h2 {
   margin: 0.5rem 0 1rem;
 }
 
+/* Inicio: 4 tarjetas por fila (2 en el celular), todas del mismo ancho; la de cumpleaños, sola en la fila de
+   abajo y centrada. */
+.indicadores-inicio {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.indicadores-inicio > .indicador {
+  flex: 0 0 calc((100% - 3 * 0.75rem) / 4);
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .indicadores-inicio > .indicador {
+    flex-basis: calc((100% - 0.75rem) / 2);
+  }
+}
+
+.lista-cumples {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.lista-cumples li {
+  display: flex;
+  flex-direction: column;
+}
+
+.lista-cumples a {
+  text-decoration: none;
+}
+
+.lista-cumples span {
+  font-size: 0.9rem;
+}
+
 /* Asistencias: los cuadros no se estiran a todo el ancho; todos del mismo tamaño. */
 .indicadores-compactos {
   grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 18rem));
@@ -1136,19 +1177,6 @@ button.indicador:hover {
 
 .lista-panel a {
   text-decoration: none;
-}
-
-/* Título de sección con un ícono a la izquierda (ej.: "Cumplen años esta semana" en Inicio). */
-.titulo-con-icono {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.titulo-con-icono .icono {
-  width: 1.375rem;
-  height: 1.375rem;
-  color: var(--color-primario);
 }
 
 /* El cumpleaños de hoy, en el color de marca. */
