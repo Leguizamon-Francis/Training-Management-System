@@ -2068,6 +2068,13 @@ button.indicador:hover {
     width: 100%;
   }
 
+  /* El menú principal y la fila del usuario, cada uno en su propia línea a todo el ancho. Sin esto, Safari del
+     iPhone dejaba el menú al lado del logo: .menu tiene flex: 1 (base 0) y entraba en la primera fila. */
+  .menu-abierto > .menu,
+  .menu-abierto > .encabezado-usuario {
+    flex: 0 0 100%;
+  }
+
   .menu-abierto .menu a {
     padding: 0.75rem;
   }
