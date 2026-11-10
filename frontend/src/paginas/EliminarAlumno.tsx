@@ -119,7 +119,7 @@ export default function EliminarAlumno() {
               <ul className="lista-asistencia">
                 {lista.visibles.map((alumno) => (
                   <li key={alumno.id}>
-                    <button type="button" onClick={() => elegir(alumno)}>
+                    <button type="button" data-no-en-demo onClick={() => elegir(alumno)}>
                       <span>
                         {alumno.apellido}, {alumno.nombre}
                       </span>

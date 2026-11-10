@@ -92,7 +92,7 @@ function FormularioPerfil({ inicial, textoBoton, onGuardar, onCancelar }: PropsF
               Cancelar
             </button>
           )}
-          <button type="submit" className="boton" disabled={guardando}>
+          <button type="submit" className="boton" disabled={guardando} data-no-en-demo>
             {guardando ? "Guardando…" : textoBoton}
           </button>
         </div>
@@ -221,6 +221,7 @@ export default function Perfiles() {
                       <button
                         type="button"
                         className="boton-link"
+                        data-no-en-demo
                         onClick={() => {
                           setEliminandoId(null);
                           setEditandoId(perfil.id);
@@ -228,7 +229,7 @@ export default function Perfiles() {
                       >
                         Editar
                       </button>
-                      <button type="button" className="boton-link peligro" onClick={() => pedirEliminar(perfil)}>
+                      <button type="button" className="boton-link peligro" data-no-en-demo onClick={() => pedirEliminar(perfil)}>
                         Eliminar
                       </button>
                     </td>

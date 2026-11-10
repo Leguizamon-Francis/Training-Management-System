@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { authApi } from "../api/auth";
 import { ErrorApi } from "../api/cliente";
 import Campo from "../componentes/Campo";
-import { useSesion } from "../componentes/Sesion";
+import { useEsDemo, useSesion } from "../componentes/Sesion";
 import { IconoTema } from "../componentes/Iconos";
 import { aplicarTema, leerTema } from "../utils/tema";
 
@@ -159,10 +159,11 @@ interface PropsFila {
   onCambiar?: () => void;
   textoBoton?: ReactNode;
   ayudaBoton?: string; // para botones que muestran solo un ícono: lo lee el lector de pantalla y aparece al pasar el mouse
+  noEnDemo?: boolean; // en la demo el botón se ve pero muestra un aviso (ver Layout)
   children?: ReactNode;
 }
 
-function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", ayudaBoton, children }: PropsFila) {
+function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", ayudaBoton, noEnDemo, children }: PropsFila) {
   return (
     <div className="fila-configuracion">
       <div className="fila-configuracion-dato">
@@ -176,6 +177,7 @@ function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", ayudaBoton, 
             onClick={onCambiar}
             aria-label={ayudaBoton}
             title={ayudaBoton}
+            data-no-en-demo={noEnDemo || undefined}
           >
             {textoBoton}
           </button>
@@ -189,6 +191,7 @@ function Fila({ etiqueta, valor, onCambiar, textoBoton = "Cambiar", ayudaBoton, 
 // Datos de la cuenta: cada uno se cambia con su propio formulario, que se abre en la misma fila.
 export default function Configuracion() {
   const { usuario } = useSesion();
+  const esDemo = useEsDemo(); // en la demo el email no se muestra
   const [abierto, setAbierto] = useState<Dato | null>(null);
   const [mensaje, setMensaje] = useState("");
   const [tema, setTema] = useState(leerTema);
@@ -218,13 +221,13 @@ export default function Configuracion() {
       {mensaje && <p className="mensaje-ok">{mensaje}</p>}
 
       <div className="tarjeta seccion">
-        <Fila etiqueta="Nombre de usuario" valor={usuario?.nombre ?? ""} onCambiar={abierto === "nombre" ? undefined : () => abrir("nombre")}>
+        <Fila etiqueta="Nombre de usuario" valor={usuario?.nombre ?? ""} noEnDemo onCambiar={abierto === "nombre" ? undefined : () => abrir("nombre")}>
           {abierto === "nombre" && <FormularioNombre {...formulario} />}
         </Fila>
-        <Fila etiqueta="Email" valor={usuario?.email ?? ""} onCambiar={abierto === "email" ? undefined : () => abrir("email")}>
+        <Fila etiqueta="Email" valor={esDemo ? "••••••••" : (usuario?.email ?? "")} noEnDemo onCambiar={abierto === "email" ? undefined : () => abrir("email")}>
           {abierto === "email" && <FormularioEmail {...formulario} />}
         </Fila>
-        <Fila etiqueta="Contraseña" valor="••••••••" onCambiar={abierto === "password" ? undefined : () => abrir("password")}>
+        <Fila etiqueta="Contraseña" valor="••••••••" noEnDemo onCambiar={abierto === "password" ? undefined : () => abrir("password")}>
           {abierto === "password" && <FormularioPassword {...formulario} />}
         </Fila>
       </div>

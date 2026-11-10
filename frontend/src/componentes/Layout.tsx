@@ -32,7 +32,7 @@ export default function Layout() {
   useEffect(() => setMenuAbierto(false), [pathname]);
 
   // En la demo los botones se ven todos (para mostrar el sistema completo), pero los marcados con
-  // data-no-en-demo (WhatsApp, descargas, Configuración) no hacen nada: muestran un aviso.
+  // data-no-en-demo (WhatsApp, descargas, cambios de la cuenta) no hacen nada: muestran un aviso.
   const [avisoDemo, setAvisoDemo] = useState(false);
   useEffect(() => {
     if (!esDemo) return;
@@ -84,7 +84,7 @@ export default function Layout() {
           </nav>
           <div className="encabezado-usuario">
             <nav className="menu">
-              <NavLink to="/configuracion" data-no-en-demo>
+              <NavLink to="/configuracion">
                 Configuración
               </NavLink>
             </nav>
