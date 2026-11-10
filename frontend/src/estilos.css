@@ -706,13 +706,23 @@ h2 {
   font-size: 1.1rem;
 }
 
+/* Título a la izquierda y botones a la derecha. Si los botones no entran al lado del título, bajan, pero siguen a la
+   derecha (regla de toda la app: los botones nunca quedan sueltos a la izquierda). */
 .pagina-encabezado {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+.pagina-encabezado > :first-child:not(:only-child) {
+  margin-right: auto;
+}
+
+.pagina-encabezado .acciones {
+  justify-content: flex-end;
 }
 
 .volver {
@@ -2327,8 +2337,9 @@ button.indicador:hover {
     display: none;
   }
 
+  /* Celda de acciones (Editar, Eliminar…): a la derecha, aunque ocupen dos líneas. */
   .tabla td[data-etiqueta=""] {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 
   .tabla td a:not(.boton-link, .boton-whatsapp, .boton) {
