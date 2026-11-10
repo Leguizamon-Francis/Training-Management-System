@@ -53,6 +53,7 @@ export interface EstadoCuotaAlumno {
   apellido: string;
   telefono: string;
   plan: string | null;
+  activo: boolean; // los inactivos no acumulan deuda
   estado: EstadoCuota;
   vence: string | null;
   diasRestantes: number | null;
@@ -96,7 +97,7 @@ export const pagosApi = {
 
   anularDeuda: (alumnoId: number) => pedir<void>(`/alumnos/${alumnoId}/anular-deuda`, { metodo: "POST" }),
 
-  estadoCuotas: () => pedir<EstadoCuotaAlumno[]>("/pagos/estado-cuotas"),
+  estadoCuotas: () => pedir<EstadoCuotaAlumno[]>("/pagos/estado-cuotas?incluirInactivos=true"),
 
   ultimos: (cantidad: number) => pedir<PagoConAlumno[]>(`/pagos/ultimos?cantidad=${cantidad}`),
 

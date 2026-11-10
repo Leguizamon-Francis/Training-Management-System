@@ -3,6 +3,7 @@ import { leerId } from "../../lib/errores";
 import { validar } from "../../middlewares/validar";
 import {
   esquemaCorreccionPago,
+  esquemaEstadoCuotas,
   esquemaPago,
   esquemaRangoIngresos,
   esquemaUltimosPagos,
@@ -22,9 +23,11 @@ import {
 
 export const pagosRouter = Router();
 
-// GET /api/pagos/estado-cuotas  → alumnos activos con el estado de su cuota (lo urgente primero)
-pagosRouter.get("/pagos/estado-cuotas", async (_req, res) => {
-  res.json(await obtenerEstadoCuotas());
+// GET /api/pagos/estado-cuotas?incluirInactivos=true  → alumnos activos con el estado de su cuota (lo urgente
+// primero); con incluirInactivos, también los dados de baja, al final.
+pagosRouter.get("/pagos/estado-cuotas", async (req, res) => {
+  const { incluirInactivos } = esquemaEstadoCuotas.parse(req.query);
+  res.json(await obtenerEstadoCuotas(incluirInactivos));
 });
 
 // GET /api/pagos/ultimos?cantidad=20  → los pagos más recientes

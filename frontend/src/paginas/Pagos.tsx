@@ -6,7 +6,7 @@ import { IconoMensaje } from "../componentes/Iconos";
 import UltimosIngresos from "../componentes/UltimosIngresos";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
-import { formatearMoneda } from "../utils/formato";
+import { formatearFecha, formatearMoneda } from "../utils/formato";
 import {
   claseEstadoCuota,
   ETIQUETAS_ESTADO_CUOTA,
@@ -15,17 +15,19 @@ import {
   textoVencimiento,
 } from "../utils/pagos";
 
-type Filtro = "TODOS" | "VENCIDA" | "POR_VENCER" | "SIN_PAGOS" | "AL_DIA";
+type Filtro = "TODOS" | "VENCIDA" | "POR_VENCER" | "SIN_PAGOS" | "AL_DIA" | "INACTIVOS";
 
 const FILTROS: { valor: Filtro; etiqueta: string; cumple: (fila: EstadoCuotaAlumno) => boolean }[] = [
-  { valor: "TODOS", etiqueta: "Todos", cumple: () => true },
-  { valor: "VENCIDA", etiqueta: "Vencidas", cumple: (f) => f.estado === "VENCIDA" },
-  { valor: "POR_VENCER", etiqueta: "Por vencer", cumple: (f) => f.estado === "POR_VENCER" },
-  { valor: "SIN_PAGOS", etiqueta: "Sin pagos", cumple: (f) => f.estado === "SIN_PAGOS" },
-  { valor: "AL_DIA", etiqueta: "Al día", cumple: (f) => f.estado === "AL_DIA" },
+  { valor: "TODOS", etiqueta: "Todos", cumple: (f) => f.activo },
+  { valor: "VENCIDA", etiqueta: "Vencidas", cumple: (f) => f.activo && f.estado === "VENCIDA" },
+  { valor: "POR_VENCER", etiqueta: "Por vencer", cumple: (f) => f.activo && f.estado === "POR_VENCER" },
+  { valor: "SIN_PAGOS", etiqueta: "Sin pagos", cumple: (f) => f.activo && f.estado === "SIN_PAGOS" },
+  { valor: "AL_DIA", etiqueta: "Al día", cumple: (f) => f.activo && f.estado === "AL_DIA" },
+  { valor: "INACTIVOS", etiqueta: "Inactivos", cumple: (f) => !f.activo },
 ];
 
-// Estado de las cuotas de todos los alumnos activos. El backend ya los ordena: lo urgente primero.
+// Estado de las cuotas de los alumnos activos; los dados de baja, aparte, en "Inactivos" (no acumulan deuda).
+// El backend ya los ordena: lo urgente primero.
 export default function Pagos() {
   const { datos: filas, error } = useCarga(() => pagosApi.estadoCuotas(), []);
   const [filtro, setFiltro] = useState<Filtro>("TODOS");
@@ -97,11 +99,19 @@ export default function Pagos() {
                       </td>
                       <td className="celda-membresia">{fila.plan ?? <span className="texto-suave">Sin membresía</span>}</td>
                       <td className="celda-estado">
-                        <span className={claseEstadoCuota(fila.estado)}>{ETIQUETAS_ESTADO_CUOTA[fila.estado]}</span>
+                        {fila.activo ? (
+                          <span className={claseEstadoCuota(fila.estado)}>{ETIQUETAS_ESTADO_CUOTA[fila.estado]}</span>
+                        ) : (
+                          <span className="insignia">Inactivo</span>
+                        )}
                       </td>
                       {/* En el celular se ve una sola de estas dos: la deuda si hay, y si no el vencimiento. */}
                       <td className={debe ? "oculta-celular" : undefined}>
-                        {textoVencimiento(fila.estado, fila.vence, fila.diasRestantes) || <span className="texto-suave">—</span>}
+                        {fila.activo
+                          ? textoVencimiento(fila.estado, fila.vence, fila.diasRestantes) || <span className="texto-suave">—</span>
+                          : fila.vence
+                            ? `Última cuota: ${formatearFecha(fila.vence)}`
+                            : <span className="texto-suave">Sin pagos</span>}
                       </td>
                       <td className={`numero sin-salto${debe ? "" : " oculta-celular"}`}>
                         {Number(fila.deudaTotal) > 0 && formatearMoneda(fila.deudaTotal)}
@@ -114,7 +124,7 @@ export default function Pagos() {
                         {Number(fila.deudaTotal) === 0 && fila.cantidadAdeudadas === 0 && <span className="texto-suave">—</span>}
                       </td>
                       <td className="celda-acciones">
-                        {requiereAviso(fila.estado) && (
+                        {fila.activo && requiereAviso(fila.estado) && (
                           <a
                             data-no-en-demo
                             className="boton-whatsapp"

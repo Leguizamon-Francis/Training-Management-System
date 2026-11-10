@@ -51,6 +51,11 @@ export const esquemaCorreccionPago = z.object({
 
 export type CorreccionPago = z.infer<typeof esquemaCorreccionPago>;
 
+// GET /api/pagos/estado-cuotas?incluirInactivos=true
+export const esquemaEstadoCuotas = z.object({
+  incluirInactivos: z.stringbool().default(false),
+});
+
 // GET /api/pagos/ultimos?cantidad=20
 export const esquemaUltimosPagos = z.object({
   cantidad: z.coerce.number().int().min(1).max(100).default(20),

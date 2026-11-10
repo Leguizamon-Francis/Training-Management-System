@@ -273,14 +273,15 @@ export async function corregirPago(id: number, datos: CorreccionPago) {
   });
 }
 
-// ---------- Estado de cuotas de todos los alumnos activos ----------
+// ---------- Estado de cuotas de todos los alumnos activos (y, si se piden, los inactivos) ----------
 
 // Lo que requiere atención primero.
 const PRIORIDAD: Record<EstadoCuota, number> = { VENCIDA: 0, POR_VENCER: 1, SIN_PAGOS: 2, AL_DIA: 3 };
 
-export async function obtenerEstadoCuotas() {
+// Los inactivos no acumulan deuda (ver inicioProximaCuota); van al final, por apellido.
+export async function obtenerEstadoCuotas(incluirInactivos = false) {
   const alumnos = await prisma.alumno.findMany({
-    where: { activo: true },
+    where: incluirInactivos ? {} : { activo: true },
     select: {
       id: true,
       nombre: true,
@@ -300,6 +301,7 @@ export async function obtenerEstadoCuotas() {
       nombre: alumno.nombre,
       apellido: alumno.apellido,
       telefono: alumno.telefono,
+      activo: alumno.activo,
       plan: alumno.plan?.nombre ?? null,
       estado: situacion.estado,
       vence: situacion.vence,
@@ -312,6 +314,8 @@ export async function obtenerEstadoCuotas() {
   // Dentro del mismo estado: los que deben más cuotas primero, después por días y apellido.
   return filas.sort(
     (a, b) =>
+      Number(b.activo) - Number(a.activo) ||
+      (a.activo ? 0 : a.apellido.localeCompare(b.apellido)) ||
       PRIORIDAD[a.estado] - PRIORIDAD[b.estado] ||
       b.cantidadAdeudadas - a.cantidadAdeudadas ||
       Number(b.deudaTotal.gt(0)) - Number(a.deudaTotal.gt(0)) ||
