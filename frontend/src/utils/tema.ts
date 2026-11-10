@@ -2,13 +2,14 @@ export type Tema = "claro" | "oscuro";
 
 const CLAVE = "tema";
 
-// La elección se guarda en este navegador. Si no se puede leer (ej.: navegación privada), queda el tema claro.
+// Por defecto, modo oscuro; el claro se elige en Configuración. La elección se guarda en este navegador
+// (si no se puede leer, ej.: navegación privada, queda el oscuro).
 // public/tema-inicial.js aplica el tema guardado antes de dibujar la página, para que no parpadee en claro.
 export function leerTema(): Tema {
   try {
-    return localStorage.getItem(CLAVE) === "oscuro" ? "oscuro" : "claro";
+    return localStorage.getItem(CLAVE) === "claro" ? "claro" : "oscuro";
   } catch {
-    return "claro";
+    return "oscuro";
   }
 }
 
