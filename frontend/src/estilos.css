@@ -2128,8 +2128,8 @@ button.indicador:hover {
     display: none;
   }
 
-  /* Panel que entra desde la derecha. Las secciones van abajo y alineadas a la derecha, donde llega el pulgar;
-     "Cerrar" queda arriba. Cerrado, no se ve ni se puede llegar con el teclado (visibility). */
+  /* Panel que entra desde la derecha: "Cerrar" arriba y debajo las secciones, alineadas a la derecha. Cerrado,
+     no se ve ni se puede llegar con el teclado (visibility). */
   .panel-menu {
     position: fixed;
     top: 0;
@@ -2159,7 +2159,6 @@ button.indicador:hover {
     display: inline-block;
     align-self: flex-end;
     min-height: 2.5rem;
-    margin-bottom: auto; /* empuja el resto hacia abajo */
   }
 
   .panel-menu .menu {
