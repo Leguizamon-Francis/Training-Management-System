@@ -25,3 +25,10 @@ test("esquemaImporte: rechaza vacíos, negativos, cero y texto", () => {
     assert.equal(esquemaImporte.safeParse(valor).success, false, `debería rechazar ${JSON.stringify(valor)}`);
   }
 });
+
+test("esquemaImporte: rechaza la coma usada para los miles en lugar de redondear", () => {
+  for (const valor of ["25,000", "25,000.50", "100,555", "1.5,555"]) {
+    assert.equal(esquemaImporte.safeParse(valor).success, false, `debería rechazar ${JSON.stringify(valor)}`);
+  }
+  assert.equal(importe("0,29"), "0.29");
+});

@@ -1,11 +1,9 @@
 import { TipoAnotacion } from "@prisma/client";
 import { z } from "zod";
-import { hoyComoTexto } from "../../lib/fechas";
+import { esquemaFechaHastaHoy } from "../../lib/fechas";
 
 export const esquemaAnotacion = z.object({
-  fecha: z.iso
-    .date("Fecha inválida")
-    .refine((fecha) => fecha <= hoyComoTexto(), "La fecha no puede ser futura"),
+  fecha: esquemaFechaHastaHoy,
   tipo: z.enum(TipoAnotacion, { error: "Elegí un tipo de anotación" }),
   detalle: z
     .string({ error: "El detalle es obligatorio" })

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { hoyComoTexto } from "../../lib/fechas";
+import { esquemaFechaHastaHoy, hoyComoTexto } from "../../lib/fechas";
 
-const fecha = z.iso.date("Fecha inválida").refine((valor) => valor <= hoyComoTexto(), "La fecha no puede ser futura");
+const fecha = esquemaFechaHastaHoy;
 
 // PUT y DELETE /api/alumnos/:alumnoId/asistencias/:fecha
 export const esquemaFechaAsistencia = fecha;

@@ -1,11 +1,9 @@
 import { MedioPago } from "@prisma/client";
 import { z } from "zod";
-import { hoyComoTexto } from "../../lib/fechas";
+import { esquemaFechaHastaHoy } from "../../lib/fechas";
 import { esquemaImporte } from "../../lib/montos";
 
-const fechaPago = z.iso
-  .date("Fecha inválida")
-  .refine((fecha) => fecha <= hoyComoTexto(), "La fecha no puede ser futura");
+const fechaPago = esquemaFechaHastaHoy;
 
 const medio = z.enum(MedioPago, { error: "Elegí el medio de pago" });
 

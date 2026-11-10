@@ -1,15 +1,17 @@
 import { Lado, OrigenResultado } from "@prisma/client";
 import { z } from "zod";
-import { hoyComoTexto } from "../../lib/fechas";
+import { esquemaFechaHastaHoy } from "../../lib/fechas";
+import { textoANumero, tieneHastaDosDecimales } from "../../lib/montos";
 
-// Acepta número o texto, y en el texto también la coma decimal ("32,5").
+// Acepta número o texto escrito como en Argentina: "32,5", "1.800" (mil ochocientos), "1.800,5".
 const valorNumerico = z
-  .union([z.number(), z.string().trim().transform((texto) => (texto === "" ? Number.NaN : Number(texto.replace(",", "."))))])
+  .union([z.number(), z.string().transform(textoANumero)])
   .pipe(
     z
-      .number({ error: "Ingresá un número" })
-      .min(-99_999_999.99, "Valor fuera de rango")
-      .max(99_999_999.99, "Valor fuera de rango"),
+      .number({ error: "Ingresá un número (ej.: 32,5 o 1.800)" })
+      .min(0, "El valor no puede ser negativo")
+      .max(99_999_999.99, "Valor fuera de rango")
+      .refine(tieneHastaDosDecimales, "Hasta 2 decimales (ej.: 32,5)"),
   );
 
 const textoOpcional = (maximo: number) =>
@@ -35,9 +37,7 @@ const esquemaResultado = z.object({
 
 export const esquemaEvaluacion = z
   .object({
-    fecha: z.iso
-      .date("Fecha inválida")
-      .refine((fecha) => fecha <= hoyComoTexto(), "La fecha no puede ser futura"),
+    fecha: esquemaFechaHastaHoy,
     observaciones: textoOpcional(2000),
     resultados: z.array(esquemaResultado).min(1, "Cargá al menos un resultado"),
   })

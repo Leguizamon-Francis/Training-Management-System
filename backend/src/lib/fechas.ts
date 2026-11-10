@@ -1,5 +1,6 @@
 // Las fechas de calendario viajan como texto "aaaa-mm-dd" y se guardan como DATE (sin hora).
 // Se usan siempre a las 00:00 UTC para que la zona horaria no corra el día.
+import { z } from "zod";
 
 const ZONA_HORARIA = "America/Argentina/Buenos_Aires";
 const MS_POR_DIA = 24 * 60 * 60 * 1000;
@@ -49,3 +50,10 @@ export function calcularEdad(nacimiento: string, hoy = hoyComoTexto()) {
 export function diasEntre(desde: string, hasta: string) {
   return Math.round((fechaDesdeTexto(hasta).getTime() - fechaDesdeTexto(desde).getTime()) / MS_POR_DIA);
 }
+
+// Fecha de algo que ya pasó (pagos, evaluaciones, anotaciones, asistencias): no puede ser futura, y una anterior
+// al 2000 es casi seguro un error de tipeo en el año.
+export const esquemaFechaHastaHoy = z.iso
+  .date("Fecha inválida")
+  .refine((fecha) => fecha >= "2000-01-01", "Revisá el año de la fecha")
+  .refine((fecha) => fecha <= hoyComoTexto(), "La fecha no puede ser futura");
