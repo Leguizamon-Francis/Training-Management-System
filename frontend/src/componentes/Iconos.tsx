@@ -37,6 +37,16 @@ export function IconoEvaluacion() {
   );
 }
 
+export function IconoCumple() {
+  return (
+    <Icono>
+      <path d="M4 20h16M5 20v-7.5a1.5 1.5 0 0 1 1.5-1.5h11a1.5 1.5 0 0 1 1.5 1.5V20" />
+      <path d="M5 15.5c1.2 0 1.8-1 3-1s1.8 1 3 1 1.8-1 3-1 1.8 1 3 1 1.4-.6 2-.9" />
+      <path d="M12 11V8M12 5.5c-.8-.8-.8-1.7 0-2.5.8.8.8 1.7 0 2.5Z" />
+    </Icono>
+  );
+}
+
 export function IconoRutina() {
   return (
     <Icono>

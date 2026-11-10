@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { panelApi, type FilaPanel, type Panel } from "../api/panel";
 import AlumnoDestacado from "../componentes/AlumnoDestacado";
 import Cargando from "../componentes/Cargando";
-import { IconoAlumnos, IconoCuota, IconoEvaluacion, IconoRutina } from "../componentes/Iconos";
+import { IconoAlumnos, IconoCuota, IconoCumple, IconoEvaluacion, IconoRutina } from "../componentes/Iconos";
 import { useSesion } from "../componentes/Sesion";
 import { useCarga } from "../hooks/useCarga";
 import { formatearFecha, hoyComoTexto, nombreDelMes } from "../utils/formato";
@@ -62,6 +62,42 @@ function ListaAlumnos({ filas, lista }: { filas: FilaPanel[]; lista: (typeof LIS
   );
 }
 
+// Cumpleaños de lunes a domingo: el nombre lleva a la ficha; el de hoy se destaca.
+function Cumpleanios({ alumnos }: { alumnos: Panel["cumpleanios"] }) {
+  const hoy = hoyComoTexto();
+  return (
+    <div className="tarjeta seccion">
+      <h2 className="titulo-con-icono">
+        <IconoCumple />
+        Cumplen años esta semana
+      </h2>
+      {alumnos.length === 0 ? (
+        <p className="texto-suave">Nadie cumple años esta semana.</p>
+      ) : (
+        <ul className="lista-panel">
+          {alumnos.map((alumno) => (
+            <li key={alumno.id}>
+              <Link to={`/alumnos/${alumno.id}`}>
+                {alumno.apellido}, {alumno.nombre}
+              </Link>
+              <span className={alumno.fecha === hoy ? "cumple-hoy" : "texto-suave"}>
+                {alumno.fecha === hoy ? "¡Hoy!" : diaDeLaSemana(alumno.fecha)}{" "}
+                {formatearFecha(alumno.fecha)} · cumple {alumno.edad} {alumno.edad === 1 ? "año" : "años"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// "Jueves" (con mayúscula: el navegador lo da en minúscula).
+function diaDeLaSemana(fecha: string) {
+  const dia = new Date(`${fecha}T12:00:00`).toLocaleDateString("es-AR", { weekday: "long" });
+  return dia.charAt(0).toUpperCase() + dia.slice(1);
+}
+
 function Indicadores({ panel }: { panel: Panel }) {
   const [abierta, setAbierta] = useState<ListaPanel | null>(null);
   const listaAbierta = LISTAS.find((lista) => lista.clave === abierta);
@@ -89,6 +125,7 @@ function Indicadores({ panel }: { panel: Panel }) {
         ))}
       </div>
       {listaAbierta && <ListaAlumnos filas={panel[listaAbierta.clave]} lista={listaAbierta} />}
+      <Cumpleanios alumnos={panel.cumpleanios} />
       {panel.destacadoMes && <AlumnoDestacado periodo={nombreDelMes(hoyComoTexto().slice(0, 7))} destacado={panel.destacadoMes} />}
       {panel.destacadoAnio && <AlumnoDestacado periodo={`año ${hoyComoTexto().slice(0, 4)}`} destacado={panel.destacadoAnio} />}
     </>

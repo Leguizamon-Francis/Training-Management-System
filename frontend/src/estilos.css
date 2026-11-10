@@ -1080,6 +1080,25 @@ button.indicador:hover {
   text-decoration: none;
 }
 
+/* Título de sección con un ícono a la izquierda (ej.: "Cumplen años esta semana" en Inicio). */
+.titulo-con-icono {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.titulo-con-icono .icono {
+  width: 1.375rem;
+  height: 1.375rem;
+  color: var(--color-primario);
+}
+
+/* El cumpleaños de hoy, en el color de marca. */
+.cumple-hoy {
+  color: var(--color-primario);
+  font-weight: 700;
+}
+
 /* ---------- Rutinas ---------- */
 
 .opciones-bloque {

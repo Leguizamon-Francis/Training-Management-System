@@ -1,4 +1,4 @@
-import { diasEntre, hoyComoTexto, textoDesdeFecha } from "../../lib/fechas";
+import { diasEntre, fechaDesdeTexto, hoyComoTexto, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { destacadoDelAnio, destacadoDelMes, destacadosDeHoy } from "../asistencias/asistencias.service";
 import { calcularProximaEvaluacion, resumenAlumnos } from "../evaluaciones/evaluaciones.service";
@@ -41,16 +41,66 @@ async function rutinasPorCambiar(hoy: string) {
     .filter((alumno) => diasEntre(hoy, alumno.fecha) <= DIAS_AVISO_RUTINA);
 }
 
+// ---------- Cumpleaños de la semana ----------
+
+function sumarDias(texto: string, dias: number) {
+  const fecha = fechaDesdeTexto(texto);
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return textoDesdeFecha(fecha);
+}
+
+// Semana calendario (de lunes a domingo) que contiene a "hoy".
+export function semanaDe(hoy: string) {
+  const lunes = sumarDias(hoy, -((fechaDesdeTexto(hoy).getUTCDay() + 6) % 7));
+  return { lunes, domingo: sumarDias(lunes, 6) };
+}
+
+function esBisiesto(anio: number) {
+  return (anio % 4 === 0 && anio % 100 !== 0) || anio % 400 === 0;
+}
+
+// Si el cumpleaños cae en la semana, la fecha en que se festeja y los años que cumple; si no, null.
+// La semana puede abarcar dos años (fin de diciembre), por eso se prueban los dos. Quien nació un 29 de febrero
+// festeja el 28 los años que no son bisiestos.
+export function cumpleEnSemana(nacimiento: string, semana: { lunes: string; domingo: string }) {
+  const [anioNacimiento, mes, dia] = nacimiento.split("-");
+  for (const anio of new Set([Number(semana.lunes.slice(0, 4)), Number(semana.domingo.slice(0, 4))])) {
+    const diaDelAnio = mes === "02" && dia === "29" && !esBisiesto(anio) ? "28" : dia;
+    const fecha = `${anio}-${mes}-${diaDelAnio}`;
+    if (fecha >= semana.lunes && fecha <= semana.domingo && anio > Number(anioNacimiento)) {
+      return { fecha, edad: anio - Number(anioNacimiento) };
+    }
+  }
+  return null;
+}
+
+// Alumnos activos que cumplen años esta semana, en orden de fecha.
+async function cumpleaniosDeLaSemana(hoy: string) {
+  const semana = semanaDe(hoy);
+  const alumnos = await prisma.alumno.findMany({
+    where: { activo: true },
+    select: { id: true, nombre: true, apellido: true, fechaNacimiento: true },
+  });
+  return alumnos
+    .map((alumno) => {
+      const cumple = cumpleEnSemana(textoDesdeFecha(alumno.fechaNacimiento), semana);
+      return cumple && { ...fila(alumno, cumple.fecha), edad: cumple.edad };
+    })
+    .filter((alumno) => alumno !== null)
+    .sort(porFecha);
+}
+
 // Lo que muestra la pantalla de Inicio. Reutiliza los cálculos de cada módulo:
 // estado de cuotas (pagos) y próxima evaluación (evaluaciones).
 // No se envían montos (ingresos, deudas): son confidenciales y se consultan en Pagos.
 export async function obtenerPanel() {
   const hoy = hoyComoTexto();
   const destacados = destacadosDeHoy(hoy);
-  const [cuotas, evaluaciones, rutinas, destacadoMes, destacadoAnio] = await Promise.all([
+  const [cuotas, evaluaciones, rutinas, cumpleanios, destacadoMes, destacadoAnio] = await Promise.all([
     obtenerEstadoCuotas(), // alumnos activos con el estado de su cuota
     resumenAlumnos(),
     rutinasPorCambiar(hoy),
+    cumpleaniosDeLaSemana(hoy),
     destacados.mes ? destacadoDelMes(hoy.slice(0, 7)) : null,
     destacados.anio ? destacadoDelAnio(hoy.slice(0, 4)) : null,
   ]);
@@ -69,6 +119,7 @@ export async function obtenerPanel() {
       .map((alumno) => fila(alumno, alumno.proximaEvaluacion.fecha))
       .sort(porFecha),
     rutinasPorCambiar: rutinas.sort(porFecha),
+    cumpleanios, // de lunes a domingo de esta semana
     // Solo los días en que se anuncian; si nadie vino en el período, tampoco.
     destacadoMes,
     destacadoAnio,
