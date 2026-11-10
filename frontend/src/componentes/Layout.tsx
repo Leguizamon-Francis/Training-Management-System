@@ -63,7 +63,7 @@ export default function Layout() {
       {/* En la demo, siempre a la vista: que nadie crea que está en un sistema real. */}
       {esDemo && (
         <div className="franja-demo" role="status">
-          <strong>Modo demo</strong> · Gimnasio de ejemplo, solo lectura: los cambios no se guardan.
+          <strong>Modo demo</strong> · Datos ficticios, solo lectura: los cambios no se guardan.
         </div>
       )}
       <header className="encabezado">
