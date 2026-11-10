@@ -1,4 +1,4 @@
-export type Tema = "claro" | "oscuro";
+type Tema = "claro" | "oscuro";
 
 const CLAVE = "tema";
 

@@ -8,8 +8,8 @@ const CARPETA_BACKEND = path.resolve(__dirname, "../..");
 const PRISMA_CLI = path.join(CARPETA_BACKEND, "node_modules/prisma/build/index.js");
 const TSX_CLI = path.join(CARPETA_BACKEND, "node_modules/tsx/dist/cli.mjs");
 
-export const ESQUEMA_CONTROL = path.join(CARPETA_BACKEND, "prisma/control/schema.prisma");
-export const ESQUEMA_CENTRO = path.join(CARPETA_BACKEND, "prisma/schema.prisma");
+const ESQUEMA_CONTROL = path.join(CARPETA_BACKEND, "prisma/control/schema.prisma");
+const ESQUEMA_CENTRO = path.join(CARPETA_BACKEND, "prisma/schema.prisma");
 
 // Conexión para crear o borrar bases (CREATE/DROP DATABASE no se pueden ejecutar dentro de la base afectada).
 // Primero prueba con "postgres", la base de mantenimiento que trae todo servidor; si el hosting no deja entrar
@@ -55,12 +55,10 @@ function ejecutar(programa: string, argumentos: string[], variables: Record<stri
   });
 }
 
-// Aplica las migraciones pendientes de la base de control.
 export function migrarControl() {
   ejecutar(PRISMA_CLI, ["migrate", "deploy", "--schema", ESQUEMA_CONTROL]);
 }
 
-// Aplica las migraciones pendientes en la base de un gimnasio.
 export function migrarCentro(baseDatos: string) {
   ejecutar(PRISMA_CLI, ["migrate", "deploy", "--schema", ESQUEMA_CENTRO], { CENTRO_DATABASE_URL: urlDeBase(baseDatos) });
 }

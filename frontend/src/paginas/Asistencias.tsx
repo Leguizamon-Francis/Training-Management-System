@@ -16,7 +16,6 @@ export default function Asistencias() {
   const [buscar, setBuscar] = useState("");
   const [abierto, setAbierto] = useState<"hoy" | "masAsistencias" | null>(null); // un cuadro abierto a la vez
   const { datos: resumen, error } = useCarga(() => asistenciasApi.resumen(mes), [mes]);
-  // "Asistencias de hoy": siempre el día de hoy.
   const { datos: vinieronHoy } = useCarga(
     () => asistenciasApi.dia(hoyComoTexto()).then((alumnos) => alumnos.filter((alumno) => alumno.presente)),
     [],

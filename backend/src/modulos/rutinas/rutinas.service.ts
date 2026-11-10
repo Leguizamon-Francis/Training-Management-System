@@ -54,7 +54,6 @@ async function leerPlantilla(tipo: TipoBloque) {
   return plantilla.pdf;
 }
 
-// Lee lo escrito en cada campo del PDF completado.
 async function extraerValores(bytes: Uint8Array) {
   let pdf: PDFDocument;
   try {

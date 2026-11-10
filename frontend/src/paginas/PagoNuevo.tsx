@@ -30,7 +30,6 @@ export default function PagoNuevo() {
     return () => clearTimeout(espera);
   }, [buscar, alumno]);
 
-  // Al elegir el alumno se trae su plan y el estado de su cuota.
   useEffect(() => {
     if (!alumno) return;
     setDatos(null);

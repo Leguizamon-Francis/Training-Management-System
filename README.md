@@ -5,101 +5,108 @@
 
 # DV Training
 
-A training management web app I built for a physical education trainer who kept his clients' information scattered across Google Drive spreadsheets and WhatsApp chats. Being prepared for its first production release.
+A training management web app for personal trainers and small gyms. I built it for a physical education trainer who kept his clients' information scattered across Google Drive spreadsheets and WhatsApp chats; it is now in production at **[dvtraining.com.ar](https://dvtraining.com.ar)**, where a read-only demo with fictional data is one click away ("Ver demo gratuita").
 
-Solo project: requirements gathering with the client, database design, backend and frontend.
+Solo project: requirements gathering with the client, database design, backend, frontend, deployment and backups.
 
-It handles client profiles, session notes, attendance, physical assessments with progress charts, workout plans on PDF templates, memberships, monthly fees, debts and income reports. It works on desktop and mobile, with light and dark themes.
-
-**Tech stack:** TypeScript, Node.js, Express, PostgreSQL, Prisma, Zod, React, Vite and `node:test`.
+**Tech stack:** TypeScript, Node.js, Express, PostgreSQL, Prisma, Zod, React, Vite and `node:test`. No UI component library: components, icons, charts and the dark theme are written from scratch.
 
 ## Features
 
-- **Clients:** full profile (personal details, sports profile, health, recovery and medical history), accent-insensitive search, deactivation and reactivation, a field-by-field change history, and permanent deletion of a client and all their data, confirmed with the password.
+- **Clients:** full profile (personal details, sports profile, health history), accent-insensitive search, deactivation and reactivation, a field-by-field change history, and permanent deletion confirmed with the password.
 - **Training notes:** technique corrections, exercise changes, discomfort, etc., filterable by type.
-- **Assessments:** configurable catalog of tests (CMJ, IMTP, mobility), results recorded for left and right sides, progress charts and a reminder for the next reassessment based on each client's profile.
-- **Attendance:** one-click check-in, monthly reports, clients who stopped coming and the most frequent client of the month and year.
-- **Workout plans:** filled in directly on the page over fillable PDF templates, starting from a blank model or an earlier plan, then downloaded or sent over WhatsApp. Plans can also be made for someone without a client profile.
-- **Payments:** memberships with a monthly price, fees that chain month to month (several months can be paid at once, with the total split to the cent), automatic debt calculation, an option to cancel a debt, audited corrections to past payments, WhatsApp reminders with the message already written and income reports by period (cash or bank transfer, by month).
-- **Dashboard:** active clients, upcoming fees, upcoming assessments and workout plans due for renewal, each opening the list of clients behind the number, without exposing any amounts.
-- **Settings:** name, login email (confirmed with the password), password and dark mode. A forgotten password is reset through an emailed single-use link that expires in 30 minutes.
+- **Assessments:** configurable catalog of tests (CMJ, IMTP, mobility), results per side (left/right), progress charts and a reminder for the next reassessment based on each client's profile.
+- **Attendance:** one-tap check-in, monthly report, clients who stopped coming and the most frequent client of the month and year.
+- **Workout plans:** filled in directly on the page over fillable PDF templates, starting from a blank model or a previous plan, then downloaded or sent over WhatsApp.
+- **Payments:** memberships with a monthly price, fees that chain month to month (several months can be paid at once, with the total split to the cent), automatic debt calculation, debt cancellation, audited corrections and income reports by period.
+- **Dashboard:** active clients, upcoming fees, upcoming assessments, workout plans due for renewal and the week's birthdays, each opening the list of clients behind the number (never amounts).
+- **Mobile first:** tables turn into cards, a side menu within thumb reach and confirmation dialogs designed for touch.
 
-## Technical decisions
+## Architecture: one database per gym
 
-- **Amounts stored as `Decimal(12,2)` instead of float**, to avoid rounding errors. Amounts can also be entered in Argentine format ("25.000,50").
-- **Dates without time**, stored as `DATE` and handled as `yyyy-mm-dd` strings, so time zones never shift a date by one day. Adding months respects month ends (Jan 31 + 1 month = Feb 28).
-- **Password reset without leaking accounts:** the same answer whether the email exists or not, only a hash of the link token is stored, the link expires in 30 minutes and works once, its address comes from configuration (not from the request, so it cannot be spoofed) and using it closes every session.
-- **Custom sessions instead of JWT:** a random token in an `httpOnly` cookie, with only its hash stored in the database. Logging out revokes the session immediately. Passwords are hashed with bcrypt, and accounts are locked for 15 minutes after 5 failed attempts.
-- **Change history in a single transaction:** editing a profile saves the data and one history row per modified field. If anything fails, nothing is saved.
-- **Workout plans without storing the PDF:** only the field values are saved (as JSON), and the PDF is rebuilt on the template when downloaded.
-- **Responsive tables without touching each table:** on small screens, rows become cards, and a single hook copies each column title to its cells.
-- **Production hardening:** a strict Content Security Policy and security headers, `Secure` cookies and AES-256-GCM encrypted backups.
-- **Automated tests** for the logic with the most edge cases (dates, amounts, debt calculation, attendance and backup encryption), using `node:test` with a mocked clock.
+The app serves several gyms from a single deployment, and each gym's data must stay sealed off from the others, **including in the backups**.
+
+- A **control database** holds gyms, users and sessions. Each gym has **its own PostgreSQL database** on the same server, created and migrated by a script (`npm run centros`).
+- After authentication, the rest of the request runs inside the user's gym through `AsyncLocalStorage`. The `prisma` object the services import is a proxy that always resolves to the current gym's client, so the business code is unaware of tenancy. A query outside a gym context throws instead of falling back to some database.
+- **Backups are made per database** and each one is encrypted (AES-256-GCM) with its own key, derived with HKDF from a master key: one gym's backup cannot be opened with another's key. They are uploaded daily to a private Backblaze B2 bucket.
+- **Isolation tests** (`src/aislamiento.test.ts`) create throwaway databases, start the app and fire hundreds of concurrent requests from two gyms, checking that no data crosses over.
+- **The demo is one more gym**, flagged as read-only: a middleware rejects every non-GET request from the demo user, downloads are blocked, and demo sessions are short and rate-limited by IP.
+
+I chose this over a shared schema with a `gymId` column (a single missed filter leaks data, and backups would mix gyms) and over one deployment per client (N services to maintain and deploy).
+
+## Other technical decisions
+
+- **Amounts stored as `Decimal(12,2)`**, never floats, and accepted in Argentine format ("25.000,50"). Ambiguous input such as "25,000" is rejected instead of being silently read as 25.
+- **Dates without time**, stored as `DATE` and handled as `yyyy-mm-dd` strings, so time zones never shift a day. Adding months respects month ends (Jan 31 + 1 month = Feb 28).
+- **Custom sessions instead of JWT:** a random token in an `httpOnly` cookie with only its hash stored, so logging out revokes it immediately. Passwords are hashed with bcrypt, and login is locked for 15 minutes after 5 failed attempts.
+- **Password reset without leaking accounts:** the same answer whether the email exists or not, a single-use link that expires in 30 minutes, an address taken from configuration (not from the request, so it cannot be spoofed) and every session closed after the reset.
+- **Change history in one transaction:** editing a profile saves the data and one history row per modified field, or nothing at all.
+- **Workout plans without storing PDFs:** only the field values are saved (as JSON); the PDF is rebuilt on the gym's template when it is opened.
+- **Validation on both ends:** every endpoint validates its input with Zod and returns field-level errors that the forms show next to each field.
+- **Production hardening:** strict Content Security Policy, security headers, `Secure` cookies and encrypted backups.
 
 ## Project structure
 
 ```
 backend/
-  prisma/              schema.prisma, migrations and seed data
+  prisma/              gym schema and migrations, seed data
+  prisma/control/      control database schema and migrations
   src/
     modulos/<modulo>/  <modulo>.routes.ts, .service.ts, .schemas.ts
-    lib/               dates, amounts, errors, Prisma client
-    middlewares/       session, Zod validation, error handling
-    scripts/           create admin user, backups
+    lib/               tenancy, dates, amounts, encryption, errors
+    middlewares/       session, read-only demo, Zod validation, errors
+    scripts/           migrations, gyms, admin user, backups, sample data
 frontend/
   src/
     api/               one file per API resource
     paginas/           one page per route
     componentes/       sections and reusable components
-    hooks/             useCarga (data fetching), useListaCorta
-    utils/             date and amount formatting, labels
-docs/                  data model and design decisions
+    hooks/             data fetching, short lists, responsive tables
+    utils/             formatting and labels
+docs/                  deployment, backups, user manual (in Spanish)
 ```
-
-The data model is explained in [docs/propuesta-etapa1.md](docs/propuesta-etapa1.md) (in Spanish).
 
 ## Running it locally
 
-Requirements: **Node.js 22 or later** and **PostgreSQL 17**.
+Requirements: **Node.js 22 or later** and **PostgreSQL 17 or later**.
 
 ```bash
 # Backend
 cd backend
-cp .env.example .env       # set DATABASE_URL with your PostgreSQL user and password
+cp .env.example .env               # set the PostgreSQL user and password
 npm install
-npx prisma migrate dev     # creates the database and runs the migrations
-npm run db:seed            # initial catalog of tests and memberships
-npm run crear-admin        # login user (asks for email, name and password)
-npm run dev                # API at http://localhost:3000
+npm run db:deploy                  # creates the control database and runs all migrations
+npm run centros -- crear gimnasio "My gym"   # creates a gym with its own database
+npm run plantillas                 # generates the workout plan PDF templates
+npm run centros -- plantillas gimnasio       # loads them into the gym
+npm run crear-admin                # login user (asks for gym, email, name and password)
+npm run dev                        # API at http://localhost:3000
 
 # Frontend (in another terminal)
 cd frontend
 npm install
-npm run dev                # http://localhost:5173
+npm run dev                        # http://localhost:5173
 ```
 
 In development, Vite proxies `/api` to the backend, so the frontend and the API share the same origin and the session cookie works without any CORS setup.
 
-The workout plan PDF templates are not included in the repository. Generate them with `npm run plantillas` from `backend` (they are saved in `backend/plantillas`). `PLANTILLA_RUTINA` only points to an older template, used to open plans saved with it.
-
-To try the app without real data, see [docs/base-de-prueba.md](docs/base-de-prueba.md) (fictional clients, in Spanish).
+To try it with fictional clients, or to run the tests, see [docs/base-de-prueba.md](docs/base-de-prueba.md).
 
 ## Backend commands
 
 | Command | Purpose |
 |---|---|
 | `npm run dev` | API in development mode (restarts on save) |
-| `npm test` | Automated tests (`*.test.ts`) |
-| `npm run db:studio` | Browse the database in the browser (Prisma Studio) |
-| `npm run crear-admin` | Create the admin user or change its password |
-| `npm run plantillas` | Generate the fillable workout plan PDFs |
-| `npm run datos-ejemplo` | Load fictional data into the test database |
-| `npm run respaldo` | Backup with `pg_dump` (keeps the last 30, encrypted with `RESPALDO_CLAVE`) |
-| `npm run respaldo:probar` | Restores the latest backup into a temporary database, checks it and deletes it |
+| `npm test` | Automated tests; the isolation tests need `.env.prueba` |
+| `npm run db:deploy` | Create the control database if missing and migrate it and every gym |
+| `npm run centros -- <command>` | Manage gyms: `listar`, `crear`, `copiar`, `desactivar`, `activar`, `exportar`, `eliminar` |
+| `npm run crear-admin` | Create a gym's user or reset its password |
+| `npm run respaldo` | Encrypted backup of every database (`pg_dump`, keeps the last 30 per database) |
+| `npm run respaldo:probar` | Restore the latest backup into a temporary database, check it and delete it |
 | `npm run build` / `npm start` | Build and run the production version |
 
-The daily automatic backup and how to restore it are explained in [docs/respaldos.md](docs/respaldos.md). Deployment is covered in [docs/publicacion.md](docs/publicacion.md) and day-to-day use in [docs/manual-de-uso.md](docs/manual-de-uso.md) (all in Spanish).
+Deployment is covered in [docs/publicacion.md](docs/publicacion.md), backups and restores in [docs/respaldos.md](docs/respaldos.md) and day-to-day use in [docs/manual-de-uso.md](docs/manual-de-uso.md).
 
-## Security and personal data
+## Personal data
 
-The database stores clients' personal and health data, so the repository contains no real data. The `.env` files, the backups, the spreadsheets and the workout plan templates are listed in `.gitignore`.
+The databases store clients' personal and health data, so the repository contains no real data: `.env` files, backups, exports and the original spreadsheets are listed in `.gitignore`, and the sample data is generated.

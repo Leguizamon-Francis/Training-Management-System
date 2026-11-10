@@ -22,7 +22,6 @@ export const ETIQUETAS_CAMPO: Record<string, string> = {
   pago: "Pago corregido",
 };
 
-// Muestra un valor del historial de forma legible.
 export function formatearValorCambio(campo: string, valor: string | null) {
   if (valor === null) return "(vacío)";
   if (campo === "fechaNacimiento") return formatearFecha(valor);

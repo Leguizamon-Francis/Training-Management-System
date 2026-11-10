@@ -49,7 +49,7 @@ export interface PuntoGrafico {
   valor: number;
 }
 
-export interface SerieGrafico {
+interface SerieGrafico {
   lado: Lado | null;
   puntos: PuntoGrafico[]; // de la más vieja a la más nueva
 }

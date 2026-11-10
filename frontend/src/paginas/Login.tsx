@@ -21,7 +21,6 @@ export default function Login() {
       .catch(() => setDemoHabilitada(false));
   }, []);
 
-  // Si ya hay sesión, no tiene sentido mostrar el login.
   if (usuario) {
     return <Navigate to="/" replace />;
   }

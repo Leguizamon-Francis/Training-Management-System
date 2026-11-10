@@ -2,9 +2,10 @@
 
 ## Inicio
 
-Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la izquierda. En el celular, las secciones se abren con el botón **Menú**.
+Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la izquierda. En el celular, las secciones se abren con el botón **Menú**, que despliega un panel desde la derecha.
 
 - Las tarjetas muestran cuántos alumnos están activos y qué vence en los próximos 7 días. Tocá una para ver los nombres y entrar a cada uno.
+- Las semanas en que algún alumno cumple años aparece la tarjeta **Cumplen años esta semana**, con el día y los años que cumple.
 - Debajo, los accesos rápidos: **Nuevo alumno**, **Registrar asistencia** y **Nueva rutina**.
 - El último día del mes aparece el alumno con más asistencias, y del 29 al 31 de diciembre, el del año.
 
@@ -18,8 +19,8 @@ Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la i
 
 - **Registrar asistencia:** tocá al alumno y queda "Presente". Si te equivocaste, tocalo otra vez. Para cargar otro día, cambiá la fecha.
 - **Asistencias de hoy:** cuántos alumnos vinieron hoy; tocalo para ver quiénes son.
-- La sección muestra quién lleva más de 14 días sin venir y la lista de alumnos con sus asistencias del mes. Podés elegir meses anteriores.
-- **Alumnos con más asistencias:** tocalo para ver los 3 alumnos que más vinieron en el mes elegido y cuántas asistencias tiene cada uno.
+- La sección muestra quién lleva más de 14 días sin venir y la lista de alumnos con sus asistencias del mes en curso. El historial completo de cada uno se ve tocando su nombre.
+- **Alumnos con más asistencias:** tocalo para ver los 3 alumnos que más vinieron en el mes y cuántas asistencias tiene cada uno.
 
 ## Rutinas
 
@@ -38,7 +39,7 @@ Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la i
 ## Membresías
 
 - **Registrar pago:** elegí el alumno, la fecha, el medio y el importe. Cada pago de cuota cubre el mes adeudado más viejo. Si paga varias juntas, elegí la **cantidad de cuotas**: se propone el **Importe total** (se puede cambiar) y el vencimiento se corre esa cantidad de meses.
-- La lista muestra primero lo más urgente. Con **WhatsApp** avisás al alumno con el mensaje escrito.
+- La lista muestra primero lo más urgente y se puede filtrar por estado. Con **WhatsApp** avisás al alumno con el mensaje escrito. En **Inactivos** están los alumnos dados de baja, que no acumulan deuda.
 - **Editar** (en los pagos de cada alumno): cambia fecha, importe o medio de cualquier pago, y queda en el historial del alumno.
 - **Anular deuda:** para cuando alguien avisa que no sigue y no se le va a cobrar.
 - **Historial de ingresos:** reporte por período. En el celular, este botón y el siguiente están en el menú **⋯**.
@@ -46,10 +47,10 @@ Es la pantalla principal; se vuelve a ella tocando **DV Training** arriba a la i
 
 ## Configuración
 
-- Cambiá tu nombre de usuario, email y contraseña.
+- Cambiá tu nombre de usuario, email y contraseña. Cada cambio pide tu contraseña actual. El email es también el que usás para ingresar.
 - **¿Te olvidaste la contraseña?** En la pantalla de ingreso, tocá "¿Olvidaste tu contraseña?" y escribí tu email: te llega un link para elegir una nueva (vence en 30 minutos). Por eso es importante que el email de tu cuenta sea uno que uses.
-- **Modo oscuro:** se guarda por dispositivo.
-- **Perfiles de los alumnos** (botón **Configurar**): creá, renombrá o eliminá los perfiles de los alumnos (ej.: Deportivo, Salud) y elegí cada cuántos meses se reevalúa a quienes lo tienen. Si cambiás los meses, la próxima evaluación de esos alumnos se recalcula desde su última evaluación. Un perfil solo se puede eliminar si ningún alumno lo tiene: primero cambiales el perfil desde su ficha.
+- **Modo oscuro:** el sistema arranca en oscuro; si preferís el claro, se elige acá y queda guardado en ese dispositivo.
+- **Perfiles de los alumnos** (botón **Configurar**): creá, renombrá o eliminá los perfiles de los alumnos (ej.: Deportivo, Salud) y elegí cada cuántos meses se reevalúa a quienes lo tienen (pide tu contraseña). Si cambiás los meses, la próxima evaluación de esos alumnos se recalcula desde su última evaluación. Un perfil solo se puede eliminar si ningún alumno lo tiene: primero cambiales el perfil desde su ficha.
 - **Eliminar alumno:** borra para siempre su ficha y todos sus datos, incluidos sus pagos, que dejan de contar en Ingresos. Pide tu contraseña y no se puede deshacer. Usalo solo si alguien pide que borren sus datos; si dejó de venir, dalo de baja.
 
 ## Cuidados

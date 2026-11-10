@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 // Uso:  const confirmar = useConfirmar();
 //       if (!(await confirmar({ titulo: "¿Eliminar la rutina?", mensaje: "No se puede deshacer.", textoConfirmar: "Eliminar", peligro: true }))) return;
 // Usa <dialog> nativo: tapa el resto de la pantalla, Esc cancela y el foco queda dentro de la ventana.
-export interface OpcionesConfirmar {
+interface OpcionesConfirmar {
   titulo: string;
   mensaje?: ReactNode;
   textoConfirmar?: string;

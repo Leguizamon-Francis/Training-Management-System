@@ -1,6 +1,6 @@
 # Publicar el sistema
 
-En producción hay un solo servidor Node: entrega las pantallas y la API desde la misma dirección. La base es PostgreSQL.
+En producción hay un solo servidor Node: entrega las pantallas y la API desde la misma dirección. En el servidor PostgreSQL hay una base de control (gimnasios, usuarios y sesiones) y una base por gimnasio.
 
 ## Qué hace falta contratar
 
@@ -18,12 +18,13 @@ Se cargan en el panel del hosting. **Nunca en el repositorio.**
 | Variable | Valor |
 |---|---|
 | `NODE_ENV` | `production` |
-| `DATABASE_URL` | La conexión a la base, con un usuario y una contraseña propios y largos |
+| `DATABASE_URL` | La conexión a la **base de control** (ej.: `.../dv_control`), con un usuario y una contraseña propios y largos. La dirección de cada gimnasio se arma con esta, cambiando solo el nombre de la base |
 | `TRUST_PROXY` | `1` si hay un proxy delante, que es lo habitual en un hosting. Sin esto, el límite de intentos de ingreso no funciona bien |
 | `RESPALDO_CLAVE` | Mínimo 16 caracteres. Guardarla también fuera del servidor: **sin ella los respaldos no se recuperan** |
 | `URL_PUBLICA` | La dirección del sistema, ej.: `https://dvtraining.com.ar`. Arma el link del mail de "¿Olvidaste tu contraseña?" |
 | `RESEND_API_KEY` | Clave de Resend para mandar ese mail (solo con permiso de envío). Sin ella o sin `URL_PUBLICA`, la recuperación por email avisa que no está configurada |
 | `EMAIL_REMITENTE` | Opcional. Por defecto `DV Training <no-responder@dvtraining.com.ar>`; el dominio tiene que estar verificado en Resend |
+| `DEMO_HABILITADA` | Opcional. `false` apaga el botón "Ver demo" y corta las sesiones de la demo |
 | `PORT` | Solo si el hosting no la define |
 
 ## Comandos
@@ -31,23 +32,26 @@ Se cargan en el panel del hosting. **Nunca en el repositorio.**
 | Paso | Comando |
 |---|---|
 | Compilar (cada publicación) | `npm run build` |
-| Aplicar cambios a la base (cada publicación, antes de iniciar) | `npm run migrar` |
+| Crear la base de control si falta y aplicar los cambios a ella y a cada gimnasio (cada publicación, antes de iniciar) | `npm run migrar` |
 | Iniciar | `npm start` |
 
 `npm run build` también genera las planillas de rutina, que no están en el repositorio.
 
-## Primera vez
+## Sumar un gimnasio
 
-Una sola vez, desde `backend`, con las variables de entorno cargadas:
+Desde `backend`, en la consola del servidor (en Render, la Shell del Web Service):
 
 ```bash
-npm run db:seed       # catálogo inicial de pruebas y membresías
-npm run crear-admin   # usuario de ingreso
+npm run centros -- crear <base> "<Nombre del gimnasio>"   # crea su base con el catálogo inicial
+npm run centros -- plantillas <base>                       # le carga los modelos de rutina
+npm run crear-admin                                        # su usuario de ingreso (pregunta el gimnasio)
 ```
 
-Después, entrar y definir los precios en Membresías → Configurar membresías.
+`<base>` va en minúsculas, sin espacios (ej.: `gimnasio_centro`). Después, el gimnasio entra y define los precios en Membresías → Configurar membresías. `npm run centros -- listar` muestra los gimnasios; `desactivar`, `exportar` y `eliminar` sirven para darlos de baja.
 
-La base de producción arranca vacía. **No cargar datos de ejemplo:** el comando se niega en producción.
+**La demo** es un gimnasio más, de solo lectura: `npm run centros -- copiar <origen> <base> "<nombre>" --demo` crea una copia de los datos de otro gimnasio (que tienen que ser ficticios), y `npm run datos-demo -- <base>` le suma alumnos inventados.
+
+El paso único de "una sola base" a "una base por gimnasio" en el sistema ya publicado está en [varios-gimnasios-render.md](varios-gimnasios-render.md).
 
 ## Respaldos automáticos
 
@@ -60,7 +64,7 @@ Programar en el hosting una tarea diaria, desde `backend`, con estas variables a
 npx tsx src/scripts/respaldo.ts
 ```
 
-Las copias salen cifradas y, con `B2_KEY_ID` y `B2_APPLICATION_KEY`, se suben a Backblaze B2: una copia en el mismo lugar no sirve si el servidor falla. En producción el script se niega a correr sin esas variables. Si el hosting ya hace copias de la base, activarlas también. La configuración para Render está en [respaldos.md](respaldos.md).
+Hace una copia de la base de control y otra de cada gimnasio, cada una cifrada con su propia clave. Con `B2_KEY_ID` y `B2_APPLICATION_KEY` se suben a Backblaze B2, en una carpeta por base: una copia en el mismo lugar no sirve si el servidor falla. En producción el script se niega a correr sin esas variables. Si el hosting ya hace copias de la base, activarlas también. La configuración para Render está en [respaldos.md](respaldos.md).
 
 Una vez por mes, comprobar que se pueden restaurar: ver [respaldos.md](respaldos.md).
 

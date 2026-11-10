@@ -1,6 +1,6 @@
 # Etapa 1 – Propuesta de modelo de datos y estructura
 
-Estado: propuesta ajustada con las respuestas del 13/10/2026, pendiente de confirmación final para pasar a la etapa 2.
+> **Documento histórico:** es la propuesta inicial del modelo de datos, acordada con el cliente en octubre de 2026 antes de escribir código. El sistema creció después (asistencias, rutinas sobre PDF, una base de datos por gimnasio); la arquitectura actual está descripta en el [README](../README.md).
 
 ## Convenciones del modelo
 - IDs `Int` autoincrementales. Todas las tablas con `creadoEn` y `actualizadoEn`.
@@ -80,7 +80,6 @@ Ejercicio, Rutina (con versiones), SesionEntrenamiento → Alumno. Turno/Asisten
 ## Estructura de carpetas
 ```
 entrenamiento/
-├── CLAUDE.md
 ├── README.md
 ├── .gitignore
 ├── backend/

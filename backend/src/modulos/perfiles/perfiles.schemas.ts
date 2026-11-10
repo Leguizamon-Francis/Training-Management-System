@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const MAXIMO_MESES_REEVALUACION = 24;
+const MAXIMO_MESES_REEVALUACION = 24;
 
 export const esquemaPerfil = z.object({
   nombre: z
