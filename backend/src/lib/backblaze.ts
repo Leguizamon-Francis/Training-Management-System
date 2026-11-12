@@ -8,16 +8,46 @@ interface Credenciales {
   clave: string;
 }
 
+// Errores pasajeros de B2 (servidor ocupado o lleno, demora): según su documentación se pide otra
+// dirección de subida y se vuelve a intentar.
+const REINTENTOS_SUBIDA = 4;
+const ESTADOS_PASAJEROS = new Set([408, 429, 500, 503]);
+
+class ErrorB2 extends Error {
+  constructor(mensaje: string, readonly pasajero: boolean) {
+    super(mensaje);
+  }
+}
+
 async function pedirB2<T>(url: string, opciones: RequestInit, paso: string): Promise<T> {
-  const respuesta = await fetch(url, opciones);
+  const respuesta = await fetch(url, opciones).catch((error) => {
+    // Sin respuesta (conexión cortada, DNS): también vale reintentar.
+    throw new ErrorB2(`Backblaze (${paso}): ${error instanceof Error ? error.message : error}`, true);
+  });
   const cuerpo = await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
-    throw new Error(`Backblaze (${paso}): ${cuerpo?.message ?? respuesta.statusText} [${respuesta.status}]`);
+    throw new ErrorB2(
+      `Backblaze (${paso}): ${cuerpo?.message ?? respuesta.statusText} [${respuesta.status}]`,
+      ESTADOS_PASAJEROS.has(respuesta.status),
+    );
   }
   return cuerpo as T;
 }
 
-export async function subirABackblaze(nombre: string, datos: Buffer, { idClave, clave }: Credenciales) {
+export async function subirABackblaze(nombre: string, datos: Buffer, credenciales: Credenciales) {
+  for (let intento = 1; ; intento++) {
+    try {
+      return await intentarSubida(nombre, datos, credenciales);
+    } catch (error) {
+      if (!(error instanceof ErrorB2) || !error.pasajero || intento === REINTENTOS_SUBIDA) throw error;
+      const espera = 5 * 2 ** (intento - 1); // 5, 10, 20 segundos
+      console.log(`${error.message}. Reintento ${intento} de ${REINTENTOS_SUBIDA - 1} en ${espera} s…`);
+      await new Promise((listo) => setTimeout(listo, espera * 1000));
+    }
+  }
+}
+
+async function intentarSubida(nombre: string, datos: Buffer, { idClave, clave }: Credenciales) {
   const cuenta = await pedirB2<{ apiUrl: string; authorizationToken: string; allowed: { bucketId: string | null } }>(
     "https://api.backblazeb2.com/b2api/v2/b2_authorize_account",
     { headers: { Authorization: `Basic ${Buffer.from(`${idClave}:${clave}`).toString("base64")}` } },

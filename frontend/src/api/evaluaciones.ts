@@ -76,4 +76,7 @@ export const evaluacionesApi = {
     pedir<Evaluacion>(`/evaluaciones/${id}`, { metodo: "PUT", datos }),
 
   eliminar: (id: number) => pedir<void>(`/evaluaciones/${id}`, { metodo: "DELETE" }),
+
+  // El PDF se arma en el servidor al pedirlo y se descarga: no queda guardado en el sistema.
+  urlReporte: (alumnoId: number) => `/api/alumnos/${alumnoId}/evaluaciones/reporte`,
 };

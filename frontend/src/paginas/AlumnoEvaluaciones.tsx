@@ -36,9 +36,16 @@ export default function AlumnoEvaluaciones() {
           </h1>
           <Link to={`/alumnos/${alumnoId}`}>Ver ficha del alumno</Link>
         </div>
-        <Link to={`/evaluaciones/alumnos/${alumnoId}/nueva`} className="boton">
-          Nueva evaluación
-        </Link>
+        <div className="acciones">
+          {evaluaciones.length > 0 && (
+            <a data-no-en-demo href={evaluacionesApi.urlReporte(alumnoId)} className="boton-secundario">
+              Generar reporte
+            </a>
+          )}
+          <Link to={`/evaluaciones/alumnos/${alumnoId}/nueva`} className="boton">
+            Nueva evaluación
+          </Link>
+        </div>
       </div>
 
       <ProximaEvaluacion datos={proximaEvaluacion} discreta />

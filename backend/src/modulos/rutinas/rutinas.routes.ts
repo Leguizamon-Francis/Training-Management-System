@@ -1,5 +1,6 @@
-import express, { Router, type Request, type Response } from "express";
+import express, { Router, type Request } from "express";
 import { ErrorHttp, leerId } from "../../lib/errores";
+import { enviarPdf } from "../../lib/pdf";
 import { esDemo, MENSAJE_DEMO } from "../../middlewares/soloLectura";
 import { esquemaBorrador, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
 import {
@@ -24,17 +25,6 @@ function pdfRecibido(req: Request) {
     throw new ErrorHttp(400, "Falta el PDF de la rutina");
   }
   return new Uint8Array(req.body);
-}
-
-function enviarPdf(res: Response, bytes: Uint8Array, nombreArchivo?: string) {
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Cache-Control", "no-store"); // contiene datos personales
-  if (nombreArchivo) {
-    // filename* admite tildes; filename es el respaldo sin caracteres especiales.
-    const simple = nombreArchivo.normalize("NFD").replace(/[^\x20-\x7E]/g, "");
-    res.setHeader("Content-Disposition", `attachment; filename="${simple}"; filename*=UTF-8''${encodeURIComponent(nombreArchivo)}`);
-  }
-  res.send(Buffer.from(bytes));
 }
 
 // GET /api/rutinas/alumnos  → alumnos activos con la cantidad de rutinas
