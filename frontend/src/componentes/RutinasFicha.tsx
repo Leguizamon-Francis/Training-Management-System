@@ -3,6 +3,7 @@ import { rutinasApi } from "../api/rutinas";
 import { useCarga } from "../hooks/useCarga";
 import Desplegable from "./Desplegable";
 import ListaRutinas from "./ListaRutinas";
+import { Flecha } from "./Iconos";
 
 // Cantidad de rutinas que se ven en la ficha (el resto, en la pantalla de Rutinas).
 const CANTIDAD_EN_FICHA = 4;
@@ -20,7 +21,7 @@ export default function RutinasFicha({ alumno }: { alumno: { id: number; nombre:
         </Link>
         {rutinas && rutinas.length > CANTIDAD_EN_FICHA && (
           <Link to={`/rutinas/${alumnoId}`} className="link-discreto">
-            Ver las {rutinas.length} rutinas →
+            Ver las {rutinas.length} rutinas<Flecha hacia="adelante" />
           </Link>
         )}
       </div>

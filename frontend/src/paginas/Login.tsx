@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from "react-router";
 import { authApi } from "../api/auth";
 import MarcaLogin from "../componentes/MarcaLogin";
 import { useSesion } from "../componentes/Sesion";
+import { Flecha } from "../componentes/Iconos";
 
 export default function Login() {
   const { usuario, iniciarSesion, entrarDemo } = useSesion();
@@ -94,7 +95,7 @@ export default function Login() {
           <div className="login-demo">
             <p className="texto-suave">¿Querés conocer el sistema?</p>
             <button type="button" className="boton-demo" onClick={verDemo} disabled={enviando}>
-              VER DEMO GRATUITA <span aria-hidden="true">→</span>
+              VER DEMO GRATUITA<Flecha hacia="adelante" />
             </button>
           </div>
         )}

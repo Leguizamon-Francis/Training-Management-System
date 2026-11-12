@@ -5,6 +5,7 @@ import { pagosApi, type PagosAlumno } from "../api/pagos";
 import Cargando from "../componentes/Cargando";
 import FormularioPago from "../componentes/FormularioPago";
 import { claseEstadoCuota, ETIQUETAS_ESTADO_CUOTA, textoPrecioPlan, textoVencimiento } from "../utils/pagos";
+import { Flecha } from "../componentes/Iconos";
 
 // Cuántos alumnos se muestran como resultado de la búsqueda.
 const MAXIMO_RESULTADOS = 8;
@@ -42,7 +43,8 @@ export default function PagoNuevo() {
   return (
     <section>
       <Link to="/membresias" className="volver">
-        ← Membresías
+        <Flecha hacia="atras" />
+        Membresías
       </Link>
       <h1>Registrar pago</h1>
 

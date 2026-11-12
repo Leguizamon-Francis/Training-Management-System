@@ -3,6 +3,7 @@ import { asistenciasApi } from "../api/asistencias";
 import { useCarga } from "../hooks/useCarga";
 import { formatearFecha } from "../utils/formato";
 import Desplegable from "./Desplegable";
+import { Flecha } from "./Iconos";
 
 // Sección "Asistencias" de la ficha del alumno: el resumen; el historial completo está en su pantalla.
 export default function AsistenciasFicha({ alumnoId }: { alumnoId: number }) {
@@ -18,7 +19,7 @@ export default function AsistenciasFicha({ alumnoId }: { alumnoId: number }) {
             {historial.fechas[0] && ` · Última: ${formatearFecha(historial.fechas[0])}`}
           </span>
           <Link to={`/asistencias/${alumnoId}`} className="link-discreto">
-            Ver historial →
+            Ver historial<Flecha hacia="adelante" />
           </Link>
         </div>
       )}

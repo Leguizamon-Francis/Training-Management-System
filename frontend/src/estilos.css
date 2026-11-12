@@ -114,6 +114,39 @@ h1 {
   flex-shrink: 0;
 }
 
+/* Flecha junto a un texto (componente Flecha): del tamaño de la letra y separada del texto. */
+.flecha {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: -0.24em;
+  flex-shrink: 0;
+}
+.flecha-atras {
+  margin-right: 0.35em;
+}
+.flecha-adelante {
+  margin-left: 0.35em;
+}
+.flecha-arriba,
+.flecha-abajo {
+  margin-right: 0.2em;
+}
+
+/* En los enlaces, la flecha se corre un poquito al pasar el mouse. */
+@media (prefers-reduced-motion: no-preference) {
+  a .flecha,
+  button .flecha {
+    transition: transform 0.15s ease;
+  }
+  a:hover .flecha-atras {
+    transform: translateX(-0.15em);
+  }
+  a:hover .flecha-adelante,
+  button:hover .flecha-adelante {
+    transform: translateX(0.15em);
+  }
+}
+
 /* Botón con solo un ícono (ej.: modo oscuro en Configuración). */
 .boton-secundario.boton-icono {
   display: inline-flex;

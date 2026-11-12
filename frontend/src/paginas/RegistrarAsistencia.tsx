@@ -4,6 +4,7 @@ import { asistenciasApi, type AlumnoDelDia } from "../api/asistencias";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { coincideBusqueda, hoyComoTexto } from "../utils/formato";
+import { Flecha } from "../componentes/Iconos";
 
 // Un clic en el alumno registra la asistencia; otro clic la quita, por si se tocó el nombre equivocado.
 export default function RegistrarAsistencia() {
@@ -37,11 +38,13 @@ export default function RegistrarAsistencia() {
     <section>
       {desdeInicio ? (
         <Link to="/" className="volver">
-          ← Inicio
+          <Flecha hacia="atras" />
+          Inicio
         </Link>
       ) : (
         <Link to="/asistencias" className="volver">
-          ← Asistencias
+          <Flecha hacia="atras" />
+          Asistencias
         </Link>
       )}
 

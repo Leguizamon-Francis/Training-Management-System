@@ -29,15 +29,15 @@ export function nombreConLado(nombre: string, lado: Lado | null) {
   return lado ? `${nombre} (${ETIQUETAS_LADO[lado].toLowerCase()})` : nombre;
 }
 
-// Diferencia entre dos mediciones, ej.: "▲ +2,5 cm (+8,3 %)".
+// Diferencia entre dos mediciones, ej.: "+2,5 cm (+8,3 %)" (la flecha la agrega el componente Variacion).
 // No se colorea como "mejor" o "peor": según la prueba, subir puede ser bueno (salto) o malo (tiempo de sprint).
 export function textoVariacion(anterior: number, actual: number, unidad: string) {
   const diferencia = actual - anterior;
-  if (diferencia === 0) return "= sin cambios";
+  if (diferencia === 0) return "Sin cambios";
   const signo = diferencia > 0 ? "+" : "";
   const porcentaje =
     anterior !== 0 ? ` (${signo}${formatearNumero((diferencia / Math.abs(anterior)) * 100)} %)` : "";
-  return `${diferencia > 0 ? "▲" : "▼"} ${signo}${formatearNumero(diferencia)} ${unidad}${porcentaje}`;
+  return `${signo}${formatearNumero(diferencia)} ${unidad}${porcentaje}`;
 }
 
 // ---------- Gráficos ----------

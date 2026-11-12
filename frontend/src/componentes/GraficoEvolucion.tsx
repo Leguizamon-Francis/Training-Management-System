@@ -3,11 +3,11 @@ import type { Lado } from "../api/evaluaciones";
 import {
   ETIQUETAS_LADO,
   formatearNumero,
-  textoVariacion,
   type DatosGrafico,
   type PuntoGrafico,
 } from "../utils/evaluaciones";
 import { formatearFecha } from "../utils/formato";
+import Variacion from "./Variacion";
 
 // Gráfico de líneas de la evolución de una prueba, dibujado en SVG (sin librerías).
 // - Una escala por gráfico: cada prueba tiene su unidad, por eso hay un gráfico por prueba.
@@ -115,7 +115,7 @@ export default function GraficoEvolucion({ datos }: { datos: DatosGrafico }) {
                   <dt>
                     {serie.lado && <span className="muestra-serie" style={{ background: colorDeLado(serie.lado) }} />}
                     {serie.lado ? `${nombreSerie(serie.lado)} — ` : ""}
-                    Primer registro → Último: {textoVariacion(primero.valor, ultimo.valor, unidad)}
+                    Del primer registro al último: <Variacion anterior={primero.valor} actual={ultimo.valor} unidad={unidad} />
                   </dt>
                 </div>
               );

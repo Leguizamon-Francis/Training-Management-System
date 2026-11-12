@@ -2,7 +2,8 @@ import { Link } from "react-router";
 import { evaluacionesApi } from "../api/evaluaciones";
 import { useCarga } from "../hooks/useCarga";
 import { useListaCorta } from "../hooks/useListaCorta";
-import { armarGraficos, formatearNumero, nombreConLado, textoVariacion } from "../utils/evaluaciones";
+import { armarGraficos, formatearNumero, nombreConLado } from "../utils/evaluaciones";
+import Variacion from "./Variacion";
 import { formatearFecha } from "../utils/formato";
 import BotonVerTodos from "./BotonVerTodos";
 import Cargando from "./Cargando";
@@ -86,7 +87,7 @@ export default function EvaluacionesAlumno({ alumnoId }: { alumnoId: number }) {
                         </td>
                         <td className="sin-salto">
                           {anterior ? (
-                            textoVariacion(anterior.valor, ultimo.valor, unidad)
+                            <Variacion anterior={anterior.valor} actual={ultimo.valor} unidad={unidad} />
                           ) : (
                             <span className="texto-suave">—</span>
                           )}

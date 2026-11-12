@@ -9,6 +9,7 @@ import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_CATEGORIA, ETIQUETAS_ORIGEN } from "../utils/evaluaciones";
 import { hoyComoTexto } from "../utils/formato";
+import { Flecha } from "../componentes/Iconos";
 
 // Una fila del formulario = una prueba. En las que se miden por lado, la fila tiene un valor para cada lado
 // y al guardar se convierte en dos resultados (izquierdo y derecho). "valor" es el de las demás pruebas; en
@@ -198,7 +199,8 @@ export default function EvaluacionFormulario() {
   return (
     <section>
       <Link to={volverA} className="volver">
-        ← {evaluacionId ? `Evaluación n° ${numero ?? ""}` : alumno ? `${alumno.apellido}, ${alumno.nombre}` : "Evaluaciones"}
+        <Flecha hacia="atras" />
+        {evaluacionId ? `Evaluación n° ${numero ?? ""}` : alumno ? `${alumno.apellido}, ${alumno.nombre}` : "Evaluaciones"}
       </Link>
       <h1>{evaluacionId ? `Editar evaluación n° ${numero ?? ""}` : "Nueva evaluación"}</h1>
 

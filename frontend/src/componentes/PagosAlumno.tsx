@@ -17,7 +17,7 @@ import Cargando from "./Cargando";
 import Desplegable from "./Desplegable";
 import FormularioCorregirPago from "./FormularioCorregirPago";
 import FormularioPago from "./FormularioPago";
-import { IconoMensaje } from "./Iconos";
+import { Flecha, IconoMensaje } from "./Iconos";
 import SelectorPlan from "./SelectorPlan";
 import { useConfirmar } from "./Confirmar";
 
@@ -129,7 +129,7 @@ export default function PagosAlumno({ alumno, onCambio, enFicha = true }: Props)
         </SelectorPlan>
         {enFicha && (
           <Link to="/membresias" className="link-discreto">
-            Ir a Membresías →
+            Ir a Membresías<Flecha hacia="adelante" />
           </Link>
         )}
       </div>

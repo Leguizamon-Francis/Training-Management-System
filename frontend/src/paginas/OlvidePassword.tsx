@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router";
 import { authApi } from "../api/auth";
 import MarcaLogin from "../componentes/MarcaLogin";
+import { Flecha } from "../componentes/Iconos";
 
 // "¿Olvidaste tu contraseña?": se pide el email y el sistema manda un link para elegir una nueva.
 // La respuesta es la misma exista o no el email (no se revela quién tiene cuenta).
@@ -47,7 +48,8 @@ export default function OlvidePassword() {
           </>
         )}
         <Link to="/login" className="enlace-login">
-          ← Volver a ingresar
+          <Flecha hacia="atras" />
+          Volver a ingresar
         </Link>
       </form>
     </main>

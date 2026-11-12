@@ -6,6 +6,7 @@ import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_LADO, ETIQUETAS_ORIGEN, formatearNumero } from "../utils/evaluaciones";
 import { formatearFecha } from "../utils/formato";
 import { useConfirmar } from "../componentes/Confirmar";
+import { Flecha } from "../componentes/Iconos";
 
 export default function EvaluacionDetalle() {
   const confirmar = useConfirmar();
@@ -39,7 +40,8 @@ export default function EvaluacionDetalle() {
   return (
     <section>
       <Link to={`/evaluaciones/alumnos/${alumno.id}`} className="volver">
-        ← Evaluaciones de {alumno.apellido}, {alumno.nombre}
+        <Flecha hacia="atras" />
+        Evaluaciones de {alumno.apellido}, {alumno.nombre}
       </Link>
 
       <div className="pagina-encabezado">

@@ -8,6 +8,7 @@ import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda } from "../utils/formato";
+import { Flecha } from "../componentes/Iconos";
 
 interface PropsConfirmacion {
   alumno: AlumnoResumen;
@@ -91,7 +92,8 @@ export default function EliminarAlumno() {
   return (
     <section>
       <Link to="/configuracion" className="volver">
-        ← Configuración
+        <Flecha hacia="atras" />
+        Configuración
       </Link>
       <h1>Eliminar alumno</h1>
       <p className="texto-suave">Elegí el alumno. Si solo dejó de venir, conviene darlo de baja desde su ficha: así se conservan sus datos.</p>

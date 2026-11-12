@@ -9,6 +9,7 @@ import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda, formatearFecha, formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 import { useConfirmar } from "../componentes/Confirmar";
+import { Flecha } from "../componentes/Iconos";
 
 // Lista de alumnos activos: al entrar a uno se ven sus rutinas y se crea una nueva. Abajo, las rutinas sin alumno.
 // Con ?nueva=1 (botón "Nueva rutina"), al elegir el alumno ya se ofrecen los modelos; también se puede armar
@@ -50,7 +51,8 @@ export default function Rutinas() {
     <section>
       {desdeInicio && (
         <Link to="/" className="volver">
-          ← Inicio
+          <Flecha hacia="atras" />
+          Inicio
         </Link>
       )}
       <h1>{nueva ? "Nueva rutina" : "Rutinas"}</h1>

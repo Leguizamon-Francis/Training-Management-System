@@ -7,6 +7,7 @@ import PlanillaEditable, { type ControlPlanilla } from "../componentes/PlanillaE
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 import { useConfirmar } from "../componentes/Confirmar";
+import { Flecha } from "../componentes/Iconos";
 
 // Completar una rutina sobre la planilla PDF.
 // - Nueva (/rutinas/:alumnoId/nueva?tipo=…, o /rutinas/sin-alumno/nueva?tipo=…): parte de la plantilla del
@@ -75,7 +76,10 @@ export default function EditorRutina() {
     return error ? (
       <>
         <p className="mensaje-error">{error}</p>
-        <Link to="/rutinas">← Rutinas</Link>
+        <Link to="/rutinas">
+          <Flecha hacia="atras" />
+          Rutinas
+        </Link>
       </>
     ) : (
       <Cargando />
@@ -87,7 +91,8 @@ export default function EditorRutina() {
   return (
     <section>
       <Link to={volverA} state={origen} className="volver">
-        {datos.alumno ? `← Rutinas de ${para}` : "← Rutinas"}
+        <Flecha hacia="atras" />
+        {datos.alumno ? `Rutinas de ${para}` : "Rutinas"}
       </Link>
 
       <div className="pagina-encabezado">

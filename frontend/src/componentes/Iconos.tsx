@@ -9,6 +9,20 @@ function Icono({ children }: { children: ReactNode }) {
   );
 }
 
+// Flecha que acompaña un texto ("Volver", "Ver historial", variaciones): del tamaño de la letra.
+// Se dibuja hacia la derecha y se gira para las otras direcciones.
+const GIRO_FLECHA = { adelante: 0, abajo: 90, atras: 180, arriba: 270 };
+
+export function Flecha({ hacia }: { hacia: keyof typeof GIRO_FLECHA }) {
+  return (
+    <svg className={`flecha flecha-${hacia}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <g transform={`rotate(${GIRO_FLECHA[hacia]} 12 12)`}>
+        <path d="M4.5 12h14M13 6.5l5.5 5.5-5.5 5.5" />
+      </g>
+    </svg>
+  );
+}
+
 export function IconoAlumnos() {
   return (
     <Icono>

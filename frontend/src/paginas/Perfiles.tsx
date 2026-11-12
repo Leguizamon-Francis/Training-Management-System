@@ -5,6 +5,7 @@ import { perfilesApi, type DatosPerfil, type Perfil } from "../api/perfiles";
 import Campo from "../componentes/Campo";
 import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
+import { Flecha } from "../componentes/Iconos";
 
 const PERFIL_VACIO: DatosPerfil = { nombre: "", mesesReevaluacion: "" };
 
@@ -165,7 +166,8 @@ export default function Perfiles() {
   return (
     <section>
       <Link to="/configuracion" className="volver">
-        ← Configuración
+        <Flecha hacia="atras" />
+        Configuración
       </Link>
       <h1>Perfiles</h1>
 

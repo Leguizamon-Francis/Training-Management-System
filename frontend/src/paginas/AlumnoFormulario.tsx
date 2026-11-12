@@ -8,6 +8,7 @@ import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_CAMPO } from "../utils/alumnos";
 import { hoyComoTexto } from "../utils/formato";
+import { Flecha } from "../componentes/Iconos";
 
 const VACIO: DatosAlumno = {
   nombre: "",
@@ -109,7 +110,8 @@ export default function AlumnoFormulario() {
   return (
     <section>
       <Link to={volverA} className="volver">
-        ← Volver
+        <Flecha hacia="atras" />
+        Volver
       </Link>
       <h1>{esEdicion ? "Editar alumno" : "Nuevo alumno"}</h1>
 

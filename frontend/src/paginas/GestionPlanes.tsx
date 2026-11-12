@@ -5,6 +5,7 @@ import { planesApi, type Plan } from "../api/planes";
 import { useCarga } from "../hooks/useCarga";
 import { formatearMoneda } from "../utils/formato";
 import { importeParaEditar } from "../utils/pagos";
+import { Flecha } from "../componentes/Iconos";
 
 interface PropsEdicion {
   plan: Plan;
@@ -66,7 +67,8 @@ export default function GestionPlanes() {
   return (
     <section>
       <Link to="/membresias" className="volver">
-        ← Membresías
+        <Flecha hacia="atras" />
+        Membresías
       </Link>
       <h1>Configurar membresías</h1>
       <p className="texto-suave">

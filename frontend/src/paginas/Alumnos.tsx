@@ -7,6 +7,7 @@ import Cargando from "../componentes/Cargando";
 import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { calcularEdad } from "../utils/formato";
+import { Flecha } from "../componentes/Iconos";
 
 export default function Alumnos() {
   const desdeInicio = useLocation().state?.desde === "inicio"; // tarjeta "Alumnos activos" de Inicio
@@ -46,7 +47,8 @@ export default function Alumnos() {
     <section>
       {desdeInicio && (
         <Link to="/" className="volver">
-          ← Inicio
+          <Flecha hacia="atras" />
+          Inicio
         </Link>
       )}
       <h1>Alumnos</h1>

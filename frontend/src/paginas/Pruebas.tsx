@@ -6,6 +6,7 @@ import Campo from "../componentes/Campo";
 import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_CATEGORIA } from "../utils/evaluaciones";
 import { useConfirmar } from "../componentes/Confirmar";
+import { Flecha } from "../componentes/Iconos";
 
 const PRUEBA_VACIA: DatosPrueba = { nombre: "", categoria: "", unidad: "", porLado: false, activa: true };
 
@@ -145,7 +146,8 @@ export default function Pruebas() {
   return (
     <section>
       <Link to="/evaluaciones" className="volver">
-        ← Evaluaciones
+        <Flecha hacia="atras" />
+        Evaluaciones
       </Link>
       <h1>Configuración de evaluaciones</h1>
 

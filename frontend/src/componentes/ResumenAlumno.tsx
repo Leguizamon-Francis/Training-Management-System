@@ -7,7 +7,7 @@ import { claseProximaEvaluacion, textoDiasRestantes } from "../utils/evaluacione
 import { formatearFecha, formatearMoneda } from "../utils/formato";
 import { claseEstadoCuota, ETIQUETAS_ESTADO_CUOTA } from "../utils/pagos";
 
-// Las pantallas a las que llevan los cuadros muestran "← Apellido, Nombre" para volver a la ficha (VolverAlumno).
+// Las pantallas a las que llevan los cuadros muestran un enlace "Apellido, Nombre" para volver a la ficha (VolverAlumno).
 const DESDE_FICHA = { desde: "ficha" };
 
 // "seccion": a dónde lleva, para el mensaje que aparece al apoyar el cursor ("Ir a …").

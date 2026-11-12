@@ -5,6 +5,7 @@ import { useListaCorta } from "../hooks/useListaCorta";
 import { formatearFecha, formatearMoneda } from "../utils/formato";
 import { ETIQUETAS_MEDIO } from "../utils/pagos";
 import BotonVerTodos from "./BotonVerTodos";
+import { Flecha } from "./Iconos";
 
 // Lista "Últimos ingresos" de la pantalla Membresías: los 20 pagos más recientes de todos los alumnos
 // (el resto, en Historial de ingresos).
@@ -53,7 +54,7 @@ export default function UltimosIngresos() {
             {lista.abierta && (
               <p className="nota">
                 <Link to="/membresias/ingresos" className="link-discreto">
-                  Ver el historial completo en Historial de ingresos →
+                  Ver el historial completo en Historial de ingresos<Flecha hacia="adelante" />
                 </Link>
               </p>
             )}

@@ -15,6 +15,7 @@ import { useListaCorta } from "../hooks/useListaCorta";
 import { ETIQUETAS_CAMPO, formatearValorCambio } from "../utils/alumnos";
 import { calcularEdad, formatearFecha, formatearFechaHora } from "../utils/formato";
 import { useConfirmar } from "../componentes/Confirmar";
+import { Flecha } from "../componentes/Iconos";
 
 function Dato({ etiqueta, children }: { etiqueta: string; children: ReactNode }) {
   return (
@@ -39,7 +40,10 @@ export default function AlumnoFicha() {
     return error ? (
       <>
         <p className="mensaje-error">{error}</p>
-        <Link to="/alumnos">← Volver a alumnos</Link>
+        <Link to="/alumnos">
+          <Flecha hacia="atras" />
+          Volver a alumnos
+        </Link>
       </>
     ) : (
       <Cargando />
@@ -76,7 +80,8 @@ export default function AlumnoFicha() {
   return (
     <section>
       <Link to="/alumnos" className="volver">
-        ← Alumnos
+        <Flecha hacia="atras" />
+        Alumnos
       </Link>
 
       <div className="pagina-encabezado">

@@ -4,6 +4,7 @@ import Cargando from "../componentes/Cargando";
 import PagosAlumno from "../componentes/PagosAlumno";
 import VolverAlumno from "../componentes/VolverAlumno";
 import { useCarga } from "../hooks/useCarga";
+import { Flecha } from "../componentes/Iconos";
 
 // Pagos de un alumno, desde Membresías o el Historial de ingresos: lo mismo que "Membresía" de la ficha, abierto.
 export default function PagosDeAlumno() {
@@ -29,7 +30,7 @@ export default function PagosDeAlumno() {
           {!alumno.activo && <span className="insignia">Inactivo</span>}
         </div>
         <Link to={`/alumnos/${alumno.id}`} className="link-discreto">
-          Ver ficha del alumno →
+          Ver ficha del alumno<Flecha hacia="adelante" />
         </Link>
       </div>
 

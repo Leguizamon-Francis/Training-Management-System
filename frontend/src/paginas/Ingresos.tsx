@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { pagosApi, type ReporteIngresos } from "../api/pagos";
 import { fechaComoTexto, formatearFecha, formatearMoneda, hoyComoTexto, nombreDelMes } from "../utils/formato";
 import { ETIQUETAS_MEDIO } from "../utils/pagos";
+import { Flecha } from "../componentes/Iconos";
 
 function rangoMesActual() {
   const hoy = hoyComoTexto();
@@ -41,7 +42,8 @@ export default function Ingresos() {
   return (
     <section>
       <Link to="/membresias" className="volver">
-        ← Membresías
+        <Flecha hacia="atras" />
+        Membresías
       </Link>
       <h1>Ingresos</h1>
 
