@@ -75,8 +75,9 @@ export const rutinasApi = {
   // Link directo para descargar el PDF (la cookie de sesión viaja sola).
   urlDescarga: (id: number) => `/api/rutinas/${id}/pdf?descargar=true`,
 
-  crear: (alumnoId: number | null, tipo: ModeloRutina, pdf: Uint8Array) =>
-    enviarPdf(`${alumnoId ? `/alumnos/${alumnoId}` : ""}/rutinas?tipo=${tipo}`, "POST", pdf),
+  // datosAlumno: el servidor pone en la planilla el nombre y la edad del alumno ("Guardar en" otro alumno).
+  crear: (alumnoId: number | null, tipo: ModeloRutina, pdf: Uint8Array, datosAlumno = false) =>
+    enviarPdf(`${alumnoId ? `/alumnos/${alumnoId}` : ""}/rutinas?tipo=${tipo}${datosAlumno ? "&datosAlumno=true" : ""}`, "POST", pdf),
 
   actualizar: (id: number, pdf: Uint8Array) => enviarPdf(`/rutinas/${id}`, "PUT", pdf),
 

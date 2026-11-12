@@ -11,6 +11,12 @@ export const esquemaBorrador = esquemaModeloRutina.extend({
   base: z.coerce.number().int().positive().optional(),
 });
 
+// POST /api/alumnos/:alumnoId/rutinas?tipo=…&datosAlumno=true  (datosAlumno: pone el nombre y la edad del alumno
+// en la planilla; lo usa "Guardar en", cuando la rutina se armó a partir de la de otro alumno o de una sin alumno)
+export const esquemaCrear = esquemaModeloRutina.extend({
+  datosAlumno: z.stringbool().default(false),
+});
+
 // GET /api/rutinas/:id/pdf?descargar=true
 export const esquemaDescarga = z.object({
   descargar: z.stringbool().default(false),

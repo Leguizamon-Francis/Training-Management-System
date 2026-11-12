@@ -560,6 +560,42 @@ input[type="date"]::-webkit-date-and-time-value {
   color: var(--color-texto-suave);
 }
 
+/* "Guardar en" del editor de rutinas: buscador y lista de alumnos que se desliza. */
+.dialogo-guardar-en input[type="search"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.lista-guardar-en {
+  list-style: none;
+  margin: 0.75rem 0 1rem;
+  padding: 0;
+  max-height: min(18rem, 45vh);
+  overflow-y: auto;
+  border: 2px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+
+.lista-guardar-en li + li {
+  border-top: 1px solid var(--color-borde);
+}
+
+.lista-guardar-en li.texto-suave {
+  padding: 0.6rem 0.75rem;
+}
+
+.lista-guardar-en button {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  text-decoration: none;
+}
+
+.lista-guardar-en button:hover:not(:disabled) {
+  background: var(--color-fondo);
+}
+
 .dialogo-confirmar h2:last-of-type + .acciones {
   margin-top: 1rem;
 }

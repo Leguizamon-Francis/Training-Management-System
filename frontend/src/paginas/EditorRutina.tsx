@@ -8,11 +8,12 @@ import { useCarga } from "../hooks/useCarga";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 import { useConfirmar } from "../componentes/Confirmar";
 import { Flecha } from "../componentes/Iconos";
+import GuardarEn from "../componentes/GuardarEn";
 
 // Completar una rutina sobre la planilla PDF.
 // - Nueva (/rutinas/:alumnoId/nueva?tipo=…, o /rutinas/sin-alumno/nueva?tipo=…): parte de la plantilla del
-//   modelo, que nunca se modifica. Con &base=… (solo con alumno) parte de lo escrito en esa rutina, que
-//   tampoco cambia.
+//   modelo, que nunca se modifica. Con &base=… (rutina del mismo alumno, o sin alumno) parte de lo escrito en
+//   esa rutina, que tampoco cambia; ahí aparece también "Guardar en…" (otro alumno o descargar sin guardar).
 // - Existente (/rutinas/editar/:rutinaId): parte de la rutina guardada.
 // Al guardar, lo escrito queda en el perfil del alumno, o en "Rutinas sin alumno".
 export default function EditorRutina() {
@@ -25,6 +26,7 @@ export default function EditorRutina() {
   const baseId = busqueda.get("base") ? Number(busqueda.get("base")) : null;
   const visor = useRef<ControlPlanilla>(null);
   const [guardando, setGuardando] = useState(false);
+  const [guardandoEn, setGuardandoEn] = useState(false); // ventana "Guardar en" abierta
 
   const { datos, error, setError } = useCarga(async () => {
     if (rutinaId) {
@@ -56,6 +58,41 @@ export default function EditorRutina() {
       setError(err instanceof Error ? err.message : "No se pudo guardar la rutina");
     } finally {
       setGuardando(false);
+    }
+  }
+
+  // "Guardar en" (solo al partir de una rutina base): la rutina nueva va a otro alumno, con su nombre y edad.
+  async function guardarEn(alumno: { id: number; nombre: string; apellido: string }) {
+    if (!datos?.modelo || !visor.current) return;
+    setError("");
+    setGuardando(true);
+    try {
+      const pdf = await visor.current.obtenerPdf();
+      await rutinasApi.crear(alumno.id, datos.modelo, pdf, true);
+      navigate(`/rutinas/${alumno.id}`, { state: origen });
+    } catch (err) {
+      setGuardandoEn(false);
+      setError(err instanceof Error ? err.message : "No se pudo guardar la rutina");
+    } finally {
+      setGuardando(false);
+    }
+  }
+
+  // Descarga la planilla tal como está en pantalla, sin guardarla en el sistema.
+  async function descargar() {
+    if (!visor.current) return;
+    setError("");
+    try {
+      const pdf = await visor.current.obtenerPdf();
+      const url = URL.createObjectURL(new Blob([pdf.slice()], { type: "application/pdf" }));
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `Rutina ${para.replace(",", "")}.pdf`;
+      enlace.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setGuardandoEn(false);
+    } catch {
+      setError("No se pudo descargar la rutina");
     }
   }
 
@@ -120,7 +157,23 @@ export default function EditorRutina() {
         <button type="button" className="boton-secundario" onClick={cancelar} disabled={guardando}>
           Cancelar
         </button>
+        {/* Queda entre Cancelar y Guardar rutina (el botón principal va siempre último). */}
+        {baseId && !rutinaId && (
+          <button type="button" className="boton-secundario" onClick={() => setGuardandoEn(true)} disabled={guardando}>
+            Guardar en…
+          </button>
+        )}
       </div>
+
+      {guardandoEn && (
+        <GuardarEn
+          alumnoActualId={datos.alumno?.id ?? null}
+          ocupado={guardando}
+          onAlumno={guardarEn}
+          onDescargar={descargar}
+          onCerrar={() => setGuardandoEn(false)}
+        />
+      )}
     </section>
   );
 }

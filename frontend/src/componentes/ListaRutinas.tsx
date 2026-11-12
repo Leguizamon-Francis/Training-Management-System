@@ -61,9 +61,14 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
                     Enviar
                   </a>
                 )}
-                {/* Solo en las rutinas de un alumno; las viejas usan una planilla que ya no se elige */}
-                {alumno && MODELOS_RUTINA.some((modelo) => modelo === rutina.tipo) && (
-                  <Link to={`/rutinas/${rutina.alumnoId}/nueva?tipo=${rutina.tipo}&base=${rutina.id}`} state={origen} className="boton-link">
+                {/* Las rutinas viejas usan una planilla que ya no se elige. La nueva queda, en principio, donde
+                    está la base (el mismo alumno o "Rutinas sin alumno"); en el editor, "Guardar en" la lleva a otro. */}
+                {MODELOS_RUTINA.some((modelo) => modelo === rutina.tipo) && (
+                  <Link
+                    to={`/rutinas/${rutina.alumnoId ?? "sin-alumno"}/nueva?tipo=${rutina.tipo}&base=${rutina.id}`}
+                    state={origen}
+                    className="boton-link"
+                  >
                     Usar como base
                   </Link>
                 )}

@@ -2,7 +2,7 @@ import express, { Router, type Request } from "express";
 import { ErrorHttp, leerId } from "../../lib/errores";
 import { enviarPdf } from "../../lib/pdf";
 import { esDemo, MENSAJE_DEMO } from "../../middlewares/soloLectura";
-import { esquemaBorrador, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
+import { esquemaBorrador, esquemaCrear, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
 import {
   actualizarRutina,
   borradorRutina,
@@ -43,10 +43,10 @@ rutinasRouter.get("/alumnos/:alumnoId/rutinas/borrador", async (req, res) => {
   enviarPdf(res, await borradorRutina(leerId(req.params.alumnoId), tipo, base));
 });
 
-// POST /api/alumnos/:alumnoId/rutinas?tipo=…  (cuerpo: el PDF completado)
+// POST /api/alumnos/:alumnoId/rutinas?tipo=…[&datosAlumno=true]  (cuerpo: el PDF completado)
 rutinasRouter.post("/alumnos/:alumnoId/rutinas", recibirPdf, async (req, res) => {
-  const { tipo } = esquemaModeloRutina.parse(req.query);
-  res.status(201).json(await crearRutina(leerId(req.params.alumnoId), tipo, pdfRecibido(req)));
+  const { tipo, datosAlumno } = esquemaCrear.parse(req.query);
+  res.status(201).json(await crearRutina(leerId(req.params.alumnoId), tipo, pdfRecibido(req), datosAlumno));
 });
 
 // ---------- Rutinas sin alumno (van antes de /rutinas/:id para que no se confundan con un id) ----------
@@ -60,10 +60,10 @@ rutinasRouter.get("/rutinas/sueltas", async (_req, res) => {
   res.json(await listarRutinasSueltas());
 });
 
-// GET /api/rutinas/borrador?tipo=…  → la planilla en blanco
+// GET /api/rutinas/borrador?tipo=…[&base=…]  → la planilla en blanco, o con lo escrito en otra rutina sin alumno
 rutinasRouter.get("/rutinas/borrador", async (req, res) => {
-  const { tipo } = esquemaModeloRutina.parse(req.query);
-  enviarPdf(res, await borradorRutina(null, tipo));
+  const { tipo, base } = esquemaBorrador.parse(req.query);
+  enviarPdf(res, await borradorRutina(null, tipo, base));
 });
 
 // POST /api/rutinas?tipo=…  (cuerpo: el PDF completado)

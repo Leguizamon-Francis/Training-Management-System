@@ -198,8 +198,8 @@ export async function pdfDeRutina(id: number) {
 }
 
 // PDF para empezar una rutina nueva: la plantilla con el nombre y la edad del alumno (una rutina sin alumno
-// arranca en blanco). Con una rutina base del mismo alumno, copia lo escrito en ella, salvo las fechas,
-// que son del bloque anterior.
+// arranca en blanco). Con una rutina base del mismo alumno (o, sin alumno, otra rutina sin alumno), copia lo
+// escrito en ella, salvo las fechas, que son del bloque anterior.
 export async function borradorRutina(alumnoId: number | null, tipo: TipoBloque, baseId?: number) {
   const alumno = alumnoId === null ? null : await obtenerAlumno(alumnoId);
   let copiados: Valores = {};
@@ -214,18 +214,23 @@ export async function borradorRutina(alumnoId: number | null, tipo: TipoBloque, 
     copiados = Object.fromEntries(Object.entries(base.valores as Valores).filter(([campo]) => !campo.startsWith("fecha_")));
   }
   if (!alumno) return generarPdf(tipo, copiados);
-  return generarPdf(tipo, {
-    ...copiados,
+  return generarPdf(tipo, { ...copiados, ...datosDelAlumno(alumno) });
+}
+
+function datosDelAlumno(alumno: { nombre: string; apellido: string; fechaNacimiento: Date }): Valores {
+  return {
     [CAMPO_NOMBRE]: `${alumno.apellido}, ${alumno.nombre}`,
     edad: String(calcularEdad(textoDesdeFecha(alumno.fechaNacimiento))),
-  });
+  };
 }
 
 // ---------- Altas y cambios ----------
 
-export async function crearRutina(alumnoId: number | null, tipo: TipoBloque, pdf: Uint8Array) {
-  if (alumnoId !== null) await obtenerAlumno(alumnoId);
-  const valores = await extraerValores(pdf);
+// Con datosAlumno, el nombre y la edad de la planilla pasan a ser los del alumno ("Guardar en" otro alumno).
+export async function crearRutina(alumnoId: number | null, tipo: TipoBloque, pdf: Uint8Array, datosAlumno = false) {
+  const alumno = alumnoId === null ? null : await obtenerAlumno(alumnoId);
+  let valores = await extraerValores(pdf);
+  if (alumno && datosAlumno) valores = { ...valores, ...datosDelAlumno(alumno) };
   // La rutina empieza el día que se crea y dura lo que indica su tipo de bloque.
   const desde = hoyComoTexto();
   const hasta = fechaFin(tipo, desde);
