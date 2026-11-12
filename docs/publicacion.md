@@ -43,7 +43,7 @@ Desde `backend`, en la consola del servidor (en Render, la Shell del Web Service
 
 ```bash
 npm run centros -- crear <base> "<Nombre del gimnasio>"   # crea su base con el catálogo inicial
-npm run centros -- plantillas <base>                       # le carga los modelos de rutina
+npm run centros -- plantillas <base> [MODELO …]            # le carga modelos de rutina (sin MODELO, los generales)
 npm run crear-admin                                        # su usuario de ingreso (pregunta el gimnasio)
 ```
 

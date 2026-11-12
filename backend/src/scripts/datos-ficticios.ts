@@ -3,7 +3,7 @@
 // próximas, y alumnos que dejaron de venir. Se puede ejecutar varias veces: saltea los DNI que ya existen.
 // Usar dentro de enCentro (escribe en el gimnasio del contexto).
 import { Prisma, type TipoAnotacion } from "@prisma/client";
-import { fechaDesdeTexto, hoyComoTexto, sumarMeses, textoDesdeFecha } from "../lib/fechas";
+import { fechaDesdeTexto, hoyComoTexto, sumarDias, sumarMeses, textoDesdeFecha } from "../lib/fechas";
 import { prisma } from "../lib/prisma";
 
 type AlumnoFicticio = {
@@ -57,12 +57,6 @@ const EJERCICIOS = [
   ["Press de banca", "Remo con barra", "Press militar", "Dominadas asistidas", "Face pull", "Curl de bíceps", "Tríceps en polea"],
   ["Sentadilla búlgara", "Peso muerto", "Saltos al cajón", "Swing con pesa rusa", "Plancha lateral"],
 ];
-
-function sumarDias(texto: string, dias: number) {
-  const fecha = fechaDesdeTexto(texto);
-  fecha.setUTCDate(fecha.getUTCDate() + dias);
-  return textoDesdeFecha(fecha);
-}
 
 function sinTildes(texto: string) {
   return texto.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();

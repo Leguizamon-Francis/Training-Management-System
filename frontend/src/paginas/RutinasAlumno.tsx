@@ -4,10 +4,10 @@ import { alumnosApi } from "../api/alumnos";
 import { rutinasApi, type Rutina } from "../api/rutinas";
 import Cargando from "../componentes/Cargando";
 import ListaRutinas from "../componentes/ListaRutinas";
+import OpcionesModelo from "../componentes/OpcionesModelo";
 import VolverAlumno from "../componentes/VolverAlumno";
 import { useCarga } from "../hooks/useCarga";
 import { formatearFechaHora } from "../utils/formato";
-import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 import { useConfirmar } from "../componentes/Confirmar";
 
 export default function RutinasAlumno() {
@@ -69,18 +69,7 @@ export default function RutinasAlumno() {
       {eligiendoTipo && (
         <div className="tarjeta seccion">
           <h2>Elegí el modelo de rutina</h2>
-          <div className="opciones-bloque">
-            {MODELOS_RUTINA.map((tipo) => (
-              <button
-                key={tipo}
-                type="button"
-                className="opcion-bloque"
-                onClick={() => navigate(`/rutinas/${alumno.id}/nueva?tipo=${tipo}`, { state: origen })}
-              >
-                {ETIQUETAS_TIPO_BLOQUE[tipo]}
-              </button>
-            ))}
-          </div>
+          <OpcionesModelo onElegir={(tipo) => navigate(`/rutinas/${alumno.id}/nueva?tipo=${tipo}`, { state: origen })} />
           <button type="button" className="boton-secundario" onClick={() => setEligiendoTipo(false)}>
             Cancelar
           </button>

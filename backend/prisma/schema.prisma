@@ -61,6 +61,7 @@ enum TipoBloque {
   MICROCICLOS_1_SEMANA // rutinas viejas: bloque de 4 microciclos de 1 semana (planilla rutina.pdf)
   MODELO_RUTINA // planilla "Modelo Rutina"
   MODELO_RUTINA_2 // planilla "Modelo Rutina 2"
+  PLANILLA_6_SEMANAS // planilla "Planilla 6 semanas" (5 días, 6 semanas)
 }
 
 enum MedioPago {
@@ -278,7 +279,7 @@ model Rutina {
   tipo          TipoBloque
   valores       Json // { "nombre": "Pérez, Juan", "deporte": "Hockey", "A4": "Sentadilla", ... }
   objetivo      String? // deporte u objetivo, copiado de la planilla para mostrarlo en las listas sin abrir el PDF
-  // Duración del bloque, calculada por el sistema: desde = día de creación; hasta = según el tipo (MESES_POR_BLOQUE).
+  // Duración del bloque, calculada por el sistema: desde = día de creación; hasta = según el tipo (DURACION en rutinas.service).
   desde         DateTime   @db.Date
   hasta         DateTime   @db.Date
   creadoEn      DateTime   @default(now())

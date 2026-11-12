@@ -8,8 +8,7 @@ export interface ControlPlanilla {
   obtenerPdf: () => Promise<Uint8Array>;
 }
 
-const ANCHO_MINIMO_HOJA = 700;
-const ESCALA_PANTALLA_ANGOSTA = "0.75";
+const ESCALA_MINIMA = 0.75;
 
 // Muestra un PDF con campos rellenables (pdf.js, de Mozilla) para completarlo dentro de la página.
 // El PDF original no se toca: lo escrito queda en memoria hasta que se pide con obtenerPdf().
@@ -55,9 +54,10 @@ const PlanillaEditable = forwardRef<ControlPlanilla, { datos: Uint8Array }>(func
       });
       linkService.setViewer(visor);
       eventBus.on("pagesinit", () => {
-        // La hoja ocupa todo el ancho disponible; en el celular se vería diminuta: queda legible y se desliza.
-        const pantallaAngosta = (contenedor.current?.clientWidth ?? 0) < ANCHO_MINIMO_HOJA;
-        visor.currentScaleValue = pantallaAngosta ? ESCALA_PANTALLA_ANGOSTA : "page-width";
+        // La hoja ocupa todo el ancho disponible. Si así se vería diminuta (en el celular, o una planilla muy
+        // ancha), queda en un tamaño legible y se desliza.
+        visor.currentScaleValue = "page-width";
+        if (visor.currentScale < ESCALA_MINIMA) visor.currentScale = ESCALA_MINIMA;
         setCargando(false);
       });
       visor.setDocument(doc);

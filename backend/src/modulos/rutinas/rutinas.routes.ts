@@ -9,6 +9,7 @@ import {
   crearRutina,
   eliminarRutina,
   listarAlumnosConRutinas,
+  listarModelos,
   listarRutinas,
   listarRutinasSueltas,
   obtenerRutina,
@@ -49,6 +50,11 @@ rutinasRouter.post("/alumnos/:alumnoId/rutinas", recibirPdf, async (req, res) =>
 });
 
 // ---------- Rutinas sin alumno (van antes de /rutinas/:id para que no se confundan con un id) ----------
+
+// GET /api/rutinas/modelos  → los modelos de rutina que tiene cargados este gimnasio
+rutinasRouter.get("/rutinas/modelos", async (_req, res) => {
+  res.json(await listarModelos());
+});
 
 rutinasRouter.get("/rutinas/sueltas", async (_req, res) => {
   res.json(await listarRutinasSueltas());

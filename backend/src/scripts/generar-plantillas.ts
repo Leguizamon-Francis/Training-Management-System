@@ -149,6 +149,64 @@ function modeloRutina2(): Modelo {
   return { nombre: "Modelo Rutina 2", columnas: [10.43, 28, 8.29, 8.71, 6, 5.29, 5.86, 5.43, 5.43, 5.43, 5.86, 5.71, 5.86, 6], filas: 31, celdas };
 }
 
+// Un recuadro de la hoja, en puntos (y desde abajo, como en PDF).
+interface Recuadro {
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+  texto?: string;
+  tamanioTexto?: number;
+  campo?: string;
+  valor?: string;
+  color?: Color;
+  izquierda?: boolean;
+  variasLineas?: boolean; // el campo admite varios renglones
+}
+
+// Corta un texto en renglones que entren en el ancho dado.
+function renglones(texto: string, fuente: PDFFont, tamanio: number, ancho: number) {
+  const lineas: string[] = [];
+  for (const palabra of texto.split(" ")) {
+    const ultima = lineas.at(-1);
+    if (ultima !== undefined && fuente.widthOfTextAtSize(`${ultima} ${palabra}`, tamanio) <= ancho) lineas[lineas.length - 1] = `${ultima} ${palabra}`;
+    else lineas.push(palabra);
+  }
+  return lineas;
+}
+
+function dibujarRecuadro(pdf: PDFDocument, pagina: PDFPage, negrita: PDFFont, r: Recuadro) {
+  const color = r.color ?? rgb(1, 1, 1);
+  pagina.drawRectangle({ x: r.x, y: r.y, width: r.ancho, height: r.alto, color, borderColor: rgb(0, 0, 0), borderWidth: 1 });
+
+  if (r.texto) {
+    const tamanio = r.tamanioTexto ?? TAMANIO_LETRA;
+    const lineas = renglones(r.texto, negrita, tamanio, r.ancho - 4);
+    const interlineado = tamanio * 1.15;
+    // Los renglones quedan centrados en el alto del recuadro.
+    const primera = r.y + (r.alto + (lineas.length - 1) * interlineado - tamanio) / 2 + 1;
+    lineas.forEach((linea, i) => {
+      const anchoTexto = negrita.widthOfTextAtSize(linea, tamanio);
+      pagina.drawText(linea, {
+        x: r.izquierda ? r.x + 4 : r.x + (r.ancho - anchoTexto) / 2,
+        y: primera - i * interlineado,
+        size: tamanio,
+        font: negrita,
+      });
+    });
+  }
+
+  if (r.campo) {
+    const campo = pdf.getForm().createTextField(r.campo);
+    if (r.variasLineas) campo.enableMultiline();
+    if (r.valor) campo.setText(r.valor);
+    campo.addToPage(pagina, { x: r.x + 1, y: r.y + 1, width: r.ancho - 2, height: r.alto - 2, borderWidth: 0, backgroundColor: color });
+    campo.setFontSize(TAMANIO_LETRA);
+    campo.setAlignment(r.izquierda ? TextAlignment.Left : TextAlignment.Center);
+  }
+}
+
+// Modelos de una hoja A4: cada celda se ubica en la grilla del Excel, escalada al ancho de la hoja.
 function dibujarCelda(pdf: PDFDocument, pagina: PDFPage, negrita: PDFFont, modelo: Modelo, celda: Celda) {
   const total = modelo.columnas.reduce((suma, ancho) => suma + ancho, 0);
   const escala = (ANCHO_HOJA - 2 * MARGEN) / total;
@@ -157,27 +215,7 @@ function dibujarCelda(pdf: PDFDocument, pagina: PDFPage, negrita: PDFFont, model
   const ancho = modelo.columnas.slice(celda.columna, celda.columna + (celda.ancho ?? 1)).reduce((suma, a) => suma + a, 0) * escala;
   const alto = altoFila * (celda.alto ?? 1);
   const y = ALTO_HOJA - MARGEN - altoFila * (celda.fila - 1) - alto;
-  const color = celda.color ?? rgb(1, 1, 1);
-
-  pagina.drawRectangle({ x, y, width: ancho, height: alto, color, borderColor: rgb(0, 0, 0), borderWidth: 1 });
-
-  if (celda.texto) {
-    const anchoTexto = negrita.widthOfTextAtSize(celda.texto, TAMANIO_LETRA);
-    pagina.drawText(celda.texto, {
-      x: celda.izquierda ? x + 4 : x + (ancho - anchoTexto) / 2,
-      y: y + (alto - TAMANIO_LETRA) / 2 + 1,
-      size: TAMANIO_LETRA,
-      font: negrita,
-    });
-  }
-
-  if (celda.campo) {
-    const campo = pdf.getForm().createTextField(celda.campo);
-    if (celda.valor) campo.setText(celda.valor);
-    campo.addToPage(pagina, { x: x + 1, y: y + 1, width: ancho - 2, height: alto - 2, borderWidth: 0, backgroundColor: color });
-    campo.setFontSize(TAMANIO_LETRA);
-    campo.setAlignment(celda.izquierda ? TextAlignment.Left : TextAlignment.Center);
-  }
+  dibujarRecuadro(pdf, pagina, negrita, { ...celda, x, y, ancho, alto });
 }
 
 async function generar(modelo: Modelo, carpeta: string) {
@@ -186,8 +224,138 @@ async function generar(modelo: Modelo, carpeta: string) {
   const pagina = pdf.addPage([ANCHO_HOJA, ALTO_HOJA]);
   const negrita = await pdf.embedFont(StandardFonts.HelveticaBold);
   for (const celda of modelo.celdas) dibujarCelda(pdf, pagina, negrita, modelo, celda);
-  await writeFile(path.join(carpeta, `${modelo.nombre}.pdf`), await pdf.save());
-  console.log(`${modelo.nombre}.pdf: ${pdf.getForm().getFields().length} campos`);
+  await guardar(pdf, modelo.nombre, carpeta);
+}
+
+async function guardar(pdf: PDFDocument, nombre: string, carpeta: string) {
+  await writeFile(path.join(carpeta, `${nombre}.pdf`), await pdf.save());
+  console.log(`${nombre}.pdf: ${pdf.getForm().getFields().length} campos`);
+}
+
+// ---------- Planilla de 6 semanas ----------
+// Un día por hoja (el Excel es muy ancho para una sola). Cada ejercicio ocupa dos renglones: series,
+// repeticiones, RPE y kilos se anotan en cada renglón; las demás columnas abarcan los dos. Los campos se llaman
+// como la celda del Excel (A3, C3, F4, AO3…), con su número de fila aunque cada día vaya en su hoja. Arriba de
+// la primera hoja se agregaron nombre, edad y deporte, como en los otros modelos.
+
+const SEMANAS = 6;
+const COLUMNAS_SEMANA = [
+  { titulo: "SERIES", ancho: 34 },
+  { titulo: "REPS", ancho: 34 },
+  { titulo: "RPE (GRADO DE ESFUERZO)", ancho: 44 },
+  { titulo: "KGS SUGERIDOS PARA EL EJERCICIO", ancho: 46 },
+  { titulo: "KGS (ANOTA ACA)", ancho: 40 },
+  { titulo: "ANOTACIONES DEL ALUMNO", ancho: 80, unaPorEjercicio: true },
+  { titulo: "CORRECCIONES", ancho: 80, unaPorEjercicio: true },
+];
+// Columnas A a E: descansos, número, ejercicio, notas y RM anteriores.
+const ANCHOS_INICIO = [52, 22, 150, 170, 46];
+
+// Fila del encabezado de cada día en el Excel y cuántos ejercicios abarca cada descanso (columna A).
+// En el Excel el quinto día también dice "Dia 4".
+const DIAS = [
+  { titulo: "Dia 1", fila: 1, descansos: [1, 1, 1, 1, 1, 2] },
+  { titulo: "Dia 2", fila: 18, descansos: [1, 1, 1, 1, 1, 2] },
+  { titulo: "Dia 3", fila: 35, descansos: [1, 1, 1, 2, 1, 2] },
+  { titulo: "Dia 4", fila: 54, descansos: [1, 1, 1, 1, 1, 1, 2] },
+  { titulo: "Dia 5", fila: 73, descansos: [1, 1, 1, 1, 1, 1, 2] },
+];
+
+const ALTO_TITULO = 18; // fila "Dia 1 / SEMANA 1…"
+const ALTO_COLUMNAS = 36; // fila con el nombre de cada columna
+const ALTO_RENGLON = 18;
+const ALTO_DATOS_ALUMNO = 20;
+const SEPARACION = 8;
+const TAMANIO_ENCABEZADO = 6.5;
+
+// Letras de columna como en el Excel: 0 → A, 25 → Z, 26 → AA.
+function columnaExcel(indice: number): string {
+  return indice < 26 ? letra(indice) : columnaExcel(Math.floor(indice / 26) - 1) + letra(indice % 26);
+}
+
+async function planilla6Semanas(carpeta: string) {
+  const nombre = "Planilla 6 semanas";
+  const CELESTE = hex("D0E0E3");
+  const GRIS = hex("F3F3F3");
+  const columnasSemana = Array.from({ length: SEMANAS }, () => COLUMNAS_SEMANA).flat();
+  const anchos = [...ANCHOS_INICIO, ...columnasSemana.map((c) => c.ancho)];
+  const xDe = (columna: number) => MARGEN + anchos.slice(0, columna).reduce((suma, a) => suma + a, 0);
+  const anchoDe = (columna: number, cuantas = 1) => anchos.slice(columna, columna + cuantas).reduce((suma, a) => suma + a, 0);
+  const maxRenglones = Math.max(...DIAS.map((dia) => dia.descansos.reduce((suma, n) => suma + n, 0) * 2));
+  const anchoHoja = xDe(anchos.length) + MARGEN;
+  const altoHoja = 2 * MARGEN + ALTO_DATOS_ALUMNO + SEPARACION + ALTO_TITULO + ALTO_COLUMNAS + maxRenglones * ALTO_RENGLON;
+
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(nombre);
+  const negrita = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+  DIAS.forEach((dia, numeroDia) => {
+    const pagina = pdf.addPage([anchoHoja, altoHoja]);
+    const dibujar = (r: Recuadro) => dibujarRecuadro(pdf, pagina, negrita, r);
+    const arriba = altoHoja - MARGEN;
+
+    if (numeroDia === 0) {
+      const datos = { y: arriba - ALTO_DATOS_ALUMNO, alto: ALTO_DATOS_ALUMNO, color: CELESTE };
+      const filas = [
+        { texto: "NOMBRE:", anchoTexto: anchoDe(0, 2), campo: "nombre", ancho: 260 },
+        { texto: "EDAD", anchoTexto: 46, campo: "edad", ancho: 46 },
+        { texto: "DEPORTE", anchoTexto: 60, campo: "deporte", ancho: 220 },
+      ];
+      let x = MARGEN;
+      for (const { texto, anchoTexto, campo, ancho } of filas) {
+        dibujar({ ...datos, x, ancho: anchoTexto, texto });
+        dibujar({ ...datos, x: x + anchoTexto, ancho, campo, izquierda: campo !== "edad" });
+        x += anchoTexto + ancho;
+      }
+    }
+
+    // Encabezado: "Dia N", notas, RM anteriores y el título de cada semana; debajo, los nombres de las columnas.
+    const yTitulo = arriba - ALTO_DATOS_ALUMNO - SEPARACION - ALTO_TITULO;
+    const yColumnas = yTitulo - ALTO_COLUMNAS;
+    const altoDoble = ALTO_TITULO + ALTO_COLUMNAS;
+    const encabezado = { color: CELESTE, tamanioTexto: TAMANIO_ENCABEZADO };
+    dibujar({ ...encabezado, x: xDe(0), y: yTitulo, ancho: anchoDe(0), alto: ALTO_TITULO, texto: dia.titulo, tamanioTexto: TAMANIO_LETRA });
+    dibujar({ ...encabezado, x: xDe(0), y: yColumnas, ancho: anchoDe(0), alto: ALTO_COLUMNAS, texto: "DESCANSOS" });
+    dibujar({ ...encabezado, x: xDe(1), y: yColumnas, ancho: anchoDe(1, 2), alto: altoDoble });
+    dibujar({ ...encabezado, x: xDe(3), y: yColumnas, ancho: anchoDe(3), alto: altoDoble, texto: "NOTAS DE LOS EJERCICIOS (EXPLICACIONES BREVES)" });
+    dibujar({ x: xDe(4), y: yColumnas, ancho: anchoDe(4), alto: altoDoble, texto: "RM ANTERIORES", tamanioTexto: TAMANIO_ENCABEZADO });
+    for (let semana = 0; semana < SEMANAS; semana++) {
+      const primera = ANCHOS_INICIO.length + semana * COLUMNAS_SEMANA.length;
+      dibujar({ x: xDe(primera), y: yTitulo, ancho: anchoDe(primera, COLUMNAS_SEMANA.length), alto: ALTO_TITULO, texto: `SEMANA ${semana + 1}`, color: GRIS });
+      COLUMNAS_SEMANA.forEach((columna, i) =>
+        dibujar({ x: xDe(primera + i), y: yColumnas, ancho: columna.ancho, alto: ALTO_COLUMNAS, texto: columna.titulo, tamanioTexto: TAMANIO_ENCABEZADO }),
+      );
+    }
+
+    // Ejercicios: empiezan dos filas debajo del encabezado del día, de a dos renglones.
+    let fila = dia.fila + 2;
+    let y = yColumnas;
+    for (const ejercicios of dia.descansos) {
+      const altoDescanso = ejercicios * 2 * ALTO_RENGLON;
+      dibujar({ x: xDe(0), y: y - altoDescanso, ancho: anchoDe(0), alto: altoDescanso, campo: `A${fila}`, variasLineas: true });
+      for (let e = 0; e < ejercicios; e++) {
+        y -= 2 * ALTO_RENGLON;
+        const dosRenglones = { y, alto: 2 * ALTO_RENGLON };
+        dibujar({ ...dosRenglones, x: xDe(1), ancho: anchoDe(1), campo: `B${fila}` });
+        dibujar({ ...dosRenglones, x: xDe(2), ancho: anchoDe(2), campo: `C${fila}`, izquierda: true, variasLineas: true });
+        dibujar({ ...dosRenglones, x: xDe(3), ancho: anchoDe(3), campo: `D${fila}`, izquierda: true, variasLineas: true });
+        dibujar({ ...dosRenglones, x: xDe(4), ancho: anchoDe(4), campo: `E${fila}` });
+        columnasSemana.forEach((columna, i) => {
+          const indice = ANCHOS_INICIO.length + i;
+          const columnaX = { x: xDe(indice), ancho: columna.ancho };
+          if (columna.unaPorEjercicio) {
+            dibujar({ ...columnaX, ...dosRenglones, campo: `${columnaExcel(indice)}${fila}`, izquierda: true, variasLineas: true });
+          } else {
+            dibujar({ ...columnaX, y: y + ALTO_RENGLON, alto: ALTO_RENGLON, campo: `${columnaExcel(indice)}${fila}` });
+            dibujar({ ...columnaX, y, alto: ALTO_RENGLON, campo: `${columnaExcel(indice)}${fila + 1}` });
+          }
+        });
+        fila += 2;
+      }
+    }
+  });
+
+  await guardar(pdf, nombre, carpeta);
 }
 
 async function main() {
@@ -195,6 +363,7 @@ async function main() {
   await mkdir(carpeta, { recursive: true });
   await generar(modeloRutina(), carpeta);
   await generar(modeloRutina2(), carpeta);
+  await planilla6Semanas(carpeta);
 }
 
 main();

@@ -40,6 +40,12 @@ export function sumarMeses(texto: string, meses: number) {
   return textoDesdeFecha(new Date(Date.UTC(anioNuevo, mesNuevo, Math.min(dia, ultimoDiaDelMes))));
 }
 
+export function sumarDias(texto: string, dias: number) {
+  const fecha = fechaDesdeTexto(texto);
+  fecha.setUTCDate(fecha.getUTCDate() + dias);
+  return textoDesdeFecha(fecha);
+}
+
 // Años cumplidos a una fecha (por defecto, hoy). Los textos "aaaa-mm-dd" se pueden comparar directamente.
 export function calcularEdad(nacimiento: string, hoy = hoyComoTexto()) {
   const anios = Number(hoy.slice(0, 4)) - Number(nacimiento.slice(0, 4));

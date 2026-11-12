@@ -78,7 +78,7 @@ npm install
 npm run db:deploy                  # creates the control database and runs all migrations
 npm run centros -- crear gimnasio "My gym"   # creates a gym with its own database
 npm run plantillas                 # generates the workout plan PDF templates
-npm run centros -- plantillas gimnasio       # loads them into the gym
+npm run centros -- plantillas gimnasio       # loads the general ones into the gym (or name the models to load)
 npm run crear-admin                # login user (asks for gym, email, name and password)
 npm run dev                        # API at http://localhost:3000
 

@@ -1,6 +1,6 @@
 import { ErrorApi, pedir } from "./cliente";
 
-export type ModeloRutina = "MODELO_RUTINA" | "MODELO_RUTINA_2";
+export type ModeloRutina = "MODELO_RUTINA" | "MODELO_RUTINA_2" | "PLANILLA_6_SEMANAS";
 export type TipoBloque = "MICROCICLOS_2_SEMANAS" | "MICROCICLOS_1_SEMANA" | ModeloRutina; // los MICROCICLOS son de rutinas viejas
 
 export interface Rutina {
@@ -9,7 +9,7 @@ export interface Rutina {
   tipo: TipoBloque;
   objetivo: string | null; // deporte u objetivo copiado de la planilla, para mostrar en listas
   desde: string; // ISO: día de creación
-  hasta: string; // ISO: según el tipo (2 meses en los modelos actuales)
+  hasta: string; // ISO: según el tipo (2 meses o 6 semanas)
   creadoEn: string; // ISO
   actualizadoEn: string;
 }
@@ -57,6 +57,9 @@ export const rutinasApi = {
   alumnos: () => pedir<AlumnoConRutinas[]>("/rutinas/alumnos"),
 
   listar: (alumnoId: number) => pedir<Rutina[]>(`/alumnos/${alumnoId}/rutinas`),
+
+  // Modelos de rutina que tiene cargados el gimnasio (los únicos que puede elegir).
+  modelos: () => pedir<ModeloRutina[]>("/rutinas/modelos"),
 
   sueltas: () => pedir<RutinaSuelta[]>("/rutinas/sueltas"),
 

@@ -4,10 +4,10 @@ import { rutinasApi, type Rutina } from "../api/rutinas";
 import BotonVerTodos from "../componentes/BotonVerTodos";
 import Desplegable from "../componentes/Desplegable";
 import ListaRutinas from "../componentes/ListaRutinas";
+import OpcionesModelo from "../componentes/OpcionesModelo";
 import { useCarga } from "../hooks/useCarga";
 import { ALUMNOS_POR_LISTA, useListaCorta } from "../hooks/useListaCorta";
 import { coincideBusqueda, formatearFecha, formatearFechaHora } from "../utils/formato";
-import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 import { useConfirmar } from "../componentes/Confirmar";
 import { Flecha } from "../componentes/Iconos";
 
@@ -130,18 +130,7 @@ export default function Rutinas() {
         <div className="tarjeta seccion">
           <h2>Rutina sin datos de alumno</h2>
           <p className="texto-suave">Elegí el modelo. La rutina queda guardada en "Rutinas sin alumno".</p>
-          <div className="opciones-bloque">
-            {MODELOS_RUTINA.map((tipo) => (
-              <button
-                key={tipo}
-                type="button"
-                className="opcion-bloque"
-                onClick={() => navigate(`/rutinas/sin-alumno/nueva?tipo=${tipo}`, { state: origen })}
-              >
-                {ETIQUETAS_TIPO_BLOQUE[tipo]}
-              </button>
-            ))}
-          </div>
+          <OpcionesModelo onElegir={(tipo) => navigate(`/rutinas/sin-alumno/nueva?tipo=${tipo}`, { state: origen })} />
           <button type="button" className="boton-secundario" onClick={() => setSinAlumno(false)}>
             Cancelar
           </button>

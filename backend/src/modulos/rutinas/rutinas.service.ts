@@ -4,7 +4,7 @@ import type { TipoBloque } from "@prisma/client";
 import { PDFDocument, PDFTextField } from "pdf-lib";
 import { env } from "../../config/env";
 import { ErrorHttp } from "../../lib/errores";
-import { calcularEdad, fechaArgentina, fechaDesdeTexto, formatearFechaTexto, hoyComoTexto, sumarMeses, textoDesdeFecha } from "../../lib/fechas";
+import { calcularEdad, fechaArgentina, fechaDesdeTexto, formatearFechaTexto, hoyComoTexto, sumarDias, sumarMeses, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
 
@@ -14,13 +14,19 @@ const CAMPO_DEPORTE = "deporte";
 const CAMPO_OBJETIVO_VIEJO = "untitled2";
 const CAMPO_NOMBRE = "nombre";
 
-// Duración de cada tipo de rutina. Los modelos tienen 4 microciclos de 2 semanas.
-const MESES_POR_BLOQUE: Record<TipoBloque, number> = {
-  MICROCICLOS_2_SEMANAS: 2,
-  MICROCICLOS_1_SEMANA: 1,
-  MODELO_RUTINA: 2,
-  MODELO_RUTINA_2: 2,
+// Duración de cada tipo de rutina. "Modelo Rutina" y "Modelo Rutina 2" tienen 4 microciclos de 2 semanas.
+const DURACION: Record<TipoBloque, { meses: number } | { semanas: number }> = {
+  MICROCICLOS_2_SEMANAS: { meses: 2 },
+  MICROCICLOS_1_SEMANA: { meses: 1 },
+  MODELO_RUTINA: { meses: 2 },
+  MODELO_RUTINA_2: { meses: 2 },
+  PLANILLA_6_SEMANAS: { semanas: 6 },
 };
+
+function fechaFin(tipo: TipoBloque, desde: string) {
+  const duracion = DURACION[tipo];
+  return "meses" in duracion ? sumarMeses(desde, duracion.meses) : sumarDias(desde, duracion.semanas * 7);
+}
 
 // Los tipos viejos usan una planilla en un archivo (PLANTILLA_RUTINA) y solo sirven para abrir las rutinas ya
 // guardadas. Esa planilla no se guarda en ninguna base: tiene datos de una persona real y terminaría copiada en otros
@@ -31,10 +37,12 @@ const PLANTILLAS_VIEJAS: Partial<Record<TipoBloque, string>> = {
 };
 
 // Modelos actuales: los PDF que genera `npm run plantillas` (carpeta backend/plantillas). De ahí se cargan a la base
-// de cada gimnasio con `npm run centros -- plantillas <base>`; el sistema usa siempre la copia del gimnasio.
+// de cada gimnasio con `npm run centros -- plantillas <base> [modelos]`; el sistema usa siempre la copia del
+// gimnasio, y cada gimnasio ve solo los modelos que tiene cargados.
 export const ARCHIVOS_MODELOS: Partial<Record<TipoBloque, string>> = {
   MODELO_RUTINA: "plantillas/Modelo Rutina.pdf",
   MODELO_RUTINA_2: "plantillas/Modelo Rutina 2.pdf",
+  PLANILLA_6_SEMANAS: "plantillas/Planilla 6 semanas.pdf",
 };
 
 type Valores = Record<string, string>;
@@ -91,12 +99,22 @@ function textoDibujable(texto: string) {
 async function generarPdf(tipo: TipoBloque, valores: Valores) {
   const pdf = await PDFDocument.load(await leerPlantilla(tipo));
   for (const campo of pdf.getForm().getFields()) {
-    if (campo instanceof PDFTextField && campo.getName() in valores) campo.setText(textoDibujable(valores[campo.getName()]));
+    if (!(campo instanceof PDFTextField) || !(campo.getName() in valores)) continue;
+    // Solo se reescriben los que cambian: cada campo reescrito suma peso al PDF, y hay planillas con miles de campos vacíos.
+    const texto = textoDibujable(valores[campo.getName()]);
+    if (texto !== (campo.getText() ?? "")) campo.setText(texto);
   }
   return pdf.save();
 }
 
 // ---------- Consultas ----------
+
+// Modelos de rutina que tiene cargados el gimnasio del pedido (los únicos que puede elegir), en el orden de ARCHIVOS_MODELOS.
+export async function listarModelos() {
+  const cargados = await prisma.plantillaRutina.findMany({ select: { tipo: true } });
+  const tipos = new Set(cargados.map((plantilla) => plantilla.tipo));
+  return (Object.keys(ARCHIVOS_MODELOS) as TipoBloque[]).filter((tipo) => tipos.has(tipo));
+}
 
 // Alumnos activos con cuántas rutinas tienen y cuándo se creó la última.
 export async function listarAlumnosConRutinas() {
@@ -210,7 +228,7 @@ export async function crearRutina(alumnoId: number | null, tipo: TipoBloque, pdf
   const valores = await extraerValores(pdf);
   // La rutina empieza el día que se crea y dura lo que indica su tipo de bloque.
   const desde = hoyComoTexto();
-  const hasta = sumarMeses(desde, MESES_POR_BLOQUE[tipo]);
+  const hasta = fechaFin(tipo, desde);
   return prisma.rutina.create({
     data: { alumnoId, tipo, valores, ...resumen(valores), desde: fechaDesdeTexto(desde), hasta: fechaDesdeTexto(hasta) },
     select: datosRutina,

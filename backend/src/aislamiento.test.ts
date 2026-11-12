@@ -184,6 +184,10 @@ describe("aislamiento entre gimnasios", { skip: !servidorDePrueba && "hace falta
   });
 
   test("cada gimnasio usa sus propias planillas de rutina, y las rutinas de uno no se abren desde otro", async () => {
+    // Cada gimnasio ve solo los modelos que tiene cargados (A tiene uno; B, ninguno).
+    assert.deepEqual((await pedir("A", "GET", "/rutinas/modelos")).json, ["MODELO_RUTINA"]);
+    assert.deepEqual((await pedir("B", "GET", "/rutinas/modelos")).json, []);
+
     const borradorA = await fetch(`${direccion}/api/rutinas/borrador?tipo=MODELO_RUTINA`, { headers: { cookie: cookies.A } });
     assert.equal(borradorA.status, 200);
     assert.equal(borradorA.headers.get("content-type"), "application/pdf");
