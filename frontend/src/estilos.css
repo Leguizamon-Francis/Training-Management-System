@@ -2411,6 +2411,14 @@ button.indicador:hover {
     justify-content: flex-end;
   }
 
+  /* Rutinas: son muchas acciones (Abrir, Descargar, Enviar, Usar como base, Compartir, Eliminar): una debajo de
+     la otra, alineadas a la derecha. */
+  .tabla-rutinas td[data-etiqueta=""] {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+  }
+
   .tabla td a:not(.boton-link, .boton-whatsapp, .boton) {
     padding: 0.25rem 0;
   }

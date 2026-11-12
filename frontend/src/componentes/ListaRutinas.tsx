@@ -26,7 +26,7 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
 
   return (
     <div className="tabla-contenedor">
-      <table className="tabla">
+      <table className="tabla tabla-rutinas">
         <thead>
           <tr>
             {!alumno && <th>Nombre</th>}
@@ -80,7 +80,7 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
                 {/* Link para que el alumno la complete desde el celular (solo los modelos con vista por día). */}
                 {MODELOS_PARA_ALUMNO.includes(rutina.tipo) && (
                   <button type="button" data-no-en-demo className="boton-link" onClick={() => setCompartiendo(rutina.id)}>
-                    {linkDe(rutina.id) ? "Link alumno (activo)" : "Link alumno"}
+                    Compartir
                   </button>
                 )}
                 {onEliminar && (
