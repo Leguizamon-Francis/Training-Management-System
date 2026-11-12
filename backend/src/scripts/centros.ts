@@ -84,6 +84,14 @@ async function copiar(origen: string, baseDatos: string, nombre: string, esDemo:
   }
   migrarCentro(baseDatos);
 
+  // Los links de las rutinas para los alumnos son del gimnasio de origen: la copia arranca sin ninguno.
+  const copia = new PrismaClient({ datasourceUrl: urlDeBase(baseDatos) });
+  try {
+    await copia.$executeRaw`UPDATE "Rutina" SET "linkAlumno" = NULL`;
+  } finally {
+    await copia.$disconnect();
+  }
+
   const centro = await control.centro.create({ data: { nombre, baseDatos, esDemo } });
   if (esDemo) {
     // Se entra con el botón "Ver demo", nunca con contraseña: se le pone una al azar que nadie conoce.

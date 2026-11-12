@@ -17,6 +17,11 @@ export const esquemaCrear = esquemaModeloRutina.extend({
   datosAlumno: z.stringbool().default(false),
 });
 
+// PUT /api/rutinas/:id?leidaEn=…  (leidaEn: cuándo se abrió en el editor; ver conservarCambiosDelAlumno)
+export const esquemaActualizar = z.object({
+  leidaEn: z.coerce.date().optional(),
+});
+
 // GET /api/rutinas/:id/pdf?descargar=true
 export const esquemaDescarga = z.object({
   descargar: z.stringbool().default(false),

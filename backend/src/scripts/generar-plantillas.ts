@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, StandardFonts, TextAlignment, rgb, type Color, type PDFFont, type PDFPage } from "pdf-lib";
+import { ANCHOS_INICIO, COLUMNAS_SEMANA, columnaExcel, DIAS, SEMANAS } from "../modulos/rutinas/planilla-6-semanas";
 
 // Genera los PDF rellenables de las rutinas a partir del diseño de los Excel de modelos de rutina.
 // Cada campo se llama como su celda (A4, B4…), salvo nombre, edad, deporte y las fechas.
@@ -238,28 +239,8 @@ async function guardar(pdf: PDFDocument, nombre: string, carpeta: string) {
 // como la celda del Excel (A3, C3, F4, AO3…), con su número de fila aunque cada día vaya en su hoja. Arriba de
 // la primera hoja se agregaron nombre, edad y deporte, como en los otros modelos.
 
-const SEMANAS = 6;
-const COLUMNAS_SEMANA = [
-  { titulo: "SERIES", ancho: 34 },
-  { titulo: "REPS", ancho: 34 },
-  { titulo: "RPE (GRADO DE ESFUERZO)", ancho: 44 },
-  { titulo: "KGS SUGERIDOS PARA EL EJERCICIO", ancho: 46 },
-  { titulo: "KGS (ANOTA ACA)", ancho: 40 },
-  { titulo: "ANOTACIONES DEL ALUMNO", ancho: 80, unaPorEjercicio: true },
-  { titulo: "CORRECCIONES", ancho: 80, unaPorEjercicio: true },
-];
-// Columnas A a E: descansos, número, ejercicio, notas y RM anteriores.
-const ANCHOS_INICIO = [52, 22, 150, 170, 46];
-
-// Fila del encabezado de cada día en el Excel y cuántos ejercicios abarca cada descanso (columna A).
-// En el Excel el quinto día también dice "Dia 4".
-const DIAS = [
-  { titulo: "Dia 1", fila: 1, descansos: [1, 1, 1, 1, 1, 2] },
-  { titulo: "Dia 2", fila: 18, descansos: [1, 1, 1, 1, 1, 2] },
-  { titulo: "Dia 3", fila: 35, descansos: [1, 1, 1, 2, 1, 2] },
-  { titulo: "Dia 4", fila: 54, descansos: [1, 1, 1, 1, 1, 1, 2] },
-  { titulo: "Dia 5", fila: 73, descansos: [1, 1, 1, 1, 1, 1, 2] },
-];
+// SEMANAS, COLUMNAS_SEMANA, ANCHOS_INICIO, DIAS y columnaExcel están en modulos/rutinas/planilla-6-semanas.ts:
+// la vista del celular para el alumno usa la misma estructura.
 
 const ALTO_TITULO = 18; // fila "Dia 1 / SEMANA 1…"
 const ALTO_COLUMNAS = 36; // fila con el nombre de cada columna
@@ -267,11 +248,6 @@ const ALTO_RENGLON = 18;
 const ALTO_DATOS_ALUMNO = 20;
 const SEPARACION = 8;
 const TAMANIO_ENCABEZADO = 6.5;
-
-// Letras de columna como en el Excel: 0 → A, 25 → Z, 26 → AA.
-function columnaExcel(indice: number): string {
-  return indice < 26 ? letra(indice) : columnaExcel(Math.floor(indice / 26) - 1) + letra(indice % 26);
-}
 
 async function planilla6Semanas(carpeta: string) {
   const nombre = "Planilla 6 semanas";

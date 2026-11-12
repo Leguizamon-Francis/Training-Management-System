@@ -64,7 +64,7 @@ function datosPublicos(usuario: UsuarioConCentro) {
     email: usuario.email,
     nombre: usuario.nombre,
     rol: usuario.rol,
-    centro: usuario.centro && { nombre: usuario.centro.nombre, esDemo: usuario.centro.esDemo },
+    centro: usuario.centro && { id: usuario.centro.id, nombre: usuario.centro.nombre, esDemo: usuario.centro.esDemo },
   };
 }
 

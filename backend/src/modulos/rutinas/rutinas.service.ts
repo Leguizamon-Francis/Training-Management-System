@@ -7,6 +7,7 @@ import { ErrorHttp } from "../../lib/errores";
 import { calcularEdad, fechaArgentina, fechaDesdeTexto, formatearFechaTexto, hoyComoTexto, sumarDias, sumarMeses, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
+import { conservarCambiosDelAlumno } from "./rutina-alumno.service";
 
 // Campos que se muestran en las listas: "deporte" en los modelos actuales; en la planilla vieja, "untitled2"
 // (los nombres "untitled…" los puso el programa que armó ese PDF).
@@ -146,6 +147,8 @@ const datosRutina = {
   objetivo: true,
   desde: true,
   hasta: true,
+  linkAlumno: true, // link para que el alumno la complete desde el celular (null = no compartida)
+  alumnoEditoEn: true,
   creadoEn: true,
   actualizadoEn: true,
 } as const;
@@ -163,7 +166,8 @@ export async function obtenerRutina(id: number) {
   if (!rutina) {
     throw new ErrorHttp(404, "Rutina no encontrada");
   }
-  return rutina;
+  // leidaEn: el editor la devuelve al guardar, para no pisar lo que el alumno cambie mientras tanto.
+  return { ...rutina, leidaEn: new Date() };
 }
 
 // Rutinas sin alumno, con el nombre escrito en la planilla para reconocerlas en la lista.
@@ -240,10 +244,18 @@ export async function crearRutina(alumnoId: number | null, tipo: TipoBloque, pdf
   });
 }
 
-export async function actualizarRutina(id: number, pdf: Uint8Array) {
+// leidaEn: cuándo se abrió la rutina en el editor (ver conservarCambiosDelAlumno).
+export async function actualizarRutina(id: number, pdf: Uint8Array, leidaEn?: Date) {
   await obtenerRutina(id);
-  const valores = await extraerValores(pdf);
-  return prisma.rutina.update({ where: { id }, data: { valores, ...resumen(valores) }, select: datosRutina });
+  const nuevos = await extraerValores(pdf);
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM "Rutina" WHERE id = ${id} FOR UPDATE`; // que no se mezcle con un guardado del alumno
+    const actual = await tx.rutina.findUniqueOrThrow({ where: { id }, select: { valores: true, edicionesAlumno: true } });
+    const valores = leidaEn
+      ? conservarCambiosDelAlumno(nuevos, actual.valores as Valores, actual.edicionesAlumno as Record<string, string>, leidaEn)
+      : nuevos;
+    return tx.rutina.update({ where: { id }, data: { valores, ...resumen(valores) }, select: datosRutina });
+  });
 }
 
 export async function eliminarRutina(id: number) {

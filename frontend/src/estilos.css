@@ -2470,3 +2470,170 @@ button.indicador:hover {
 .buscador {
   color: var(--color-texto-suave);
 }
+
+/* ---------- Rutina del alumno (link del celular, /r/:centro/:link) ---------- */
+
+.rutina-alumno {
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.rutina-alumno h1 {
+  margin: 0.75rem 0 0.25rem;
+}
+
+.rutina-alumno-marca {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.rutina-alumno-marca .logo {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+/* Día, semana y estado del guardado quedan a la vista al deslizar. */
+.rutina-alumno-barra {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 1rem -1rem;
+  padding: 0.75rem 1rem 0.5rem;
+  background: var(--color-fondo);
+  border-bottom: 2px solid var(--color-borde);
+}
+
+.selector-chips {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.chip {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.85rem;
+  border: 2px solid var(--color-borde);
+  border-radius: 999px;
+  background: var(--color-superficie);
+  color: var(--color-texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chip-activo {
+  border-color: var(--color-primario);
+  background: var(--color-primario);
+  color: var(--color-sobre-primario);
+}
+
+.indicador-guardado {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+  text-align: right;
+}
+
+.indicador-guardado.estado-guardado {
+  color: var(--color-ok);
+}
+
+.estado-error {
+  color: var(--color-aviso);
+}
+
+.estado-cortado {
+  color: var(--color-error);
+}
+
+.ejercicio-alumno {
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ejercicio-alumno .campo {
+  margin-bottom: 0.75rem;
+}
+
+.ejercicio-alumno input,
+.ejercicio-alumno textarea {
+  font-size: max(1rem, 16px); /* 16px como mínimo: si no, el iPhone hace zoom al escribir */
+}
+
+.ejercicio-alumno-titulo {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.ejercicio-alumno-titulo input,
+.series-alumno input {
+  padding: 0.5rem;
+  border: 2px solid var(--color-borde);
+  border-radius: var(--radio);
+  font-family: inherit;
+  font-weight: 600;
+  background: var(--color-superficie);
+  color: inherit;
+  width: 100%;
+  min-width: 0;
+}
+
+.ejercicio-alumno-titulo input:not(.ejercicio-alumno-numero) {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ejercicio-alumno-numero {
+  flex: 0 0 3.25rem;
+  text-align: center;
+}
+
+.ejercicio-alumno-dos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.series-alumno {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0.3rem;
+  margin: 0 -0.3rem 0.5rem;
+  table-layout: fixed;
+}
+
+.series-alumno th {
+  font-size: 0.8rem;
+  color: var(--color-texto-suave);
+  text-align: center;
+}
+
+.series-alumno input {
+  text-align: center;
+  padding: 0.5rem 0.2rem;
+}
+
+.boton-ancho {
+  width: 100%;
+}
+
+/* Ventana "Link para el alumno" */
+.campo-link {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid var(--color-borde);
+  border-radius: var(--radio);
+  background: var(--color-fondo);
+  color: inherit;
+  font: inherit;
+}
+
+.acciones-compartir {
+  flex-wrap: wrap;
+}

@@ -2,7 +2,8 @@ import express, { Router, type Request } from "express";
 import { ErrorHttp, leerId } from "../../lib/errores";
 import { enviarPdf } from "../../lib/pdf";
 import { esDemo, MENSAJE_DEMO } from "../../middlewares/soloLectura";
-import { esquemaBorrador, esquemaCrear, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
+import { compartirRutina, dejarDeCompartir } from "./rutina-alumno.service";
+import { esquemaActualizar, esquemaBorrador, esquemaCrear, esquemaDescarga, esquemaModeloRutina } from "./rutinas.schemas";
 import {
   actualizarRutina,
   borradorRutina,
@@ -88,9 +89,21 @@ rutinasRouter.get("/rutinas/:id/pdf", async (req, res) => {
   enviarPdf(res, bytes, descargar ? nombreArchivo : undefined);
 });
 
-// PUT /api/rutinas/:id  (cuerpo: el PDF con los cambios)
+// PUT /api/rutinas/:id?leidaEn=…  (cuerpo: el PDF con los cambios)
 rutinasRouter.put("/rutinas/:id", recibirPdf, async (req, res) => {
-  res.json(await actualizarRutina(leerId(req.params.id), pdfRecibido(req)));
+  const { leidaEn } = esquemaActualizar.parse(req.query);
+  res.json(await actualizarRutina(leerId(req.params.id), pdfRecibido(req), leidaEn));
+});
+
+// POST /api/rutinas/:id/link  → el link para que el alumno la complete desde el celular (lo crea si no tenía)
+rutinasRouter.post("/rutinas/:id/link", async (req, res) => {
+  res.json(await compartirRutina(leerId(req.params.id)));
+});
+
+// DELETE /api/rutinas/:id/link  → corta el link
+rutinasRouter.delete("/rutinas/:id/link", async (req, res) => {
+  await dejarDeCompartir(leerId(req.params.id));
+  res.status(204).end();
 });
 
 rutinasRouter.delete("/rutinas/:id", async (req, res) => {

@@ -10,12 +10,15 @@ export interface Rutina {
   objetivo: string | null; // deporte u objetivo copiado de la planilla, para mostrar en listas
   desde: string; // ISO: día de creación
   hasta: string; // ISO: según el tipo (2 meses o 6 semanas)
+  linkAlumno: string | null; // link para que el alumno la complete desde el celular (null = no compartida)
+  alumnoEditoEn: string | null; // ISO: último cambio que hizo el alumno con el link
   creadoEn: string; // ISO
   actualizadoEn: string;
 }
 
 export interface RutinaConAlumno extends Rutina {
   alumno: { id: number; nombre: string; apellido: string } | null;
+  leidaEn: string; // ISO, hora del servidor: se devuelve al guardar para no pisar lo que cambie el alumno
 }
 
 export interface RutinaSuelta extends Rutina {
@@ -79,7 +82,12 @@ export const rutinasApi = {
   crear: (alumnoId: number | null, tipo: ModeloRutina, pdf: Uint8Array, datosAlumno = false) =>
     enviarPdf(`${alumnoId ? `/alumnos/${alumnoId}` : ""}/rutinas?tipo=${tipo}${datosAlumno ? "&datosAlumno=true" : ""}`, "POST", pdf),
 
-  actualizar: (id: number, pdf: Uint8Array) => enviarPdf(`/rutinas/${id}`, "PUT", pdf),
+  actualizar: (id: number, pdf: Uint8Array, leidaEn: string) =>
+    enviarPdf(`/rutinas/${id}?leidaEn=${encodeURIComponent(leidaEn)}`, "PUT", pdf),
+
+  // Link para el alumno: lo crea si no tenía; borrarlo lo corta.
+  compartir: (id: number) => pedir<{ linkAlumno: string }>(`/rutinas/${id}/link`, { metodo: "POST" }),
+  dejarDeCompartir: (id: number) => pedir<void>(`/rutinas/${id}/link`, { metodo: "DELETE" }),
 
   eliminar: (id: number) => pedir<void>(`/rutinas/${id}`, { metodo: "DELETE" }),
 };

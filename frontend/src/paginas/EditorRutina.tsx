@@ -5,6 +5,7 @@ import { rutinasApi, type ModeloRutina, type TipoBloque } from "../api/rutinas";
 import Cargando from "../componentes/Cargando";
 import PlanillaEditable, { type ControlPlanilla } from "../componentes/PlanillaEditable";
 import { useCarga } from "../hooks/useCarga";
+import { formatearFechaHora } from "../utils/formato";
 import { ETIQUETAS_TIPO_BLOQUE, MODELOS_RUTINA } from "../utils/rutinas";
 import { useConfirmar } from "../componentes/Confirmar";
 import { Flecha } from "../componentes/Iconos";
@@ -30,8 +31,11 @@ export default function EditorRutina() {
 
   const { datos, error, setError } = useCarga(async () => {
     if (rutinaId) {
-      const [rutina, pdf] = await Promise.all([rutinasApi.obtener(rutinaId), rutinasApi.pdf(rutinaId)]);
-      return { alumno: rutina.alumno, tipo: rutina.tipo, modelo: null, pdf };
+      // Primero los datos y después el PDF: así leidaEn es anterior a lo que trae el PDF y, al guardar, se conserva
+      // todo lo que el alumno haya cambiado después (con el link del celular).
+      const rutina = await rutinasApi.obtener(rutinaId);
+      const pdf = await rutinasApi.pdf(rutinaId);
+      return { alumno: rutina.alumno, tipo: rutina.tipo, modelo: null, pdf, leidaEn: rutina.leidaEn, alumnoEditoEn: rutina.alumnoEditoEn };
     }
     const modelo = MODELOS_RUTINA.find((tipo) => tipo === busqueda.get("tipo"));
     if (!modelo) throw new Error("Falta elegir el modelo de rutina");
@@ -40,7 +44,7 @@ export default function EditorRutina() {
       alumnoId ? alumnosApi.obtener(alumnoId) : null,
       rutinasApi.borrador(alumnoId, modelo, baseId),
     ]);
-    return { alumno, tipo: modelo as TipoBloque, modelo: modelo as ModeloRutina | null, pdf };
+    return { alumno, tipo: modelo as TipoBloque, modelo: modelo as ModeloRutina | null, pdf, leidaEn: null, alumnoEditoEn: null };
   }, [rutinaId, parametros.alumnoId, busqueda]);
 
   const volverA = datos?.alumno ? `/rutinas/${datos.alumno.id}` : "/rutinas";
@@ -51,7 +55,7 @@ export default function EditorRutina() {
     setGuardando(true);
     try {
       const pdf = await visor.current.obtenerPdf();
-      if (rutinaId) await rutinasApi.actualizar(rutinaId, pdf);
+      if (rutinaId && datos.leidaEn) await rutinasApi.actualizar(rutinaId, pdf, datos.leidaEn);
       else if (datos.modelo) await rutinasApi.crear(datos.alumno?.id ?? null, datos.modelo, pdf);
       navigate(volverA, { state: origen });
     } catch (err) {
@@ -139,6 +143,9 @@ export default function EditorRutina() {
             {para} · {ETIQUETAS_TIPO_BLOQUE[datos.tipo]}
             {baseId && " · A partir de una rutina anterior"}
           </p>
+          {datos.alumnoEditoEn && (
+            <p className="texto-suave subtitulo">Última anotación del alumno: {formatearFechaHora(datos.alumnoEditoEn)}</p>
+          )}
         </div>
       </div>
 

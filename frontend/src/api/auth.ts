@@ -5,7 +5,7 @@ export interface Usuario {
   email: string;
   nombre: string;
   rol: "ADMIN" | "DEMO" | "SUPERADMIN";
-  centro: { nombre: string; esDemo: boolean } | null;
+  centro: { id: number; nombre: string; esDemo: boolean } | null;
 }
 
 export const authApi = {

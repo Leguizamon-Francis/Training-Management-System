@@ -30,6 +30,7 @@ import RegistrarAsistencia from "./paginas/RegistrarAsistencia";
 import RestablecerPassword from "./paginas/RestablecerPassword";
 import Rutinas from "./paginas/Rutinas";
 import RutinasAlumno from "./paginas/RutinasAlumno";
+import RutinaAlumno from "./paginas/RutinaAlumno";
 
 // El editor de rutinas usa pdf.js (más de 1 MB con su hoja de estilos): se descarga recién al abrirlo,
 // así las demás pantallas cargan más rápido.
@@ -64,6 +65,8 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/olvide-password" element={<OlvidePassword />} />
             <Route path="/restablecer-password" element={<RestablecerPassword />} />
+            {/* Rutina que el alumno completa desde el celular con el link del profesor, sin usuario. */}
+            <Route path="/r/:centro/:link" element={<RutinaAlumno />} />
 
             <Route element={<RutaProtegida />}>
               <Route element={<Layout />}>

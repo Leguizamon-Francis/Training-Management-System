@@ -18,6 +18,7 @@ import { perfilesRouter } from "./modulos/perfiles/perfiles.routes";
 import { panelRouter } from "./modulos/panel/panel.routes";
 import { planesRouter } from "./modulos/planes/planes.routes";
 import { pruebasRouter } from "./modulos/pruebas/pruebas.routes";
+import { rutinaAlumnoRouter } from "./modulos/rutinas/rutina-alumno.routes";
 import { rutinasRouter } from "./modulos/rutinas/rutinas.routes";
 
 // Mensajes de error de Zod en español para los casos sin mensaje propio.
@@ -62,6 +63,8 @@ app.get("/api/salud", async (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
+// Rutinas que el alumno completa con un link, sin usuario (solo esa rutina).
+app.use("/api/publico", rutinaAlumnoRouter);
 
 // ---------- Rutas protegidas: de acá para abajo hace falta sesión ----------
 app.use("/api", requiereSesion);

@@ -20,7 +20,6 @@ datasource db {
 
 // ---------- Enums ----------
 
-
 enum TipoAnotacion {
   OBSERVACION
   CORRECCION_TECNICA
@@ -273,17 +272,24 @@ model Asistencia {
 // (para alguien que no es alumno). No se guarda el PDF completo (pesa ~2,4 MB): se guarda lo escrito en cada
 // campo y el PDF se vuelve a armar con la plantilla al verlo o descargarlo.
 model Rutina {
-  id            Int        @id @default(autoincrement())
-  alumnoId      Int?
-  alumno        Alumno?    @relation(fields: [alumnoId], references: [id], onDelete: Restrict)
-  tipo          TipoBloque
-  valores       Json // { "nombre": "Pérez, Juan", "deporte": "Hockey", "A4": "Sentadilla", ... }
-  objetivo      String? // deporte u objetivo, copiado de la planilla para mostrarlo en las listas sin abrir el PDF
+  id              Int        @id @default(autoincrement())
+  alumnoId        Int?
+  alumno          Alumno?    @relation(fields: [alumnoId], references: [id], onDelete: Restrict)
+  tipo            TipoBloque
+  valores         Json // { "nombre": "Pérez, Juan", "deporte": "Hockey", "A4": "Sentadilla", ... }
+  objetivo        String? // deporte u objetivo, copiado de la planilla para mostrarlo en las listas sin abrir el PDF
   // Duración del bloque, calculada por el sistema: desde = día de creación; hasta = según el tipo (DURACION en rutinas.service).
-  desde         DateTime   @db.Date
-  hasta         DateTime   @db.Date
-  creadoEn      DateTime   @default(now())
-  actualizadoEn DateTime   @updatedAt
+  desde           DateTime   @db.Date
+  hasta           DateTime   @db.Date
+  // Link para que el alumno complete la rutina desde el celular (/r/<id del gimnasio>/<linkAlumno>), sin usuario.
+  // null = no compartida. Se guarda el token tal cual para poder volver a copiar el link: solo da acceso a esta rutina.
+  linkAlumno      String?    @unique
+  // Campos que cambió el alumno y cuándo ({ "AO5": "2026-11-12T18:40:00.000Z" }): al guardar desde el editor no se
+  // pisan los cambios del alumno que el profesor todavía no había visto.
+  edicionesAlumno Json       @default("{}")
+  alumnoEditoEn   DateTime?
+  creadoEn        DateTime   @default(now())
+  actualizadoEn   DateTime   @updatedAt
 
   @@index([alumnoId, creadoEn])
 }

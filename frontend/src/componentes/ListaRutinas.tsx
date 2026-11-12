@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, useLocation } from "react-router";
+import CompartirRutina from "./CompartirRutina";
 import { rutinasApi, type Rutina, type RutinaSuelta } from "../api/rutinas";
 import { formatearFecha } from "../utils/formato";
-import { ETIQUETAS_TIPO_BLOQUE, linkRutinaWhatsApp, MODELOS_RUTINA } from "../utils/rutinas";
+import { ETIQUETAS_TIPO_BLOQUE, linkRutinaWhatsApp, MODELOS_PARA_ALUMNO, MODELOS_RUTINA } from "../utils/rutinas";
 
 type Props =
   | { rutinas: Rutina[]; alumno: { nombre: string; telefono: string }; onEliminar?: (rutina: Rutina) => void }
@@ -18,6 +20,9 @@ function descargar(url: string) {
 // Si no se pasa onEliminar, no se muestra "Eliminar".
 export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
   const origen = useLocation().state; // el editor lo devuelve al volver (ej.: hasta Inicio)
+  const [compartiendo, setCompartiendo] = useState<number | null>(null); // rutina con la ventana del link abierta
+  const [links, setLinks] = useState<Record<number, string | null>>({}); // links creados o cortados en esta pantalla
+  const linkDe = (id: number) => (id in links ? links[id] : (rutinas.find((r) => r.id === id)?.linkAlumno ?? null));
 
   return (
     <div className="tabla-contenedor">
@@ -72,6 +77,12 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
                     Usar como base
                   </Link>
                 )}
+                {/* Link para que el alumno la complete desde el celular (solo los modelos con vista por día). */}
+                {MODELOS_PARA_ALUMNO.includes(rutina.tipo) && (
+                  <button type="button" data-no-en-demo className="boton-link" onClick={() => setCompartiendo(rutina.id)}>
+                    {linkDe(rutina.id) ? "Link alumno (activo)" : "Link alumno"}
+                  </button>
+                )}
                 {onEliminar && (
                   <button type="button" className="boton-link peligro" onClick={() => onEliminar(rutina)}>
                     Eliminar
@@ -82,6 +93,15 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
           ))}
         </tbody>
       </table>
+      {compartiendo !== null && (
+        <CompartirRutina
+          rutinaId={compartiendo}
+          linkAlumno={linkDe(compartiendo)}
+          alumno={alumno}
+          onCambio={(link) => setLinks((actuales) => ({ ...actuales, [compartiendo]: link }))}
+          onCerrar={() => setCompartiendo(null)}
+        />
+      )}
     </div>
   );
 }
