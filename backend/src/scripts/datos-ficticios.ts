@@ -104,7 +104,7 @@ export async function cargarDatosFicticios() {
   // Precios de las membresías, solo si no tienen uno definido (0).
   for (const plan of planes) {
     if (plan.precioMensual.isZero()) {
-      plan.precioMensual = new Prisma.Decimal(PRECIOS[plan.modalidad]);
+      plan.precioMensual = new Prisma.Decimal(PRECIOS[plan.modalidad ?? "OTRO"]);
       await prisma.plan.update({ where: { id: plan.id }, data: { precioMensual: plan.precioMensual } });
     }
   }

@@ -199,17 +199,17 @@ model ResultadoEvaluacion {
 
 // ---------- Planes y pagos ----------
 
-// Hay un plan fijo por modalidad (Presencial, Semi presencial, Online, Otro), creado por el seed.
-// Solo se define su precio mensual. Los cambios de plan de cada alumno quedan en CambioAlumno (campo "plan").
+// El seed crea uno por modalidad (Presencial, Semi presencial, Online, Otro); el gimnasio puede agregar más
+// (sin modalidad) desde "Configurar membresías". Los cambios de plan de cada alumno quedan en CambioAlumno (campo "plan").
 model Plan {
-  id            Int       @id @default(autoincrement())
-  nombre        String    @unique
-  modalidad     Modalidad @unique
-  precioMensual Decimal   @db.Decimal(12, 2)
+  id            Int        @id @default(autoincrement())
+  nombre        String     @unique
+  modalidad     Modalidad? @unique // las 4 del seed; null en las que agrega el gimnasio
+  precioMensual Decimal    @db.Decimal(12, 2)
   alumnos       Alumno[]
   cuotas        Cuota[]
-  creadoEn      DateTime  @default(now())
-  actualizadoEn DateTime  @updatedAt
+  creadoEn      DateTime   @default(now())
+  actualizadoEn DateTime   @updatedAt
 }
 
 // Un mes de entrenamiento (desde → vence). Se crea al registrar el pago, o con "anular deuda".

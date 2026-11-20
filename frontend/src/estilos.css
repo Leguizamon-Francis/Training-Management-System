@@ -1603,6 +1603,14 @@ button.indicador:hover {
   margin-top: 1.625rem;
 }
 
+/* Configurar membresías → Nueva membresía: nombre, precio y botones en una fila. */
+.formulario-membresia {
+  display: grid;
+  grid-template-columns: 2fr 1fr auto;
+  gap: 0 0.75rem;
+  align-items: start;
+}
+
 /* Configuración → Perfiles: nombre, meses, contraseña y botones en una fila. */
 .formulario-perfil {
   display: grid;
@@ -2159,6 +2167,10 @@ button.indicador:hover {
   padding: 0.5rem 0.75rem;
 }
 
+.edicion-precio input.edicion-nombre {
+  width: 18rem;
+}
+
 .nota {
   margin: 0.75rem 0 0;
   font-size: 0.85rem;
@@ -2302,7 +2314,8 @@ button.indicador:hover {
 
   .fila-resultado-campos,
   .formulario-prueba,
-  .formulario-perfil {
+  .formulario-perfil,
+  .formulario-membresia {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -2336,6 +2349,16 @@ button.indicador:hover {
 
   .sin-salto {
     white-space: normal;
+  }
+
+  /* Editar precio o nombre en la fila: el campo a todo el ancho y los botones a la derecha. */
+  .edicion-precio {
+    justify-content: flex-end;
+  }
+
+  .edicion-precio input,
+  .edicion-precio input.edicion-nombre {
+    width: 100%;
   }
 
   .texto-recortado {
