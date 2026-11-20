@@ -45,7 +45,7 @@ export default function ListaRutinas({ rutinas, alumno, onEliminar }: Props) {
               <td>{rutina.objetivo ?? <span className="texto-suave">—</span>}</td>
               <td className="sin-salto">{formatearFecha(rutina.desde)}</td>
               <td className="sin-salto">{formatearFecha(rutina.hasta)}</td>
-              <td className="sin-salto">
+              <td className="acciones-rutina">
                 <Link to={`/rutinas/editar/${rutina.id}`} state={origen} className="boton-link">
                   Abrir
                 </Link>

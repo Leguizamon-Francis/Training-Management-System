@@ -786,8 +786,18 @@ h2 {
   margin-bottom: 1rem;
 }
 
-.pagina-encabezado > :first-child:not(:only-child) {
-  margin-right: auto;
+.pagina-encabezado > :first-child:not(:only-child),
+.pagina-encabezado > :is(h1, h2, div:not(.acciones)):only-child {
+  margin-right: auto; /* el título va a la izquierda aunque esté solo (sin botones al lado) */
+}
+
+/* Acciones de cada rutina: si no entran en un renglón, bajan alineadas a la derecha (sin cortar ninguna). */
+.tabla td.acciones-rutina {
+  text-align: right;
+}
+
+.acciones-rutina > * {
+  white-space: nowrap;
 }
 
 .pagina-encabezado .acciones {
