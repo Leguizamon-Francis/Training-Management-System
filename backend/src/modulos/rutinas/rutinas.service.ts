@@ -1,12 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { TipoBloque } from "@prisma/client";
-import { PDFDocument, PDFTextField } from "pdf-lib";
+import { PDFCheckBox, PDFDocument, PDFDropdown, PDFTextField, StandardFonts } from "pdf-lib";
 import { env } from "../../config/env";
 import { ErrorHttp } from "../../lib/errores";
 import { calcularEdad, fechaArgentina, fechaDesdeTexto, formatearFechaTexto, hoyComoTexto, sumarDias, sumarMeses, textoDesdeFecha } from "../../lib/fechas";
 import { prisma } from "../../lib/prisma";
 import { obtenerAlumno } from "../alumnos/alumnos.service";
+import * as modeloRutina3 from "./modelo-rutina-3";
 import { conservarCambiosDelAlumno } from "./rutina-alumno.service";
 
 // Campos que se muestran en las listas: "deporte" en los modelos actuales; en la planilla vieja, "untitled2"
@@ -22,6 +23,7 @@ const DURACION: Record<TipoBloque, { meses: number } | { semanas: number }> = {
   MODELO_RUTINA: { meses: 2 },
   MODELO_RUTINA_2: { meses: 2 },
   PLANILLA_6_SEMANAS: { semanas: 6 },
+  MODELO_RUTINA_3: { meses: 1 },
 };
 
 function fechaFin(tipo: TipoBloque, desde: string) {
@@ -44,6 +46,7 @@ export const ARCHIVOS_MODELOS: Partial<Record<TipoBloque, string>> = {
   MODELO_RUTINA: "plantillas/Modelo Rutina.pdf",
   MODELO_RUTINA_2: "plantillas/Modelo Rutina 2.pdf",
   PLANILLA_6_SEMANAS: "plantillas/Planilla 6 semanas.pdf",
+  MODELO_RUTINA_3: "plantillas/Modelo Rutina 3.pdf",
 };
 
 type Valores = Record<string, string>;
@@ -72,7 +75,10 @@ async function extraerValores(bytes: Uint8Array) {
   }
   const valores: Valores = {};
   for (const campo of pdf.getForm().getFields()) {
+    if (campo.isReadOnly()) continue; // los completa el sistema (cuentas de "Modelo Rutina 3")
     if (campo instanceof PDFTextField) valores[campo.getName()] = campo.getText() ?? "";
+    else if (campo instanceof PDFCheckBox) valores[campo.getName()] = campo.isChecked() ? modeloRutina3.MARCADO : "";
+    else if (campo instanceof PDFDropdown) valores[campo.getName()] = campo.getSelected()[0] ?? "";
   }
   if (Object.keys(valores).length === 0) {
     throw new ErrorHttp(400, "El PDF no tiene los campos de la plantilla de rutinas");
@@ -97,13 +103,29 @@ function textoDibujable(texto: string) {
 
 // Arma el PDF de una rutina: la plantilla con los valores dados. Los campos siguen siendo editables,
 // y los que no vienen en valores conservan lo que trae la plantilla.
-async function generarPdf(tipo: TipoBloque, valores: Valores) {
+async function generarPdf(tipo: TipoBloque, valoresGuardados: Valores) {
   const pdf = await PDFDocument.load(await leerPlantilla(tipo));
+  // "Modelo Rutina 3" lleva las cuentas del Excel: se calculan con lo guardado y pisan lo que hubiera.
+  const cuentas = tipo === "MODELO_RUTINA_3" ? modeloRutina3.calcular(valoresGuardados) : null;
+  const valores = cuentas ? { ...valoresGuardados, ...cuentas.campos } : valoresGuardados;
   for (const campo of pdf.getForm().getFields()) {
-    if (!(campo instanceof PDFTextField) || !(campo.getName() in valores)) continue;
-    // Solo se reescriben los que cambian: cada campo reescrito suma peso al PDF, y hay planillas con miles de campos vacíos.
-    const texto = textoDibujable(valores[campo.getName()]);
-    if (texto !== (campo.getText() ?? "")) campo.setText(texto);
+    if (!(campo.getName() in valores)) continue;
+    const valor = valores[campo.getName()];
+    if (campo instanceof PDFTextField) {
+      // Solo se reescriben los que cambian: cada campo reescrito suma peso al PDF, y hay planillas con miles de campos vacíos.
+      const texto = textoDibujable(valor);
+      if (texto !== (campo.getText() ?? "")) campo.setText(texto);
+    } else if (campo instanceof PDFCheckBox) {
+      if (valor === modeloRutina3.MARCADO) campo.check();
+      else campo.uncheck();
+    } else if (campo instanceof PDFDropdown && campo.getOptions().includes(valor)) {
+      campo.select(valor);
+    }
+  }
+  if (cuentas) {
+    const pagina = pdf.getPage(0);
+    modeloRutina3.dibujarBarraProgreso(pagina, cuentas.progreso);
+    modeloRutina3.dibujarGrafico(pagina, await pdf.embedFont(StandardFonts.HelveticaBold), cuentas.volumenPorBloque);
   }
   return pdf.save();
 }

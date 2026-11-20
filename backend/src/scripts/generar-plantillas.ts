@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { PDFDocument, StandardFonts, TextAlignment, rgb, type Color, type PDFFont, type PDFPage } from "pdf-lib";
+import * as M3 from "../modulos/rutinas/modelo-rutina-3";
 import { ANCHOS_INICIO, COLUMNAS_SEMANA, columnaExcel, DIAS, SEMANAS } from "../modulos/rutinas/planilla-6-semanas";
 
 // Genera los PDF rellenables de las rutinas a partir del diseño de los Excel de modelos de rutina.
@@ -163,6 +164,9 @@ interface Recuadro {
   color?: Color;
   izquierda?: boolean;
   variasLineas?: boolean; // el campo admite varios renglones
+  colorTexto?: Color;
+  soloLectura?: boolean; // campo que completa el sistema
+  tamanioCampo?: number;
 }
 
 // Corta un texto en renglones que entren en el ancho dado.
@@ -193,6 +197,7 @@ function dibujarRecuadro(pdf: PDFDocument, pagina: PDFPage, negrita: PDFFont, r:
         y: primera - i * interlineado,
         size: tamanio,
         font: negrita,
+        color: r.colorTexto,
       });
     });
   }
@@ -200,9 +205,10 @@ function dibujarRecuadro(pdf: PDFDocument, pagina: PDFPage, negrita: PDFFont, r:
   if (r.campo) {
     const campo = pdf.getForm().createTextField(r.campo);
     if (r.variasLineas) campo.enableMultiline();
+    if (r.soloLectura) campo.enableReadOnly();
     if (r.valor) campo.setText(r.valor);
     campo.addToPage(pagina, { x: r.x + 1, y: r.y + 1, width: r.ancho - 2, height: r.alto - 2, borderWidth: 0, backgroundColor: color });
-    campo.setFontSize(TAMANIO_LETRA);
+    campo.setFontSize(r.tamanioCampo ?? TAMANIO_LETRA);
     campo.setAlignment(r.izquierda ? TextAlignment.Left : TextAlignment.Center);
   }
 }
@@ -334,12 +340,96 @@ async function planilla6Semanas(carpeta: string) {
   await guardar(pdf, nombre, carpeta);
 }
 
+// ---------- Modelo Rutina 3 ----------
+// Una sesión, del Excel "rutina esqueleto". La geometría y las cuentas están en modulos/rutinas/modelo-rutina-3.ts:
+// el servidor completa los campos de solo lectura (volumen, totales, resumen, progreso) y dibuja el gráfico.
+
+async function modeloRutina3(carpeta: string) {
+  const nombre = "Modelo Rutina 3";
+  const g = M3.geometria();
+  const pdf = await PDFDocument.create();
+  pdf.setTitle(nombre);
+  const pagina = pdf.addPage([M3.ANCHO_HOJA, M3.ALTO_HOJA]);
+  const negrita = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const dibujar = (r: Recuadro) => dibujarRecuadro(pdf, pagina, negrita, r);
+  const blanco = rgb(1, 1, 1);
+  const formulario = pdf.getForm();
+
+  dibujar({ ...g.titulo, texto: M3.TITULO, color: M3.AZUL, colorTexto: blanco, tamanioTexto: 14 });
+
+  // Nombre, edad y deporte, como en los otros modelos.
+  let x = g.titulo.x;
+  for (const { texto, anchoTexto, campo, ancho } of [
+    { texto: "NOMBRE:", anchoTexto: 60, campo: "nombre", ancho: 330 },
+    { texto: "EDAD", anchoTexto: 44, campo: "edad", ancho: 44 },
+    { texto: "DEPORTE", anchoTexto: 60, campo: "deporte", ancho: g.titulo.ancho - 538 },
+  ]) {
+    dibujar({ ...g.datos, x, ancho: anchoTexto, texto, color: M3.CELESTE });
+    dibujar({ ...g.datos, x: x + anchoTexto, ancho, campo, izquierda: campo !== "edad" });
+    x += anchoTexto + ancho;
+  }
+
+  for (const total of g.totales) {
+    dibujar({ ...total.etiqueta, texto: total.titulo, color: M3.CELESTE });
+    dibujar({ ...total.valor, campo: total.campo, soloLectura: true, color: M3.RAYADO, tamanioCampo: 13 });
+  }
+  // Recuadro completo de "Progreso de sesión" (la barra la dibuja el servidor).
+  const progreso = g.totales[3].valor;
+  pagina.drawRectangle({ x: progreso.x + progreso.ancho, y: progreso.y, width: progreso.ancho, height: progreso.alto, color: M3.RAYADO, borderColor: rgb(0, 0, 0), borderWidth: 1 });
+
+  for (const c of g.columnas) {
+    dibujar({ ...g.encabezado, x: c.x, ancho: c.ancho, texto: c.titulo, color: M3.AZUL, colorTexto: blanco, tamanioTexto: 7.5 });
+  }
+  g.filas.forEach((fila, i) => {
+    const color = i % 2 === 0 ? M3.RAYADO : blanco;
+    for (const c of g.columnas) {
+      const celda = { x: c.x, y: fila.y, ancho: c.ancho, alto: M3.ALTO_FILA, color };
+      const nombreCampo = `${c.letra}${fila.fila}`;
+      if (c.letra === "B") {
+        // Bloque: lista para elegir, como la validación del Excel.
+        dibujar(celda);
+        const lista = formulario.createDropdown(nombreCampo);
+        lista.addOptions(M3.BLOQUES);
+        lista.select(fila.bloque);
+        lista.addToPage(pagina, { x: c.x + 1, y: fila.y + 1, width: c.ancho - 2, height: M3.ALTO_FILA - 2, borderWidth: 0, backgroundColor: color });
+        lista.setFontSize(7.5);
+      } else if (c.letra === "J") {
+        // Completado: casilla, centrada en la celda.
+        dibujar(celda);
+        const lado = 11;
+        const casilla = formulario.createCheckBox(nombreCampo);
+        casilla.addToPage(pagina, { x: c.x + (c.ancho - lado) / 2, y: fila.y + (M3.ALTO_FILA - lado) / 2, width: lado, height: lado, borderWidth: 1, borderColor: rgb(0.3, 0.3, 0.35), backgroundColor: blanco });
+      } else {
+        const izquierda = c.letra === "C" || c.letra === "I";
+        dibujar({ ...celda, campo: nombreCampo, izquierda, variasLineas: izquierda, soloLectura: c.letra === "G" });
+      }
+    }
+  });
+
+  for (const c of g.resumen.columnas) {
+    dibujar({ ...g.resumen.encabezado, x: c.x, ancho: c.ancho, texto: c.titulo, color: M3.AZUL, colorTexto: blanco, tamanioTexto: 7.5 });
+  }
+  g.resumen.filas.forEach((fila, i) => {
+    const color = i % 2 === 0 ? M3.RAYADO : blanco;
+    g.resumen.columnas.forEach((c, n) => {
+      const celda = { x: c.x, y: fila.y, ancho: c.ancho, alto: fila.alto, color };
+      if (n === 0) dibujar({ ...celda, texto: fila.bloque, izquierda: true, tamanioTexto: 7.5 });
+      else dibujar({ ...celda, campo: `${c.letra}${fila.fila}`, soloLectura: true });
+    });
+  });
+
+  // Las cuentas, la barra de progreso y el gráfico los agrega el servidor al armar cada PDF (también el borrador).
+
+  await guardar(pdf, nombre, carpeta);
+}
+
 async function main() {
   const carpeta = path.resolve(process.cwd(), "plantillas");
   await mkdir(carpeta, { recursive: true });
   await generar(modeloRutina(), carpeta);
   await generar(modeloRutina2(), carpeta);
   await planilla6Semanas(carpeta);
+  await modeloRutina3(carpeta);
 }
 
 main();

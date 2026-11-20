@@ -6,7 +6,7 @@ export function linkRutinaWhatsApp({ nombre, telefono }: { nombre: string; telef
 }
 
 // Todos los modelos actuales (cada gimnasio elige entre los que tiene cargados: GET /api/rutinas/modelos).
-export const MODELOS_RUTINA: ModeloRutina[] = ["MODELO_RUTINA", "MODELO_RUTINA_2", "PLANILLA_6_SEMANAS"];
+export const MODELOS_RUTINA: ModeloRutina[] = ["MODELO_RUTINA", "MODELO_RUTINA_2", "PLANILLA_6_SEMANAS", "MODELO_RUTINA_3"];
 
 // Modelos que el alumno puede completar desde el celular con un link (tienen vista por día).
 export const MODELOS_PARA_ALUMNO: TipoBloque[] = ["PLANILLA_6_SEMANAS"];
@@ -24,6 +24,7 @@ export const ETIQUETAS_TIPO_BLOQUE: Record<TipoBloque, string> = {
   MODELO_RUTINA: "Modelo Rutina",
   MODELO_RUTINA_2: "Modelo Rutina 2",
   PLANILLA_6_SEMANAS: "Planilla 6 semanas",
+  MODELO_RUTINA_3: "Modelo Rutina 3",
   MICROCICLOS_2_SEMANAS: "Bloque de 4 microciclos de 2 semanas",
   MICROCICLOS_1_SEMANA: "Bloque de 4 microciclos de 1 semana",
 };

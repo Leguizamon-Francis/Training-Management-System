@@ -1,6 +1,6 @@
 import { ErrorApi, pedir } from "./cliente";
 
-export type ModeloRutina = "MODELO_RUTINA" | "MODELO_RUTINA_2" | "PLANILLA_6_SEMANAS";
+export type ModeloRutina = "MODELO_RUTINA" | "MODELO_RUTINA_2" | "PLANILLA_6_SEMANAS" | "MODELO_RUTINA_3";
 export type TipoBloque = "MICROCICLOS_2_SEMANAS" | "MICROCICLOS_1_SEMANA" | ModeloRutina; // los MICROCICLOS son de rutinas viejas
 
 export interface Rutina {
